@@ -1,6 +1,6 @@
 # Brand identity
 
-Two rounds so far. Round 1 chose the direction of the mark; its outcome is recorded at the end of its section. Round 2 is open.
+Three rounds so far. Each round's outcome is recorded at the end of its section. Round 1 chose the direction of the mark, round 2 the typeface and the colour family. Round 3 is open.
 
 ## Round 1: three directions for the mark
 
@@ -131,7 +131,7 @@ Which direction is developed in round 2?
 
 ## Round 2: direction A in jewel teal and gold
 
-Status: proposals. This round changes three things, each in answer to round 1: the colour, the joint where the hands meet, and the typeface.
+Status: closed. This round changed three things, each in answer to round 1: the colour, the joint where the hands meet, and the typeface.
 
 ### Colour
 
@@ -230,3 +230,61 @@ A light-first variant of the palette; discipline themes; final lockup rules; fav
 1. The joint: A1 bead, **A2 hands apart** (suggested), or A3 ring.
 2. The typeface for the name: IBM Plex Serif, Zilla Slab, Rokkitt, Bitter, or custom lettering drawn for the name.
 3. Whether the teal, gold and white match what was intended.
+
+### Outcome of round 2 (Product Owner, 2026-11-23)
+
+- **Joint:** A2, hands apart, in principle. Before settling, the Product Owner wants to see the mark made with the chosen typeface, so that mark and name are coherent.
+- **Typeface:** Bitter.
+- **Colour:** greener.
+
+## Round 3: the mark and the typeface together, in green
+
+Status: proposals. Two questions: how far the mark should take on the typeface, and how green the green should be.
+
+### How much of the typeface goes into the mark
+
+Five versions of the same figure, from none of the typeface to all of it. The name beside them is Bitter Bold in every case.
+
+![Round 3 marks](boards/board-r3-marks.png)
+
+| | Version | What it is | What it gains | What it loses |
+| --- | --- | --- | --- | --- |
+| R | Rope, round ends | A2 from round 2, unchanged | The friendliest figure. Contrast with the slab name: a soft symbol beside a firm word. | Shares nothing with the typeface except weight. |
+| F | Rope, flat ends | A2 with one change: flat ends and sharp corners, like the typeface's terminals | Sits naturally beside Bitter and keeps the figure. | A little less soft. |
+| S | With slab serifs | A2 redrawn with slabs on the D, on the K's stem and at the end of each arm | The closest a drawn figure gets to the typeface. | Heavy. The arms read as legs with boots. |
+| T1 | Bitter `:` `D` `K` | The font's own colon, D and K, turned upright | Complete coherence: it is the typeface. | Reads as letters lying on their side more than as a person. Narrow, so it looks small beside the name. Not symmetric. |
+| T2 | Bitter split I | The font's I cut in two, with its D and K | Shows the I-beam the brief asked for. | The eyes become two T shapes. The same narrowness. |
+
+![Round 3 lockups](boards/board-r3-lockups.png)
+
+![Round 3 size test](boards/board-r3-sizes.png)
+
+R, F and S keep their parts at 16 px. T1 and T2 blur at 16 and 24 px: serif strokes are thin, and the figure is narrow.
+
+### How green
+
+Three steps of hue. The lightness of every surface was recomputed so that white text has exactly the same contrast on each as in round 2 (13.1, 8.5, 5.9 and 3.9), so the three differ in colour only.
+
+![Round 3 palettes](boards/board-r3-palettes.png)
+
+| Step | deep | base | bright | jewel |
+| --- | --- | --- | --- | --- |
+| Round 2, teal (hue 188) | `#07363E` | `#0B5560` | `#0E6E7D` | `#128EA1` |
+| Green teal (hue 172) | `#063831` | `#0A574D` | `#0D7163` | `#109180` |
+| Emerald (hue 160) | `#063828` | `#0A583E` | `#0D7250` | `#109367` |
+
+Gold `#E6BE5A` keeps 4.8 on every base and 7.4 on every deep. The boards in this round use emerald.
+
+### What was checked in round 3
+
+- R, F and S are exactly symmetric about the vertical axis. T1 and T2 are not, because the letters are not.
+- Rendered at 16, 24, 32 and 48 px on the green base.
+- Contrast recomputed for each hue.
+- The typographic versions use the font's real outlines at weight 700, not a redrawing.
+
+`sources/make_round3.py` needs the Bitter variable font as its first argument. The font is under the SIL Open Font License and will be added to the repository, with its licence, when the identity is settled.
+
+### Decisions asked
+
+1. The mark: R, **F** (suggested), S, or one of the typographic versions.
+2. The green: teal, green teal, or **emerald** (used in this round's boards).
