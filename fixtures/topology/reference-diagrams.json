@@ -1,0 +1,2421 @@
+{
+  "format": "idk-reference-diagrams",
+  "formatVersion": "0.1.0",
+  "generated": {
+    "date": "2026-11-23",
+    "tools": {
+      "snappy": "3.3.2",
+      "spherogram": "2.4.1",
+      "regina": "7.4",
+      "database_knotinfo": "braid words for 5_2 and 10_132 only"
+    }
+  },
+  "conventions": {
+    "view": "the diagram is seen from +z; \"o\" (over) is nearer the viewer",
+    "crossingSign": "sign of (tangent_over x tangent_under) . z; +1 is the right-handed crossing",
+    "strands": "each component lists its crossing visits in order of travel; closed components are cyclic",
+    "jones": "V(t) keyed by exponent of t; the right-handed trefoil has V = t + t^3 - t^4",
+    "alexander": "coefficients from degree 0 upward, normalised to a polynomial with positive constant term"
+  },
+  "diagrams": [
+    {
+      "id": "unknot-kink",
+      "title": "Unknot drawn with one kink",
+      "class": "classical-knot",
+      "components": [
+        {
+          "id": "k",
+          "kind": "rope",
+          "closed": true
+        }
+      ],
+      "crossings": [
+        {
+          "id": "c1",
+          "sign": 1
+        }
+      ],
+      "strands": {
+        "k": [
+          [
+            "c1",
+            "o"
+          ],
+          [
+            "c1",
+            "u"
+          ]
+        ]
+      },
+      "source": "one Reidemeister I move applied to a circle",
+      "knownAs": "0_1 (unknot)",
+      "expected": {
+        "crossingCount": 1,
+        "writhe": 1,
+        "jones": {
+          "0": 1
+        },
+        "componentCount": 1
+      },
+      "checks": [
+        "planarity (genus of the combinatorial map)"
+      ]
+    },
+    {
+      "id": "trefoil-right",
+      "title": "Right-handed trefoil",
+      "class": "classical-knot",
+      "components": [
+        {
+          "id": "k0",
+          "kind": "rope",
+          "closed": true
+        }
+      ],
+      "crossings": [
+        {
+          "id": "c1",
+          "sign": 1
+        },
+        {
+          "id": "c2",
+          "sign": 1
+        },
+        {
+          "id": "c3",
+          "sign": 1
+        }
+      ],
+      "strands": {
+        "k0": [
+          [
+            "c1",
+            "o"
+          ],
+          [
+            "c2",
+            "u"
+          ],
+          [
+            "c3",
+            "o"
+          ],
+          [
+            "c1",
+            "u"
+          ],
+          [
+            "c2",
+            "o"
+          ],
+          [
+            "c3",
+            "u"
+          ]
+        ]
+      },
+      "source": "closure of the braid word [1, 1, 1] on 2 strands",
+      "knownAs": "3_1, positive crossings",
+      "expected": {
+        "crossingCount": 3,
+        "writhe": 3,
+        "jones": {
+          "1": 1,
+          "3": 1,
+          "4": -1
+        },
+        "alexander": [
+          1,
+          -1,
+          1
+        ],
+        "seifertGenus": 1,
+        "fibered": true,
+        "componentCount": 1
+      },
+      "checks": [
+        "planarity (genus of the combinatorial map)",
+        "Jones polynomial: prototype state sum == Regina",
+        "Alexander polynomial: Regina",
+        "genus and fibredness: knot Floer homology"
+      ]
+    },
+    {
+      "id": "trefoil-left",
+      "title": "Left-handed trefoil",
+      "class": "classical-knot",
+      "components": [
+        {
+          "id": "k0",
+          "kind": "rope",
+          "closed": true
+        }
+      ],
+      "crossings": [
+        {
+          "id": "c1",
+          "sign": -1
+        },
+        {
+          "id": "c2",
+          "sign": -1
+        },
+        {
+          "id": "c3",
+          "sign": -1
+        }
+      ],
+      "strands": {
+        "k0": [
+          [
+            "c1",
+            "u"
+          ],
+          [
+            "c2",
+            "o"
+          ],
+          [
+            "c3",
+            "u"
+          ],
+          [
+            "c1",
+            "o"
+          ],
+          [
+            "c2",
+            "u"
+          ],
+          [
+            "c3",
+            "o"
+          ]
+        ]
+      },
+      "source": "closure of the braid word [-1, -1, -1] on 2 strands",
+      "knownAs": "mirror image of trefoil-right",
+      "expected": {
+        "crossingCount": 3,
+        "writhe": -3,
+        "jones": {
+          "-4": -1,
+          "-3": 1,
+          "-1": 1
+        },
+        "alexander": [
+          1,
+          -1,
+          1
+        ],
+        "seifertGenus": 1,
+        "fibered": true,
+        "componentCount": 1
+      },
+      "checks": [
+        "planarity (genus of the combinatorial map)",
+        "Jones polynomial: prototype state sum == Regina",
+        "Alexander polynomial: Regina",
+        "genus and fibredness: knot Floer homology"
+      ]
+    },
+    {
+      "id": "figure-eight",
+      "title": "Figure-eight knot",
+      "class": "classical-knot",
+      "components": [
+        {
+          "id": "k0",
+          "kind": "rope",
+          "closed": true
+        }
+      ],
+      "crossings": [
+        {
+          "id": "c1",
+          "sign": 1
+        },
+        {
+          "id": "c2",
+          "sign": -1
+        },
+        {
+          "id": "c3",
+          "sign": 1
+        },
+        {
+          "id": "c4",
+          "sign": -1
+        }
+      ],
+      "strands": {
+        "k0": [
+          [
+            "c1",
+            "o"
+          ],
+          [
+            "c2",
+            "u"
+          ],
+          [
+            "c4",
+            "o"
+          ],
+          [
+            "c1",
+            "u"
+          ],
+          [
+            "c3",
+            "o"
+          ],
+          [
+            "c4",
+            "u"
+          ],
+          [
+            "c2",
+            "o"
+          ],
+          [
+            "c3",
+            "u"
+          ]
+        ]
+      },
+      "source": "closure of the braid word [1, -2, 1, -2] on 3 strands",
+      "knownAs": "4_1 (amphichiral)",
+      "expected": {
+        "crossingCount": 4,
+        "writhe": 0,
+        "jones": {
+          "-2": 1,
+          "-1": -1,
+          "0": 1,
+          "1": -1,
+          "2": 1
+        },
+        "alexander": [
+          1,
+          -3,
+          1
+        ],
+        "seifertGenus": 1,
+        "fibered": true,
+        "snappyIdentify": [
+          "m004",
+          "4_1",
+          "K2_1",
+          "K4a1",
+          "otet02_00001"
+        ],
+        "hyperbolicVolume": 2.029883213,
+        "componentCount": 1
+      },
+      "checks": [
+        "planarity (genus of the combinatorial map)",
+        "Jones polynomial: prototype state sum == Regina",
+        "Alexander polynomial: Regina",
+        "genus and fibredness: knot Floer homology",
+        "identification of the complement: SnapPy census"
+      ]
+    },
+    {
+      "id": "cinquefoil",
+      "title": "Cinquefoil, the (2,5) torus knot",
+      "class": "classical-knot",
+      "components": [
+        {
+          "id": "k0",
+          "kind": "rope",
+          "closed": true
+        }
+      ],
+      "crossings": [
+        {
+          "id": "c1",
+          "sign": 1
+        },
+        {
+          "id": "c2",
+          "sign": 1
+        },
+        {
+          "id": "c3",
+          "sign": 1
+        },
+        {
+          "id": "c4",
+          "sign": 1
+        },
+        {
+          "id": "c5",
+          "sign": 1
+        }
+      ],
+      "strands": {
+        "k0": [
+          [
+            "c1",
+            "o"
+          ],
+          [
+            "c2",
+            "u"
+          ],
+          [
+            "c3",
+            "o"
+          ],
+          [
+            "c4",
+            "u"
+          ],
+          [
+            "c5",
+            "o"
+          ],
+          [
+            "c1",
+            "u"
+          ],
+          [
+            "c2",
+            "o"
+          ],
+          [
+            "c3",
+            "u"
+          ],
+          [
+            "c4",
+            "o"
+          ],
+          [
+            "c5",
+            "u"
+          ]
+        ]
+      },
+      "source": "closure of the braid word [1, 1, 1, 1, 1] on 2 strands",
+      "knownAs": "5_1",
+      "expected": {
+        "crossingCount": 5,
+        "writhe": 5,
+        "jones": {
+          "2": 1,
+          "4": 1,
+          "5": -1,
+          "6": 1,
+          "7": -1
+        },
+        "alexander": [
+          1,
+          -1,
+          1,
+          -1,
+          1
+        ],
+        "seifertGenus": 2,
+        "fibered": true,
+        "componentCount": 1
+      },
+      "checks": [
+        "planarity (genus of the combinatorial map)",
+        "Jones polynomial: prototype state sum == Regina",
+        "Alexander polynomial: Regina",
+        "genus and fibredness: knot Floer homology"
+      ]
+    },
+    {
+      "id": "three-twist",
+      "title": "Three-twist knot",
+      "class": "classical-knot",
+      "components": [
+        {
+          "id": "k0",
+          "kind": "rope",
+          "closed": true
+        }
+      ],
+      "crossings": [
+        {
+          "id": "c1",
+          "sign": 1
+        },
+        {
+          "id": "c2",
+          "sign": 1
+        },
+        {
+          "id": "c3",
+          "sign": 1
+        },
+        {
+          "id": "c4",
+          "sign": 1
+        },
+        {
+          "id": "c5",
+          "sign": -1
+        },
+        {
+          "id": "c6",
+          "sign": 1
+        }
+      ],
+      "strands": {
+        "k0": [
+          [
+            "c1",
+            "o"
+          ],
+          [
+            "c2",
+            "u"
+          ],
+          [
+            "c3",
+            "o"
+          ],
+          [
+            "c4",
+            "o"
+          ],
+          [
+            "c6",
+            "u"
+          ],
+          [
+            "c1",
+            "u"
+          ],
+          [
+            "c2",
+            "o"
+          ],
+          [
+            "c3",
+            "u"
+          ],
+          [
+            "c5",
+            "u"
+          ],
+          [
+            "c6",
+            "o"
+          ],
+          [
+            "c4",
+            "u"
+          ],
+          [
+            "c5",
+            "o"
+          ]
+        ]
+      },
+      "source": "closure of the braid word [1, 1, 1, 2, -1, 2] on 3 strands",
+      "knownAs": "5_2",
+      "expected": {
+        "crossingCount": 6,
+        "writhe": 4,
+        "jones": {
+          "1": 1,
+          "2": -1,
+          "3": 2,
+          "4": -1,
+          "5": 1,
+          "6": -1
+        },
+        "alexander": [
+          2,
+          -3,
+          2
+        ],
+        "seifertGenus": 1,
+        "fibered": false,
+        "snappyIdentify": [
+          "m015",
+          "5_2",
+          "K3_2",
+          "K5a1"
+        ],
+        "hyperbolicVolume": 2.828122088,
+        "componentCount": 1
+      },
+      "checks": [
+        "planarity (genus of the combinatorial map)",
+        "Jones polynomial: prototype state sum == Regina",
+        "Alexander polynomial: Regina",
+        "genus and fibredness: knot Floer homology",
+        "identification of the complement: SnapPy census"
+      ]
+    },
+    {
+      "id": "torus-3-4",
+      "title": "The (3,4) torus knot",
+      "class": "classical-knot",
+      "components": [
+        {
+          "id": "k0",
+          "kind": "rope",
+          "closed": true
+        }
+      ],
+      "crossings": [
+        {
+          "id": "c1",
+          "sign": 1
+        },
+        {
+          "id": "c2",
+          "sign": 1
+        },
+        {
+          "id": "c3",
+          "sign": 1
+        },
+        {
+          "id": "c4",
+          "sign": 1
+        },
+        {
+          "id": "c5",
+          "sign": 1
+        },
+        {
+          "id": "c6",
+          "sign": 1
+        },
+        {
+          "id": "c7",
+          "sign": 1
+        },
+        {
+          "id": "c8",
+          "sign": 1
+        }
+      ],
+      "strands": {
+        "k0": [
+          [
+            "c1",
+            "o"
+          ],
+          [
+            "c2",
+            "o"
+          ],
+          [
+            "c4",
+            "u"
+          ],
+          [
+            "c5",
+            "u"
+          ],
+          [
+            "c7",
+            "o"
+          ],
+          [
+            "c8",
+            "o"
+          ],
+          [
+            "c2",
+            "u"
+          ],
+          [
+            "c3",
+            "u"
+          ],
+          [
+            "c5",
+            "o"
+          ],
+          [
+            "c6",
+            "o"
+          ],
+          [
+            "c8",
+            "u"
+          ],
+          [
+            "c1",
+            "u"
+          ],
+          [
+            "c3",
+            "o"
+          ],
+          [
+            "c4",
+            "o"
+          ],
+          [
+            "c6",
+            "u"
+          ],
+          [
+            "c7",
+            "u"
+          ]
+        ]
+      },
+      "source": "closure of the braid word [1, 2, 1, 2, 1, 2, 1, 2] on 3 strands",
+      "knownAs": "8_19, the first non-alternating knot in the tables",
+      "expected": {
+        "crossingCount": 8,
+        "writhe": 8,
+        "jones": {
+          "3": 1,
+          "5": 1,
+          "8": -1
+        },
+        "alexander": [
+          1,
+          -1,
+          0,
+          1,
+          0,
+          -1,
+          1
+        ],
+        "seifertGenus": 3,
+        "fibered": true,
+        "componentCount": 1
+      },
+      "checks": [
+        "planarity (genus of the combinatorial map)",
+        "Jones polynomial: prototype state sum == Regina",
+        "Alexander polynomial: Regina",
+        "genus and fibredness: knot Floer homology"
+      ]
+    },
+    {
+      "id": "knot-10-132",
+      "title": "Knot 10_132",
+      "class": "classical-knot",
+      "components": [
+        {
+          "id": "k0",
+          "kind": "rope",
+          "closed": true
+        }
+      ],
+      "crossings": [
+        {
+          "id": "c1",
+          "sign": 1
+        },
+        {
+          "id": "c2",
+          "sign": 1
+        },
+        {
+          "id": "c3",
+          "sign": 1
+        },
+        {
+          "id": "c4",
+          "sign": -1
+        },
+        {
+          "id": "c5",
+          "sign": -1
+        },
+        {
+          "id": "c6",
+          "sign": -1
+        },
+        {
+          "id": "c7",
+          "sign": -1
+        },
+        {
+          "id": "c8",
+          "sign": -1
+        },
+        {
+          "id": "c9",
+          "sign": 1
+        },
+        {
+          "id": "c10",
+          "sign": -1
+        },
+        {
+          "id": "c11",
+          "sign": -1
+        }
+      ],
+      "strands": {
+        "k0": [
+          [
+            "c1",
+            "o"
+          ],
+          [
+            "c2",
+            "u"
+          ],
+          [
+            "c3",
+            "o"
+          ],
+          [
+            "c4",
+            "u"
+          ],
+          [
+            "c7",
+            "o"
+          ],
+          [
+            "c9",
+            "o"
+          ],
+          [
+            "c10",
+            "u"
+          ],
+          [
+            "c11",
+            "o"
+          ],
+          [
+            "c4",
+            "o"
+          ],
+          [
+            "c5",
+            "o"
+          ],
+          [
+            "c6",
+            "u"
+          ],
+          [
+            "c7",
+            "u"
+          ],
+          [
+            "c8",
+            "u"
+          ],
+          [
+            "c10",
+            "o"
+          ],
+          [
+            "c11",
+            "u"
+          ],
+          [
+            "c8",
+            "o"
+          ],
+          [
+            "c9",
+            "u"
+          ],
+          [
+            "c1",
+            "u"
+          ],
+          [
+            "c2",
+            "o"
+          ],
+          [
+            "c3",
+            "u"
+          ],
+          [
+            "c5",
+            "u"
+          ],
+          [
+            "c6",
+            "o"
+          ]
+        ]
+      },
+      "source": "closure of the braid word [1, 1, 1, -2, -1, -1, -2, -3, 2, -3, -3] on 4 strands",
+      "knownAs": "10_132",
+      "note": "Shares its Jones and Alexander polynomials with the cinquefoil (up to mirror image) although the two knots are different: 10_132 is hyperbolic, 5_1 is a torus knot. A test that invariants can fail to separate knots.",
+      "expected": {
+        "crossingCount": 11,
+        "writhe": -3,
+        "jones": {
+          "-7": -1,
+          "-6": 1,
+          "-5": -1,
+          "-4": 1,
+          "-2": 1
+        },
+        "alexander": [
+          1,
+          -1,
+          1,
+          -1,
+          1
+        ],
+        "seifertGenus": 2,
+        "fibered": true,
+        "snappyIdentify": [
+          "m201",
+          "10_132",
+          "K5_9",
+          "K10n13"
+        ],
+        "hyperbolicVolume": 4.056860224,
+        "componentCount": 1
+      },
+      "checks": [
+        "planarity (genus of the combinatorial map)",
+        "Jones polynomial: prototype state sum == Regina",
+        "Alexander polynomial: Regina",
+        "genus and fibredness: knot Floer homology",
+        "identification of the complement: SnapPy census"
+      ]
+    },
+    {
+      "id": "granny-closed",
+      "title": "Granny knot (closed)",
+      "class": "classical-knot",
+      "components": [
+        {
+          "id": "k0",
+          "kind": "rope",
+          "closed": true
+        }
+      ],
+      "crossings": [
+        {
+          "id": "c1",
+          "sign": 1
+        },
+        {
+          "id": "c2",
+          "sign": 1
+        },
+        {
+          "id": "c3",
+          "sign": 1
+        },
+        {
+          "id": "c4",
+          "sign": 1
+        },
+        {
+          "id": "c5",
+          "sign": 1
+        },
+        {
+          "id": "c6",
+          "sign": 1
+        }
+      ],
+      "strands": {
+        "k0": [
+          [
+            "c1",
+            "o"
+          ],
+          [
+            "c2",
+            "u"
+          ],
+          [
+            "c3",
+            "o"
+          ],
+          [
+            "c4",
+            "o"
+          ],
+          [
+            "c5",
+            "u"
+          ],
+          [
+            "c6",
+            "o"
+          ],
+          [
+            "c4",
+            "u"
+          ],
+          [
+            "c5",
+            "o"
+          ],
+          [
+            "c6",
+            "u"
+          ],
+          [
+            "c1",
+            "u"
+          ],
+          [
+            "c2",
+            "o"
+          ],
+          [
+            "c3",
+            "u"
+          ]
+        ]
+      },
+      "source": "closure of the braid word [1, 1, 1, 2, 2, 2] on 3 strands",
+      "knownAs": "3_1 # 3_1, connected sum of two trefoils of the same handedness",
+      "expected": {
+        "crossingCount": 6,
+        "writhe": 6,
+        "jones": {
+          "2": 1,
+          "4": 2,
+          "5": -2,
+          "6": 1,
+          "7": -2,
+          "8": 1
+        },
+        "alexander": [
+          1,
+          -2,
+          3,
+          -2,
+          1
+        ],
+        "seifertGenus": 2,
+        "fibered": true,
+        "componentCount": 1
+      },
+      "checks": [
+        "planarity (genus of the combinatorial map)",
+        "Jones polynomial: prototype state sum == Regina",
+        "Alexander polynomial: Regina",
+        "genus and fibredness: knot Floer homology"
+      ]
+    },
+    {
+      "id": "square-closed",
+      "title": "Square knot (closed)",
+      "class": "classical-knot",
+      "components": [
+        {
+          "id": "k0",
+          "kind": "rope",
+          "closed": true
+        }
+      ],
+      "crossings": [
+        {
+          "id": "c1",
+          "sign": 1
+        },
+        {
+          "id": "c2",
+          "sign": 1
+        },
+        {
+          "id": "c3",
+          "sign": 1
+        },
+        {
+          "id": "c4",
+          "sign": -1
+        },
+        {
+          "id": "c5",
+          "sign": -1
+        },
+        {
+          "id": "c6",
+          "sign": -1
+        }
+      ],
+      "strands": {
+        "k0": [
+          [
+            "c1",
+            "o"
+          ],
+          [
+            "c2",
+            "u"
+          ],
+          [
+            "c3",
+            "o"
+          ],
+          [
+            "c4",
+            "u"
+          ],
+          [
+            "c5",
+            "o"
+          ],
+          [
+            "c6",
+            "u"
+          ],
+          [
+            "c4",
+            "o"
+          ],
+          [
+            "c5",
+            "u"
+          ],
+          [
+            "c6",
+            "o"
+          ],
+          [
+            "c1",
+            "u"
+          ],
+          [
+            "c2",
+            "o"
+          ],
+          [
+            "c3",
+            "u"
+          ]
+        ]
+      },
+      "source": "closure of the braid word [1, 1, 1, -2, -2, -2] on 3 strands",
+      "knownAs": "3_1 # mirror(3_1)",
+      "note": "Same Alexander polynomial as the granny knot; the Jones polynomial and the signature tell them apart.",
+      "expected": {
+        "crossingCount": 6,
+        "writhe": 0,
+        "jones": {
+          "-3": -1,
+          "-2": 1,
+          "-1": -1,
+          "0": 3,
+          "1": -1,
+          "2": 1,
+          "3": -1
+        },
+        "alexander": [
+          1,
+          -2,
+          3,
+          -2,
+          1
+        ],
+        "seifertGenus": 2,
+        "fibered": true,
+        "componentCount": 1
+      },
+      "checks": [
+        "planarity (genus of the combinatorial map)",
+        "Jones polynomial: prototype state sum == Regina",
+        "Alexander polynomial: Regina",
+        "genus and fibredness: knot Floer homology"
+      ]
+    },
+    {
+      "id": "hopf-positive",
+      "title": "Hopf link, linking number +1",
+      "class": "classical-link",
+      "components": [
+        {
+          "id": "k0",
+          "kind": "rope",
+          "closed": true
+        },
+        {
+          "id": "k1",
+          "kind": "rope",
+          "closed": true
+        }
+      ],
+      "crossings": [
+        {
+          "id": "c1",
+          "sign": 1
+        },
+        {
+          "id": "c2",
+          "sign": 1
+        }
+      ],
+      "strands": {
+        "k0": [
+          [
+            "c1",
+            "o"
+          ],
+          [
+            "c2",
+            "u"
+          ]
+        ],
+        "k1": [
+          [
+            "c1",
+            "u"
+          ],
+          [
+            "c2",
+            "o"
+          ]
+        ]
+      },
+      "source": "closure of the braid word [1, 1] on 2 strands",
+      "knownAs": "L2a1",
+      "expected": {
+        "crossingCount": 2,
+        "writhe": 2,
+        "jones": {
+          "1/2": -1,
+          "5/2": -1
+        },
+        "componentCount": 2
+      },
+      "checks": [
+        "planarity (genus of the combinatorial map)",
+        "Jones polynomial: prototype state sum == Regina"
+      ]
+    },
+    {
+      "id": "hopf-negative",
+      "title": "Hopf link, linking number -1",
+      "class": "classical-link",
+      "components": [
+        {
+          "id": "k0",
+          "kind": "rope",
+          "closed": true
+        },
+        {
+          "id": "k1",
+          "kind": "rope",
+          "closed": true
+        }
+      ],
+      "crossings": [
+        {
+          "id": "c1",
+          "sign": -1
+        },
+        {
+          "id": "c2",
+          "sign": -1
+        }
+      ],
+      "strands": {
+        "k0": [
+          [
+            "c1",
+            "u"
+          ],
+          [
+            "c2",
+            "o"
+          ]
+        ],
+        "k1": [
+          [
+            "c1",
+            "o"
+          ],
+          [
+            "c2",
+            "u"
+          ]
+        ]
+      },
+      "source": "closure of the braid word [-1, -1] on 2 strands",
+      "knownAs": "L2a1 with one component reversed",
+      "expected": {
+        "crossingCount": 2,
+        "writhe": -2,
+        "jones": {
+          "-5/2": -1,
+          "-1/2": -1
+        },
+        "componentCount": 2
+      },
+      "checks": [
+        "planarity (genus of the combinatorial map)",
+        "Jones polynomial: prototype state sum == Regina"
+      ]
+    },
+    {
+      "id": "whitehead",
+      "title": "Whitehead link",
+      "class": "classical-link",
+      "components": [
+        {
+          "id": "k0",
+          "kind": "rope",
+          "closed": true
+        },
+        {
+          "id": "k1",
+          "kind": "rope",
+          "closed": true
+        }
+      ],
+      "crossings": [
+        {
+          "id": "c1",
+          "sign": 1
+        },
+        {
+          "id": "c2",
+          "sign": -1
+        },
+        {
+          "id": "c3",
+          "sign": 1
+        },
+        {
+          "id": "c4",
+          "sign": -1
+        },
+        {
+          "id": "c5",
+          "sign": -1
+        }
+      ],
+      "strands": {
+        "k0": [
+          [
+            "c1",
+            "o"
+          ],
+          [
+            "c2",
+            "u"
+          ],
+          [
+            "c4",
+            "o"
+          ],
+          [
+            "c5",
+            "u"
+          ],
+          [
+            "c2",
+            "o"
+          ],
+          [
+            "c3",
+            "u"
+          ]
+        ],
+        "k1": [
+          [
+            "c1",
+            "u"
+          ],
+          [
+            "c3",
+            "o"
+          ],
+          [
+            "c4",
+            "u"
+          ],
+          [
+            "c5",
+            "o"
+          ]
+        ]
+      },
+      "source": "closure of the braid word [1, -2, 1, -2, -2] on 3 strands",
+      "knownAs": "L5a1",
+      "note": "Linking number 0, yet the components cannot be separated.",
+      "expected": {
+        "crossingCount": 5,
+        "writhe": -1,
+        "jones": {
+          "-7/2": 1,
+          "-5/2": -2,
+          "-3/2": 1,
+          "-1/2": -2,
+          "1/2": 1,
+          "3/2": -1
+        },
+        "snappyIdentify": [
+          "m129",
+          "5^2_1",
+          "L5a1",
+          "ooct01_00001"
+        ],
+        "hyperbolicVolume": 3.663862377,
+        "componentCount": 2
+      },
+      "checks": [
+        "planarity (genus of the combinatorial map)",
+        "Jones polynomial: prototype state sum == Regina",
+        "identification of the complement: SnapPy census"
+      ]
+    },
+    {
+      "id": "borromean",
+      "title": "Borromean rings",
+      "class": "classical-link",
+      "components": [
+        {
+          "id": "k0",
+          "kind": "rope",
+          "closed": true
+        },
+        {
+          "id": "k1",
+          "kind": "rope",
+          "closed": true
+        },
+        {
+          "id": "k2",
+          "kind": "rope",
+          "closed": true
+        }
+      ],
+      "crossings": [
+        {
+          "id": "c1",
+          "sign": 1
+        },
+        {
+          "id": "c2",
+          "sign": -1
+        },
+        {
+          "id": "c3",
+          "sign": 1
+        },
+        {
+          "id": "c4",
+          "sign": -1
+        },
+        {
+          "id": "c5",
+          "sign": 1
+        },
+        {
+          "id": "c6",
+          "sign": -1
+        }
+      ],
+      "strands": {
+        "k0": [
+          [
+            "c1",
+            "o"
+          ],
+          [
+            "c2",
+            "u"
+          ],
+          [
+            "c4",
+            "o"
+          ],
+          [
+            "c5",
+            "u"
+          ]
+        ],
+        "k1": [
+          [
+            "c1",
+            "u"
+          ],
+          [
+            "c3",
+            "o"
+          ],
+          [
+            "c4",
+            "u"
+          ],
+          [
+            "c6",
+            "o"
+          ]
+        ],
+        "k2": [
+          [
+            "c2",
+            "o"
+          ],
+          [
+            "c3",
+            "u"
+          ],
+          [
+            "c5",
+            "o"
+          ],
+          [
+            "c6",
+            "u"
+          ]
+        ]
+      },
+      "source": "closure of the braid word [1, -2, 1, -2, 1, -2] on 3 strands",
+      "knownAs": "L6a4",
+      "note": "Every pair of components is unlinked; the three together are not.",
+      "expected": {
+        "crossingCount": 6,
+        "writhe": 0,
+        "jones": {
+          "-3": -1,
+          "-2": 3,
+          "-1": -2,
+          "0": 4,
+          "1": -2,
+          "2": 3,
+          "3": -1
+        },
+        "snappyIdentify": [
+          "t12067",
+          "6^3_2",
+          "L6a4",
+          "ooct02_00005"
+        ],
+        "hyperbolicVolume": 7.327724753,
+        "componentCount": 3
+      },
+      "checks": [
+        "planarity (genus of the combinatorial map)",
+        "Jones polynomial: prototype state sum == Regina",
+        "identification of the complement: SnapPy census"
+      ]
+    },
+    {
+      "id": "overhand-knot",
+      "title": "Overhand knot in an open rope",
+      "class": "open-knot",
+      "components": [
+        {
+          "id": "rope",
+          "kind": "rope",
+          "closed": false,
+          "ends": {
+            "start": {
+              "role": "standing"
+            },
+            "end": {
+              "role": "working"
+            }
+          }
+        }
+      ],
+      "crossings": [
+        {
+          "id": "c1",
+          "sign": 1
+        },
+        {
+          "id": "c2",
+          "sign": 1
+        },
+        {
+          "id": "c3",
+          "sign": 1
+        }
+      ],
+      "strands": {
+        "rope": [
+          [
+            "c1",
+            "o"
+          ],
+          [
+            "c2",
+            "u"
+          ],
+          [
+            "c3",
+            "o"
+          ],
+          [
+            "c1",
+            "u"
+          ],
+          [
+            "c2",
+            "o"
+          ],
+          [
+            "c3",
+            "u"
+          ]
+        ]
+      },
+      "source": "hand-derived; signs fixed by planarity",
+      "knownAs": "ABOK #46; closes to the trefoil",
+      "expected": {
+        "planar": true,
+        "connected": true,
+        "componentCount": 1,
+        "crossingCount": 3,
+        "writhe": 3,
+        "endsShareOneFace": true,
+        "closure": {
+          "description": "join the two ends by an arc through their common face",
+          "crossingCount": 3,
+          "writhe": 3,
+          "jones": {
+            "1": 1,
+            "3": 1,
+            "4": -1
+          },
+          "alexander": [
+            1,
+            -1,
+            1
+          ],
+          "seifertGenus": 1,
+          "fibered": true
+        }
+      },
+      "checks": [
+        "planarity with end vertices (genus of the combinatorial map)",
+        "all rope ends lie in one face",
+        "closure: planarity (genus of the combinatorial map)",
+        "closure: Jones polynomial: prototype state sum == Regina",
+        "closure: Alexander polynomial: Regina",
+        "closure: genus and fibredness: knot Floer homology"
+      ]
+    },
+    {
+      "id": "figure-eight-stopper",
+      "title": "Figure-eight knot in an open rope",
+      "class": "open-knot",
+      "components": [
+        {
+          "id": "rope",
+          "kind": "rope",
+          "closed": false,
+          "ends": {
+            "start": {
+              "role": "standing"
+            },
+            "end": {
+              "role": "working"
+            }
+          }
+        }
+      ],
+      "crossings": [
+        {
+          "id": "c1",
+          "sign": 1
+        },
+        {
+          "id": "c2",
+          "sign": 1
+        },
+        {
+          "id": "c3",
+          "sign": -1
+        },
+        {
+          "id": "c4",
+          "sign": -1
+        }
+      ],
+      "strands": {
+        "rope": [
+          [
+            "c1",
+            "o"
+          ],
+          [
+            "c2",
+            "u"
+          ],
+          [
+            "c3",
+            "o"
+          ],
+          [
+            "c4",
+            "u"
+          ],
+          [
+            "c2",
+            "o"
+          ],
+          [
+            "c1",
+            "u"
+          ],
+          [
+            "c4",
+            "o"
+          ],
+          [
+            "c3",
+            "u"
+          ]
+        ]
+      },
+      "source": "hand-derived; signs fixed by planarity",
+      "knownAs": "ABOK #520; closes to 4_1",
+      "expected": {
+        "planar": true,
+        "connected": true,
+        "componentCount": 1,
+        "crossingCount": 4,
+        "writhe": 0,
+        "endsShareOneFace": true,
+        "closure": {
+          "description": "join the two ends by an arc through their common face",
+          "crossingCount": 4,
+          "writhe": 0,
+          "jones": {
+            "-2": 1,
+            "-1": -1,
+            "0": 1,
+            "1": -1,
+            "2": 1
+          },
+          "alexander": [
+            1,
+            -3,
+            1
+          ],
+          "seifertGenus": 1,
+          "fibered": true,
+          "snappyIdentify": [
+            "m004",
+            "4_1",
+            "K2_1",
+            "K4a1",
+            "otet02_00001"
+          ],
+          "hyperbolicVolume": 2.029883213
+        }
+      },
+      "checks": [
+        "planarity with end vertices (genus of the combinatorial map)",
+        "all rope ends lie in one face",
+        "closure: planarity (genus of the combinatorial map)",
+        "closure: Jones polynomial: prototype state sum == Regina",
+        "closure: Alexander polynomial: Regina",
+        "closure: genus and fibredness: knot Floer homology",
+        "closure: identification of the complement: SnapPy census"
+      ]
+    },
+    {
+      "id": "slipped-overhand",
+      "title": "Slipped overhand knot (a bight tucked instead of the end)",
+      "class": "open-knot",
+      "components": [
+        {
+          "id": "rope",
+          "kind": "rope",
+          "closed": false,
+          "ends": {
+            "start": {
+              "role": "standing"
+            },
+            "end": {
+              "role": "working"
+            }
+          }
+        }
+      ],
+      "crossings": [
+        {
+          "id": "c1",
+          "sign": 1
+        },
+        {
+          "id": "c2",
+          "sign": 1
+        },
+        {
+          "id": "c3",
+          "sign": 1
+        },
+        {
+          "id": "c4",
+          "sign": -1
+        },
+        {
+          "id": "c5",
+          "sign": -1
+        }
+      ],
+      "strands": {
+        "rope": [
+          [
+            "c1",
+            "o"
+          ],
+          [
+            "c2",
+            "u"
+          ],
+          [
+            "c5",
+            "u"
+          ],
+          [
+            "c4",
+            "o"
+          ],
+          [
+            "c3",
+            "o"
+          ],
+          [
+            "c1",
+            "u"
+          ],
+          [
+            "c2",
+            "o"
+          ],
+          [
+            "c3",
+            "u"
+          ],
+          [
+            "c4",
+            "u"
+          ],
+          [
+            "c5",
+            "o"
+          ]
+        ]
+      },
+      "source": "hand-derived from the overhand knot by replacing the final tuck with a bight",
+      "note": "Topologically trivial with the ends held: its closure is the unknot. It is nevertheless a distinct, useful knot. Identity of practical knots cannot rest on topology alone.",
+      "expected": {
+        "planar": true,
+        "connected": true,
+        "componentCount": 1,
+        "crossingCount": 5,
+        "writhe": 1,
+        "endsShareOneFace": true,
+        "closure": {
+          "description": "join the two ends by an arc through their common face",
+          "crossingCount": 5,
+          "writhe": 1,
+          "jones": {
+            "0": 1
+          },
+          "alexander": [
+            1
+          ],
+          "seifertGenus": 0,
+          "fibered": true
+        }
+      },
+      "checks": [
+        "planarity with end vertices (genus of the combinatorial map)",
+        "all rope ends lie in one face",
+        "closure: planarity (genus of the combinatorial map)",
+        "closure: Jones polynomial: prototype state sum == Regina",
+        "closure: Alexander polynomial: Regina",
+        "closure: genus and fibredness: knot Floer homology"
+      ]
+    },
+    {
+      "id": "reef-knot",
+      "title": "Reef knot joining two ropes",
+      "class": "bend",
+      "components": [
+        {
+          "id": "a",
+          "kind": "rope",
+          "closed": false,
+          "ends": {
+            "start": {
+              "role": "standing"
+            },
+            "end": {
+              "role": "working"
+            }
+          }
+        },
+        {
+          "id": "b",
+          "kind": "rope",
+          "closed": false,
+          "ends": {
+            "start": {
+              "role": "standing"
+            },
+            "end": {
+              "role": "working"
+            }
+          }
+        }
+      ],
+      "crossings": [
+        {
+          "id": "c1",
+          "sign": 1
+        },
+        {
+          "id": "c2",
+          "sign": 1
+        },
+        {
+          "id": "c3",
+          "sign": 1
+        },
+        {
+          "id": "c4",
+          "sign": -1
+        },
+        {
+          "id": "c5",
+          "sign": -1
+        },
+        {
+          "id": "c6",
+          "sign": -1
+        }
+      ],
+      "strands": {
+        "a": [
+          [
+            "c1",
+            "o"
+          ],
+          [
+            "c2",
+            "u"
+          ],
+          [
+            "c3",
+            "o"
+          ],
+          [
+            "c4",
+            "o"
+          ],
+          [
+            "c5",
+            "u"
+          ],
+          [
+            "c6",
+            "o"
+          ]
+        ],
+        "b": [
+          [
+            "c3",
+            "u"
+          ],
+          [
+            "c2",
+            "o"
+          ],
+          [
+            "c1",
+            "u"
+          ],
+          [
+            "c6",
+            "u"
+          ],
+          [
+            "c5",
+            "o"
+          ],
+          [
+            "c4",
+            "u"
+          ]
+        ]
+      },
+      "source": "two columns of three half-twists of opposite handedness (tangle 1/3 + 1/-3)",
+      "knownAs": "ABOK #1402; closes to the square knot",
+      "expected": {
+        "planar": true,
+        "connected": true,
+        "componentCount": 2,
+        "crossingCount": 6,
+        "writhe": 0,
+        "endsShareOneFace": true,
+        "closure": {
+          "description": "join a.end to b.end and b.start to a.start through the common face (standing part to standing part, tail to tail)",
+          "crossingCount": 6,
+          "writhe": 0,
+          "jones": {
+            "-3": -1,
+            "-2": 1,
+            "-1": -1,
+            "0": 3,
+            "1": -1,
+            "2": 1,
+            "3": -1
+          },
+          "alexander": [
+            1,
+            -2,
+            3,
+            -2,
+            1
+          ],
+          "seifertGenus": 2,
+          "fibered": true
+        }
+      },
+      "checks": [
+        "planarity with end vertices (genus of the combinatorial map)",
+        "all rope ends lie in one face",
+        "closure: planarity (genus of the combinatorial map)",
+        "closure: Jones polynomial: prototype state sum == Regina",
+        "closure: Alexander polynomial: Regina",
+        "closure: genus and fibredness: knot Floer homology"
+      ]
+    },
+    {
+      "id": "thief-knot",
+      "title": "Thief knot: the reef knot diagram with the loaded ends on opposite sides",
+      "class": "bend",
+      "components": [
+        {
+          "id": "a",
+          "kind": "rope",
+          "closed": false,
+          "ends": {
+            "start": {
+              "role": "standing"
+            },
+            "end": {
+              "role": "working"
+            }
+          }
+        },
+        {
+          "id": "b",
+          "kind": "rope",
+          "closed": false,
+          "ends": {
+            "start": {
+              "role": "working"
+            },
+            "end": {
+              "role": "standing"
+            }
+          }
+        }
+      ],
+      "crossings": [
+        {
+          "id": "c1",
+          "sign": 1
+        },
+        {
+          "id": "c2",
+          "sign": 1
+        },
+        {
+          "id": "c3",
+          "sign": 1
+        },
+        {
+          "id": "c4",
+          "sign": -1
+        },
+        {
+          "id": "c5",
+          "sign": -1
+        },
+        {
+          "id": "c6",
+          "sign": -1
+        }
+      ],
+      "strands": {
+        "a": [
+          [
+            "c1",
+            "o"
+          ],
+          [
+            "c2",
+            "u"
+          ],
+          [
+            "c3",
+            "o"
+          ],
+          [
+            "c4",
+            "o"
+          ],
+          [
+            "c5",
+            "u"
+          ],
+          [
+            "c6",
+            "o"
+          ]
+        ],
+        "b": [
+          [
+            "c3",
+            "u"
+          ],
+          [
+            "c2",
+            "o"
+          ],
+          [
+            "c1",
+            "u"
+          ],
+          [
+            "c6",
+            "u"
+          ],
+          [
+            "c5",
+            "o"
+          ],
+          [
+            "c4",
+            "u"
+          ]
+        ]
+      },
+      "source": "same diagram as reef-knot; only the end roles of rope b are exchanged",
+      "knownAs": "ABOK #1207",
+      "note": "Identical crossing structure to the reef knot. Only the roles of the ends differ, so end roles are part of what a practical knot is.",
+      "expected": {
+        "planar": true,
+        "connected": true,
+        "componentCount": 2,
+        "crossingCount": 6,
+        "writhe": 0,
+        "endsShareOneFace": true
+      },
+      "checks": [
+        "planarity with end vertices (genus of the combinatorial map)",
+        "all rope ends lie in one face"
+      ]
+    },
+    {
+      "id": "granny-knot",
+      "title": "Granny knot joining two ropes",
+      "class": "bend",
+      "components": [
+        {
+          "id": "a",
+          "kind": "rope",
+          "closed": false,
+          "ends": {
+            "start": {
+              "role": "standing"
+            },
+            "end": {
+              "role": "working"
+            }
+          }
+        },
+        {
+          "id": "b",
+          "kind": "rope",
+          "closed": false,
+          "ends": {
+            "start": {
+              "role": "standing"
+            },
+            "end": {
+              "role": "working"
+            }
+          }
+        }
+      ],
+      "crossings": [
+        {
+          "id": "c1",
+          "sign": 1
+        },
+        {
+          "id": "c2",
+          "sign": 1
+        },
+        {
+          "id": "c3",
+          "sign": 1
+        },
+        {
+          "id": "c4",
+          "sign": 1
+        },
+        {
+          "id": "c5",
+          "sign": 1
+        },
+        {
+          "id": "c6",
+          "sign": 1
+        }
+      ],
+      "strands": {
+        "a": [
+          [
+            "c1",
+            "o"
+          ],
+          [
+            "c2",
+            "u"
+          ],
+          [
+            "c3",
+            "o"
+          ],
+          [
+            "c4",
+            "u"
+          ],
+          [
+            "c5",
+            "o"
+          ],
+          [
+            "c6",
+            "u"
+          ]
+        ],
+        "b": [
+          [
+            "c3",
+            "u"
+          ],
+          [
+            "c2",
+            "o"
+          ],
+          [
+            "c1",
+            "u"
+          ],
+          [
+            "c6",
+            "o"
+          ],
+          [
+            "c5",
+            "u"
+          ],
+          [
+            "c4",
+            "o"
+          ]
+        ]
+      },
+      "source": "two columns of three half-twists of the same handedness (tangle 1/3 + 1/3)",
+      "knownAs": "ABOK #1405; closes to the granny knot",
+      "expected": {
+        "planar": true,
+        "connected": true,
+        "componentCount": 2,
+        "crossingCount": 6,
+        "writhe": 6,
+        "endsShareOneFace": true,
+        "closure": {
+          "description": "join a.end to b.end and b.start to a.start through the common face (standing part to standing part, tail to tail)",
+          "crossingCount": 6,
+          "writhe": -6,
+          "jones": {
+            "-8": 1,
+            "-7": -2,
+            "-6": 1,
+            "-5": -2,
+            "-4": 2,
+            "-2": 1
+          },
+          "alexander": [
+            1,
+            -2,
+            3,
+            -2,
+            1
+          ],
+          "seifertGenus": 2,
+          "fibered": true
+        }
+      },
+      "checks": [
+        "planarity with end vertices (genus of the combinatorial map)",
+        "all rope ends lie in one face",
+        "closure: planarity (genus of the combinatorial map)",
+        "closure: Jones polynomial: prototype state sum == Regina",
+        "closure: Alexander polynomial: Regina",
+        "closure: genus and fibredness: knot Floer homology"
+      ]
+    },
+    {
+      "id": "clove-hitch-on-pole",
+      "title": "Clove hitch on a pole",
+      "class": "hitch",
+      "components": [
+        {
+          "id": "rope",
+          "kind": "rope",
+          "closed": false,
+          "ends": {
+            "start": {
+              "role": "standing"
+            },
+            "end": {
+              "role": "working"
+            }
+          }
+        },
+        {
+          "id": "pole",
+          "kind": "rigid",
+          "shape": "pole",
+          "closed": false,
+          "ends": {
+            "start": {
+              "role": "blocked"
+            },
+            "end": {
+              "role": "blocked"
+            }
+          }
+        }
+      ],
+      "crossings": [
+        {
+          "id": "d1",
+          "sign": -1
+        },
+        {
+          "id": "p1",
+          "sign": 1
+        },
+        {
+          "id": "p2",
+          "sign": 1
+        },
+        {
+          "id": "p3",
+          "sign": 1
+        },
+        {
+          "id": "d2",
+          "sign": -1
+        },
+        {
+          "id": "p4",
+          "sign": 1
+        },
+        {
+          "id": "p5",
+          "sign": 1
+        }
+      ],
+      "strands": {
+        "rope": [
+          [
+            "d1",
+            "u"
+          ],
+          [
+            "p1",
+            "o"
+          ],
+          [
+            "p2",
+            "u"
+          ],
+          [
+            "d1",
+            "o"
+          ],
+          [
+            "p3",
+            "o"
+          ],
+          [
+            "d2",
+            "o"
+          ],
+          [
+            "p4",
+            "u"
+          ],
+          [
+            "p5",
+            "o"
+          ],
+          [
+            "d2",
+            "u"
+          ]
+        ],
+        "pole": [
+          [
+            "p2",
+            "o"
+          ],
+          [
+            "p1",
+            "u"
+          ],
+          [
+            "p3",
+            "u"
+          ],
+          [
+            "p5",
+            "u"
+          ],
+          [
+            "p4",
+            "o"
+          ]
+        ]
+      },
+      "source": "hand-derived from an explicit planar layout; signs computed from the tangent directions",
+      "knownAs": "ABOK #1245",
+      "note": "Delete the pole and the rope has only two removable kinks: the hitch has no existence without its object. Objects must be part of the topological description.",
+      "expected": {
+        "planar": true,
+        "connected": true,
+        "componentCount": 2,
+        "crossingCount": 7,
+        "writhe": 3,
+        "endsShareOneFace": true,
+        "ropeObjectCrossingSignSum": {
+          "rope|pole": 5
+        },
+        "ropeAloneClosureJones": {
+          "0": 1
+        }
+      },
+      "checks": [
+        "planarity with end vertices (genus of the combinatorial map)",
+        "all rope ends lie in one face"
+      ]
+    }
+  ]
+}
