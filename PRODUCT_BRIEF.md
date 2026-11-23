@@ -4,7 +4,7 @@ Draft, discovery in progress. Decisions are recorded here as the Product Owner t
 
 ## What it is
 
-IdontKnot is an interactive knot encyclopedia and an experimental laboratory. It has three complementary sides:
+IDontKnot is an interactive knot encyclopedia and an experimental laboratory. It has three complementary sides:
 
 - **Explore**: discover, inspect and compare knots and rope structures.
 - **Experiment**: manipulate rope, explore mathematical representations, create new configurations.
@@ -31,6 +31,11 @@ Its differentiator is that the system reasons about knots through a mathematical
 | 2026-11-23 | Repository | Public. This reverses the initial plan of a private repository. |
 | 2026-11-23 | CI | GitHub-hosted runners. No self-hosted runner. |
 | 2026-11-23 | Licence | AGPL-3.0-only for all code, as in Nevus. |
+| 2026-11-23 | Devices | Desktop and tablet are equal first-class targets: mouse and touch are both designed for from the start. A tablet propped beside a real rope is the typical learning setup. Phones work, with simplified manipulation. |
+| 2026-11-23 | Editor | Opens to users after the tutorials. It exists earlier as an internal authoring tool for library content. The first release can save, import and export configurations, not draw them from scratch. |
+| 2026-11-23 | First content | Few and complete: about a dozen essential knots spread over the six disciplines, each with every layer (3D view, diagram, guided tutorial, uses, limits, sources). |
+| 2026-11-23 | Name | The product is written **IDontKnot**. |
+| 2026-11-23 | Logo brief | The mark should integrate the initials IDK as `:DK`: the I split into two segments like a colon. Read vertically, as an emoticon, it is a happy person (eyes, smile) with hands together as if tying a knot. |
 
 ## Open decisions
 
