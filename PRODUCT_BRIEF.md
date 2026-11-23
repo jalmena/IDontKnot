@@ -36,11 +36,13 @@ Its differentiator is that the system reasons about knots through a mathematical
 | 2026-11-23 | First content | Few and complete: about a dozen essential knots spread over the six disciplines, each with every layer (3D view, diagram, guided tutorial, uses, limits, sources). |
 | 2026-11-23 | Name | The product is written **IDontKnot**. |
 | 2026-11-23 | Logo brief | The mark should integrate the initials IDK as `:DK`: the I split into two segments like a colon. Read vertically, as an emoticon, it is a happy person (eyes, smile) with hands together as if tying a knot. |
+| 2026-11-24 | Brand identity | Mark: the `:DK` figure in rope-weight strokes with flat ends, a hand on each side of the knot. Typeface: Bitter. Colours: a near-black forest green, ivory and a satin gold, with flat gold at small sizes and in the interface. Detailed in `docs/design/brand/README.md`. |
+| 2026-11-24 | Reviewing alternatives | Alternatives are shown and chosen locally. Only the chosen result and a short record of the decision go into the repository. |
 
 ## Open decisions
 
 - Licence of the content: texts and illustrations.
-- Visual identity: logo, typography, palettes, and how themes change by discipline.
+- Visual identity, remaining: a variant for light surfaces, themes by discipline, iconography and motion.
 - 3D interaction details, editor capabilities, content organisation and the first set of knots.
 - Technology stack.
 - App store integration: name, identifier, port, category, store card.
