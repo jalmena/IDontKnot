@@ -1,290 +1,77 @@
 # Brand identity
 
-Three rounds so far. Each round's outcome is recorded at the end of its section. Round 1 chose the direction of the mark, round 2 the typeface and the colour family. Round 3 is open.
+![IDontKnot](svg/lockup-satin.svg)
 
-## Round 1: three directions for the mark
+## The mark
 
-Status: closed. Direction A was chosen; the palettes and typefaces shown here were declined.
-
-### Brief
-
-- **It must communicate:** hands, knot, delight.
-- **It must never suggest:** a children's game (the product has no gamification); danger or alarm; one discipline above the others (no anchor, no carabiner); anything sexual.
-- **Where it lives:** a 16 px favicon, an app icon, a store card, the README header, a dark interface header. Every candidate has to survive the smallest of these.
-- **Fixed decisions:** the product is written IDontKnot. The mark integrates the initials IDK as `:DK`, with the I split into two segments.
-- **The Product Owner's words:** "me gustaría que el logo integrase las iniciales IDK (:DK, (dividiendo la I en dos segmentos) en vertical estilo emoticono parece una persona feliz con las manos juntas como si estuviera tejiendo un nudo)".
-- **Declined in earlier rounds:** none. This is the first round.
-
-### The idea
-
-All three directions share one skeleton, drawn on a 256-unit grid:
+The mark is the initials IDK written as `:DK`, with the I split into two segments. The idea is the Product Owner's.
 
 | Letter | Shape | Upright, it is |
 | --- | --- | --- |
-| I, split in two | two short segments | the eyes |
+| I, split in two | two short bars | the eyes |
 | D | a half disc, flat side up | the smile |
-| K | a bar and two diagonals meeting at its middle | a rope, and two arms with the hands together on it |
+| K | a bar and two diagonals | a rope, and an arm reaching it on each side of a knot |
 
-Upright it is a figure. Turned a quarter turn anticlockwise it reads `:DK`. The directions differ in character, not in idea, because the idea was given.
+Upright it is a happy figure tying a knot. Turned a quarter turn anticlockwise it reads `:DK`.
 
-![Marks, upright and turned](boards/board-marks.png)
+It is drawn on a 256-unit grid with one stroke weight and flat ends, and is exactly symmetric about its vertical axis. It keeps eyes, smile, knot and arms at 16 px.
 
-| | Direction | What it is | Strength | Weakness |
-| --- | --- | --- | --- | --- |
-| A | The person | Strokes as thick as a rope, round ends. One coloured bead where the hands meet: the knot. | The friendliest. Reads at 16 px. Symmetric. | The bar, arms and bead can also be read as a bow tie. A bow tie is a knot, so the reading is not wrong, but it is not the one asked for. |
-| B | The diagram | A thin line. At the joint of the K the rope passes through a ring, over on one side and under on the other, drawn with the gaps a knot diagram uses. | The only one that speaks the language of knot diagrams. | Disappears below 32 px, so it needs A's form as a small-size glyph. Deliberately not symmetric at the ring. |
-| C | The seal | Solid shapes cut out of a rounded block. No line work. | The strongest at small sizes and as an app icon. Symmetric. | The least hand-made. Reads as a face more than as someone tying. |
+![App icon](svg/icon.svg)
 
-### On dark, and in one colour
+## Decisions
 
-![Marks on dark](boards/board-marks-dark.png)
+All taken by the Product Owner, 2026-11-23 and 2026-11-24.
 
-![Marks in one colour](boards/board-mono.png)
+| Topic | Decision |
+| --- | --- |
+| Name | Written IDontKnot |
+| Concept | The initials as `:DK`, read upright as a person with the hands together on a knot |
+| Drawing | A figure in rope-weight strokes, each hand reaching the rope beside the knot, with flat ends to sit beside the typeface |
+| Typeface | Bitter, a slab serif. Chosen because serifs give each letter more stroke junctions, which suits the subject: the I becomes the section of an I-beam |
+| Colour | A near-black forest green, ivory, and a satin gold, taken from a reference image supplied by the Product Owner |
+| Treatment | Ivory for the figure and the letters. Gold for the knot and for the initials I, D and K. A soft sheen on the gold at large sizes; flat gold at small sizes and in the interface |
 
-### At real sizes
+## Colour
 
-Each mark at 16, 24, 32 and 48 px, at real size and enlarged eight times.
-
-![Size test](boards/board-sizes.png)
-
-A keeps eyes, smile, bead and arms at 16 px. B loses its line at 16 and 24 px. C holds its face at every size; the K below the smile blurs at 16 px.
-
-### Wordmark
-
-Five typefaces, all under the SIL Open Font License, set with real shaping and normalised to one cap height. The three initials take the accent colour.
-
-![Wordmarks](boards/board-wordmarks.png)
-
-| Typeface | Character | Note |
-| --- | --- | --- |
-| Outfit | Geometric, open, friendly | Round forms echo the mark's round ends |
-| Space Grotesk | Technical, slightly eccentric | Its capital I has slab serifs and collided with the D; the pair was opened by 45 thousandths of an em |
-| IBM Plex Sans | Engineered | The serifed capital I cannot be mistaken for a lowercase l |
-| Inter Display | Neutral | The safest, and the least distinctive |
-| Fraunces | Bookish serif | The encyclopedia side of the product |
-
-At text sizes, because the wordmark face usually becomes the interface face:
-
-![Type specimens](boards/board-type.png)
-
-Font files are not in the repository yet. They will be added, with their licences, for the face that is chosen.
-
-### Colour
-
-Three base palettes, each with a light and a dark paper. Discipline themes are a later round and would sit on top of the chosen base.
-
-![Palettes](boards/board-palettes.png)
-
-| Palette | Role | Light | Dark | Contrast on its paper, light / dark |
-| --- | --- | --- | --- | --- |
-| 1 Hemp and tar | paper | `#F3EDE2` | `#1A1714` | |
-| | ink | `#221E1A` | `#EFE7DA` | 14.2 / 14.5 |
-| | accent | `#B8431F` | `#EC7A50` | 4.7 / 6.4 |
-| 2 Ink and chart | paper | `#F4F5F2` | `#0F1522` | |
-| | ink | `#121A2B` | `#E8ECF4` | 15.9 / 15.4 |
-| | accent | `#2450C8` | `#7C9DFF` | 6.3 / 7.1 |
-| 3 Slate and brass | paper | `#F1F0EA` | `#151917` | |
-| | ink | `#1D2320` | `#ECEAE2` | 14.0 / 14.7 |
-| | accent | `#7A5C0A` | `#DDB85C` | 5.5 / 9.4 |
-
-Every pair passes WCAG AA for body text (4.5:1).
-
-### Mark and name together
-
-Examples only, to show scale and feel. The pairing of mark and typeface is open.
-
-![Lockups](boards/board-lockups.png)
-
-### What was checked
-
-- Drawn on the 256 grid, one stroke weight per mark, consistent ends and joins.
-- A and C are exactly symmetric about the vertical axis (0 differing pixels when mirrored). B is not, by design: over on one side, under on the other.
-- Rendered at 16, 24, 32 and 48 px.
-- Dark variants exist; every accent keeps more than 3:1 on its dark paper.
-- Wordmarks shaped with HarfBuzz; the pairs around the capitals were inspected and one was adjusted.
-- Text contrast computed for every palette.
-
-### Not in this round
-
-Final lockups with clear space and minimum sizes; favicon and app-icon files; a small-size glyph for B; discipline themes; iconography; motion; font files.
-
-### Files
-
-- `sources/make_marks.py` generates every mark and palette card. Changing a parameter and rerunning it is how the next round is made.
-- `svg/` holds the marks (light, dark, one colour, turned, without background), the wordmarks, the example lockups and the palette cards.
-- `boards/` holds the rendered boards shown above.
-
-### Decision asked
-
-Which direction is developed in round 2?
-
-- **A, the person** (suggested default)
-- B, the diagram
-- C, the seal
-- A combination, for example A as the mark with B's ring as a detail at large sizes
-
-### Outcome of round 1 (Product Owner, 2026-11-23)
-
-- **Direction:** A, the person. B and C are declined.
-- **Colour:** none of the three palettes. The brand should lean towards a jewel teal (blue-green) gradient, with a gold and a white. The three palettes above are declined.
-- **Typeface:** none of the five as shown. The wish is a face in which every letter has as many crossings as possible, to speak of knots: the I should not be a stick but the cross-section of an I-beam. The plain sans faces (Outfit, Space Grotesk, Inter Display) are declined for the wordmark.
-
-## Round 2: direction A in jewel teal and gold
-
-Status: closed. This round changed three things, each in answer to round 1: the colour, the joint where the hands meet, and the typeface.
-
-### Colour
-
-The Product Owner pointed to a reference image by link. The link refused automated access, so the palette below was built from its description (a teal, jewel-toned gradient, with gold and white) and has not been compared with the image itself.
-
-![Jewel palette](boards/board-r2-palette.png)
-
-| Token | Value | Use | Contrast |
+| Token | Value | Use | Contrast on green |
 | --- | --- | --- | --- |
-| teal deep | `#063640` | Darkest surface, start of the gradient; text on light paper | white on it 13.1 |
-| teal | `#0B5560` | The brand surface | white on it 8.5; gold on it 4.8 |
-| teal bright | `#0E6F76` | Raised surfaces | white on it 5.9; gold on it 3.3 (large text and graphics only) |
-| jewel | `#15908C` | End of the gradient, decoration | white on it 3.9 (large text and graphics only) |
-| gold | `#E6BE5A` | The accent on teal: the knot, the initials | 7.4 on teal deep |
-| gold dark | `#8C6710` | The accent as text on light paper | 4.9 on paper |
-| white | `#FFFFFF` | Ink on teal | |
-| paper | `#F5FAF9` | Light surface | teal on it 8.0 |
+| green edge | `#05140B` | Darkest surface; outer edge of the vignette | |
+| green | `#0B2315` | The brand surface | |
+| green glow | `#123524` | Centre of the vignette; raised surfaces | |
+| ivory | `#F3EAD3` | Ink on green | 13.9 |
+| gold | `#C9A867` | The accent, flat | 7.3 |
+| satin gold | `#C9A867` `#EAD2A0` `#D2B47C` `#E3CB98` `#C4A577` | The accent as a soft sheen | Large graphics only |
 
-The gradient runs from teal deep at the lower left to jewel at the upper right. Body text never sits on the bright end of it.
+Ivory and flat gold both pass WCAG AA for body text on the green.
 
-### The joint
+## Rules of use
 
-Round 1 noted that the bar, the arms and the bead can be read as a bow tie. Three treatments of that one spot, everything else unchanged:
+- The knot and the three initials are the only gold elements.
+- Use the satin versions for large display: a header, a splash screen, a store card. Use the flat versions for the favicon, the interface and anything below about 64 px.
+- Do not put the mark on a light surface yet: a light variant has not been designed.
+- Do not redraw or re-space the wordmark. Its letters are outlines with the typeface's own kerning.
 
-![Round 2 marks](boards/board-r2-marks.png)
+## Files
 
-| | Variation | What changed | Effect |
-| --- | --- | --- | --- |
-| A1 | Bead | Nothing: round 1, recoloured | The reference. The bow-tie reading remains. |
-| A2 | Hands apart | Each arm reaches the rope beside the knot, not at one point | Reads as two hands holding a rope with a knot between them. Turned, the K is still a K. |
-| A3 | Ring | The bead becomes a gold ring around the joint | Reads as an eye or a ring more than as a knot. The ring loses its hole below 32 px. |
+| File | Contents |
+| --- | --- |
+| `svg/mark.svg`, `svg/mark-satin.svg` | The mark for green surfaces, flat and with sheen, no background |
+| `svg/mark-one-colour.svg` | The mark in a single colour |
+| `svg/icon.svg`, `svg/icon-satin.svg` | The app icon: the mark on a rounded green block |
+| `svg/wordmark.svg`, `svg/wordmark-satin.svg` | The name, no background |
+| `svg/lockup.svg`, `svg/lockup-satin.svg` | Mark and name together on green |
+| `sources/make_brand.py` | Generates the marks and icons. Change a parameter and rerun it; do not edit the SVG files by hand. |
 
-![Round 2 size test](boards/board-r2-sizes.png)
+The wordmark is Bitter at weight 700, shaped with HarfBuzz, tracked by −0.005 em, and converted to outlines. Bitter is under the SIL Open Font License. Its font files will be added, with the licence, when the interface is built.
 
-All three keep eyes, smile, knot and arms at 16 px on teal.
+## Considered and declined
 
-### Typeface: counting junctions
+Kept as a note so that these are not proposed again. The explorations themselves were reviewed locally and are not in the repository.
 
-To make "as many crossings as possible" something that can be compared, each letter of the name was rendered large, thinned to its skeleton, and the points where three or more strokes meet were counted. The script is `sources/count_junctions.py`. It is a proxy: it depends on rendering size and on how short a spur is ignored.
+- **Other drawings of the same idea:** a thin-line version with the rope threaded through a ring, like a knot diagram (vanished below 32 px); a solid seal; versions built from the typeface's own letters (read as letters lying down, and blurred at small sizes); round ends; slab serifs on the figure.
+- **Other colours:** a warm hemp and terracotta; a navy and ultramarine; a slate and brass; a jewel teal and its greener steps; navy blue with red.
+- **Other typefaces:** plain sans faces, which have a third of the stroke junctions; other slab serifs, which differ little from Bitter in that respect.
 
-| Typeface | Total in "IDontKnot" | I | D | o | n | t | K |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| IBM Plex Serif | 22 | 2 | 2 | 0 | 4 | 2 | 6 |
-| Fraunces | 22 | 2 | 2 | 0 | 4 | 2 | 6 |
-| Zilla Slab | 20 | 2 | 2 | 0 | 3 | 2 | 6 |
-| Rokkitt | 20 | 2 | 2 | 0 | 3 | 2 | 6 |
-| Bitter | 20 | 2 | 2 | 0 | 4 | 1 | 6 |
-| Besley | 20 | 2 | 2 | 0 | 3 | 2 | 6 |
-| Courier Prime | 19 | 2 | 2 | 0 | 3 | 2 | 5 |
-| Alfa Slab One | 19 | 2 | 2 | 0 | 3 | 2 | 5 |
-| Josefin Slab | 18 | 2 | 2 | 0 | 3 | 1 | 6 |
-| Space Mono | 10 | 2 | 2 | 0 | 1 | 1 | 2 |
-| IBM Plex Sans | 8 | 2 | 0 | 0 | 1 | 1 | 2 |
-| Outfit | 6 | 0 | 0 | 0 | 1 | 1 | 2 |
-| Inter Display | 6 | 0 | 0 | 0 | 1 | 1 | 2 |
-| Fredericka the Great | 424 | 41 | 73 | 39 | 46 | 32 | 76 |
+## Still to do
 
-What the numbers say:
-
-- Any face with serifs or slabs triples the count of a sans. The I becomes an I-beam (2) and the K gains the most (6).
-- Among serifed faces the differences are small, so the choice between them is about character and about how the face works as interface text, not about the count.
-- **The letter o scores 0 in every conventional typeface.** A loop has no junction. Giving the two o's a crossing would need a drawn letter, for example an o made as a loop of rope whose ends cross. That would be custom lettering, and is offered below as an option.
-- Sketched faces score in the hundreds because their hatching crosses itself. That is the literal maximum, and a different look altogether.
-
-![Round 2 wordmarks](boards/board-r2-wordmarks.png)
-
-| Typeface | Character | As interface text |
-| --- | --- | --- |
-| IBM Plex Serif | Engineered, sharp slabs | Belongs to a family with a sans and a monospace, useful for notation |
-| Zilla Slab | Friendly, sturdy | Good on screen; no monospace companion |
-| Rokkitt | Geometric, wide | Display first; lighter weights are thin for long text |
-| Bitter | Made for reading on screens | The most comfortable for long articles |
-| Fredericka the Great | Chalk sketch | Display only |
-
-All are under the SIL Open Font License.
-
-### Mark and name together
-
-Examples, using A2. The pairing is open.
-
-![Round 2 lockups](boards/board-r2-lockups.png)
-
-### What was checked in round 2
-
-- Every variation is exactly symmetric about the vertical axis.
-- Rendered at 16, 24, 32 and 48 px on teal.
-- Contrast computed for every pair in the token table.
-- Wordmarks shaped with HarfBuzz at one cap height.
-
-### Not in this round
-
-A light-first variant of the palette; discipline themes; final lockup rules; favicon and app-icon files; iconography; motion; font files; custom lettering.
-
-### Decisions asked
-
-1. The joint: A1 bead, **A2 hands apart** (suggested), or A3 ring.
-2. The typeface for the name: IBM Plex Serif, Zilla Slab, Rokkitt, Bitter, or custom lettering drawn for the name.
-3. Whether the teal, gold and white match what was intended.
-
-### Outcome of round 2 (Product Owner, 2026-11-23)
-
-- **Joint:** A2, hands apart, in principle. Before settling, the Product Owner wants to see the mark made with the chosen typeface, so that mark and name are coherent.
-- **Typeface:** Bitter.
-- **Colour:** greener.
-
-## Round 3: the mark and the typeface together, in green
-
-Status: proposals. Two questions: how far the mark should take on the typeface, and how green the green should be.
-
-### How much of the typeface goes into the mark
-
-Five versions of the same figure, from none of the typeface to all of it. The name beside them is Bitter Bold in every case.
-
-![Round 3 marks](boards/board-r3-marks.png)
-
-| | Version | What it is | What it gains | What it loses |
-| --- | --- | --- | --- | --- |
-| R | Rope, round ends | A2 from round 2, unchanged | The friendliest figure. Contrast with the slab name: a soft symbol beside a firm word. | Shares nothing with the typeface except weight. |
-| F | Rope, flat ends | A2 with one change: flat ends and sharp corners, like the typeface's terminals | Sits naturally beside Bitter and keeps the figure. | A little less soft. |
-| S | With slab serifs | A2 redrawn with slabs on the D, on the K's stem and at the end of each arm | The closest a drawn figure gets to the typeface. | Heavy. The arms read as legs with boots. |
-| T1 | Bitter `:` `D` `K` | The font's own colon, D and K, turned upright | Complete coherence: it is the typeface. | Reads as letters lying on their side more than as a person. Narrow, so it looks small beside the name. Not symmetric. |
-| T2 | Bitter split I | The font's I cut in two, with its D and K | Shows the I-beam the brief asked for. | The eyes become two T shapes. The same narrowness. |
-
-![Round 3 lockups](boards/board-r3-lockups.png)
-
-![Round 3 size test](boards/board-r3-sizes.png)
-
-R, F and S keep their parts at 16 px. T1 and T2 blur at 16 and 24 px: serif strokes are thin, and the figure is narrow.
-
-### How green
-
-Three steps of hue. The lightness of every surface was recomputed so that white text has exactly the same contrast on each as in round 2 (13.1, 8.5, 5.9 and 3.9), so the three differ in colour only.
-
-![Round 3 palettes](boards/board-r3-palettes.png)
-
-| Step | deep | base | bright | jewel |
-| --- | --- | --- | --- | --- |
-| Round 2, teal (hue 188) | `#07363E` | `#0B5560` | `#0E6E7D` | `#128EA1` |
-| Green teal (hue 172) | `#063831` | `#0A574D` | `#0D7163` | `#109180` |
-| Emerald (hue 160) | `#063828` | `#0A583E` | `#0D7250` | `#109367` |
-
-Gold `#E6BE5A` keeps 4.8 on every base and 7.4 on every deep. The boards in this round use emerald.
-
-### What was checked in round 3
-
-- R, F and S are exactly symmetric about the vertical axis. T1 and T2 are not, because the letters are not.
-- Rendered at 16, 24, 32 and 48 px on the green base.
-- Contrast recomputed for each hue.
-- The typographic versions use the font's real outlines at weight 700, not a redrawing.
-
-`sources/make_round3.py` needs the Bitter variable font as its first argument. The font is under the SIL Open Font License and will be added to the repository, with its licence, when the identity is settled.
-
-### Decisions asked
-
-1. The mark: R, **F** (suggested), S, or one of the typographic versions.
-2. The green: teal, green teal, or **emerald** (used in this round's boards).
+A variant for light surfaces; favicon and app-icon files in the sizes each platform needs; clear-space and minimum-size rules; themes by discipline; iconography; motion.
