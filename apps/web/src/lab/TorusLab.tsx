@@ -10,6 +10,7 @@ import {
 } from '@idontknot/core';
 import { useId, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Diagram2D } from '../diagram/Diagram2D.tsx';
 import { RopeView } from '../viewer/RopeView.tsx';
 import { ROPE_MATERIAL_IDS, ropeColour, type RopeMaterialId } from '../viewer/materials.ts';
 import type { RopeSpec } from '../viewer/RopeViewport.ts';
@@ -91,10 +92,11 @@ export function TorusLab() {
   );
   const facts = useMemo(() => {
     if (tooLarge) return null;
-    const { diagram } = diagramFromGeometry(curves);
+    const { diagram, visits } = diagramFromGeometry(curves);
     const word = torusBraidWord(p, q);
     return {
       diagram,
+      visits,
       word,
       planar: embed(diagram).genus === 0,
       writhe: writhe(diagram),
@@ -166,6 +168,17 @@ export function TorusLab() {
           </p>
         )}
         {tooLarge && <p className="lab__message">{t('lab.tooLarge', { count: crossingCount, max: MAX_CROSSINGS })}</p>}
+        {facts && (
+          <figure className="lab__diagram">
+            <Diagram2D
+              curves={curves}
+              visits={facts.visits}
+              colours={curves.map((_, index) => ropeColour(material, index))}
+              label={t('lab.diagram.label', { count: facts.diagram.crossings.length })}
+            />
+            <figcaption>{t('lab.diagram.caption')}</figcaption>
+          </figure>
+        )}
         {facts && (
           <dl>
             {tableName && (

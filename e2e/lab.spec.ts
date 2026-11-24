@@ -75,6 +75,16 @@ test('lists the ropes in alphabetical order of the language in use', async ({ pa
   ]);
 });
 
+test('draws the knot diagram, broken where the rope passes under', async ({ page }) => {
+  const diagram = page.getByTestId('diagram');
+  await expect(diagram).toBeVisible();
+  await expect(diagram.locator('polyline')).toHaveCount(3);
+  await expect(diagram.locator('text')).toHaveText(['1', '2', '3']);
+
+  await page.getByLabel('Passes through the hole (q)').fill('5');
+  await expect(diagram.locator('polyline')).toHaveCount(5);
+});
+
 test('recomputes when the knot changes', async ({ page }) => {
   await page.getByLabel('Passes through the hole (q)').fill('5');
   await expect(page.getByTestId('q-value')).toHaveText('5');
