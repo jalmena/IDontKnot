@@ -11,14 +11,12 @@ import {
 import { useId, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { RopeView } from '../viewer/RopeView.tsx';
+import { ROPE_MATERIAL_IDS, ropeColour, type RopeMaterialId } from '../viewer/materials.ts';
 import type { RopeSpec } from '../viewer/RopeViewport.ts';
 import { magnitude, polynomialText, terms } from './format.ts';
 
 /** The state sum doubles with every crossing; this keeps the page instant. */
 const MAX_CROSSINGS = 14;
-
-/** One colour per loop of rope, so that the loops of a link can be told apart. */
-const ROPE_COLOURS = ['#f3ead3', '#d9b56c', '#a9c9b4', '#dba183', '#b4c2da'] as const;
 
 /** Names of torus knots in the standard tables. Identifiers, so they are not translated. */
 const TABLE_NAMES: Readonly<Record<string, string>> = {
@@ -61,6 +59,8 @@ export function TorusLab() {
   const { t } = useTranslation();
   const [p, setP] = useState(2);
   const [q, setQ] = useState(3);
+  const [material, setMaterial] = useState<RopeMaterialId>('jute');
+  const ropeId = useId();
   const pId = useId();
   const qId = useId();
 
@@ -75,9 +75,10 @@ export function TorusLab() {
         points: curve.points,
         closed: true,
         radius: p >= 4 ? 0.13 : 0.17,
-        color: ROPE_COLOURS[index % ROPE_COLOURS.length] as string,
+        material,
+        index,
       })),
-    [curves, p],
+    [curves, p, material],
   );
   const facts = useMemo(() => {
     if (tooLarge) return null;
@@ -132,6 +133,20 @@ export function TorusLab() {
           <output htmlFor={qId} data-testid="q-value">
             {q}
           </output>
+          <label htmlFor={ropeId}>{t('lab.rope')}</label>
+          <select
+            id={ropeId}
+            className="lab__rope"
+            value={material}
+            onChange={(event) => setMaterial(event.target.value as RopeMaterialId)}
+          >
+            {ROPE_MATERIAL_IDS.map((id) => (
+              <option key={id} value={id}>
+                {t(`lab.ropes.${id}`)}
+              </option>
+            ))}
+          </select>
+          <p className="lab__note">{t('lab.ropeNote')}</p>
         </form>
       </div>
 
@@ -168,11 +183,7 @@ export function TorusLab() {
             <dd className="code">
               {facts.diagram.components.map((component, index) => (
                 <span key={component.id} className="code__line">
-                  <span
-                    className="swatch"
-                    style={{ background: ROPE_COLOURS[index % ROPE_COLOURS.length] }}
-                    aria-hidden="true"
-                  />
+                  <span className="swatch" style={{ background: ropeColour(material, index) }} aria-hidden="true" />
                   {strandOf(facts.diagram, component.id)
                     .map(([crossing, pass]) => `${crossing.slice(1)}${pass}`)
                     .join(' ')}

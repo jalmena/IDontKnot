@@ -1,6 +1,16 @@
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { RopeViewport, type RopeSpec } from './RopeViewport.ts';
+import { RopeViewport, type Detail, type RopeSpec } from './RopeViewport.ts';
+
+/**
+ * Full detail for people. A browser driven by a test gets the plain drawing, because without a graphics card
+ * the full one takes seconds per frame. Either can be asked for with ?rope=full or ?rope=plain.
+ */
+function chosenDetail(): Detail {
+  const asked = new URLSearchParams(window.location.search).get('rope');
+  if (asked === 'full' || asked === 'plain') return asked;
+  return navigator.webdriver ? 'plain' : 'full';
+}
 
 interface Props {
   readonly ropes: readonly RopeSpec[];
@@ -18,7 +28,7 @@ export function RopeView({ ropes, label }: Props) {
   useEffect(() => {
     if (!host.current) return;
     try {
-      viewport.current = new RopeViewport(host.current);
+      viewport.current = new RopeViewport(host.current, chosenDetail());
     } catch {
       setUnavailable(true);
     }

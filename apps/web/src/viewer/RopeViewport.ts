@@ -3,9 +3,12 @@
  * It renders on demand (when the ropes, the camera or the size change), not in a continuous loop.
  * It computes no topology: that is the core's work.
  *
- * Each rope is drawn twice. Once as laid rope: three strands, with a texture of fibres that follows them.
- * And once, slightly larger and inside out, in a dark colour: that leaves a thin dark edge wherever a rope
- * passes in front of something, which is what makes over and under readable.
+ * Each rope is drawn twice. Once in its material: laid, braided or smooth, with its texture. And once,
+ * slightly larger and inside out, in a dark colour: that leaves a thin dark edge wherever a rope passes
+ * in front of something, which is what makes over and under readable.
+ *
+ * In "plain" detail the ropes are smooth tubes with few vertices and no texture. Automated tests use it:
+ * without a graphics card the full drawing takes seconds per frame.
  */
 
 import type { Point3 } from '@idontknot/core';
@@ -13,7 +16,7 @@ import {
   BackSide,
   BufferAttribute,
   BufferGeometry,
-  CanvasTexture,
+  type CanvasTexture,
   DirectionalLight,
   Group,
   HemisphereLight,
@@ -21,80 +24,27 @@ import {
   MeshBasicMaterial,
   MeshStandardMaterial,
   PerspectiveCamera,
-  RepeatWrapping,
   Scene,
-  SRGBColorSpace,
   WebGLRenderer,
 } from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { ROPE_MATERIALS, ropeColour, type RopeMaterialId } from './materials.ts';
+import { textureFor } from './textures.ts';
 import { buildTube, curveLength, resample, type TubeData } from './tube.ts';
+
+export type Detail = 'full' | 'plain';
 
 export interface RopeSpec {
   readonly points: readonly Point3[];
   readonly closed: boolean;
   readonly radius: number;
-  /** A CSS colour. */
-  readonly color: string;
+  readonly material: RopeMaterialId;
+  /** Which loop this is, counting from 0: it selects the colour within the material. */
+  readonly index: number;
 }
 
 const EDGE_COLOUR = 0x030d07;
 const MAX_ROWS = 1600;
-
-/** One strand's worth of fibres: yarns slanting across the strand, darker towards the grooves on either side. */
-function fibreTexture(): CanvasTexture {
-  const size = 256;
-  const canvas = document.createElement('canvas');
-  canvas.width = size;
-  canvas.height = size;
-  const context = canvas.getContext('2d');
-  if (context) {
-    context.fillStyle = '#f4f1ea';
-    context.fillRect(0, 0, size, size);
-    // yarns: they slant the opposite way to the strands, and repeat exactly so that the texture tiles
-    const yarns = 9;
-    for (let k = -yarns; k < 2 * yarns; k++) {
-      const offset = (k / yarns) * size;
-      for (const [width, colour] of [
-        [7, 'rgba(92, 70, 38, 0.30)'],
-        [2, 'rgba(48, 34, 16, 0.38)'],
-      ] as const) {
-        context.strokeStyle = colour;
-        context.lineWidth = width;
-        context.beginPath();
-        context.moveTo(-8, offset + 8);
-        context.lineTo(size + 8, offset - size - 8);
-        context.stroke();
-      }
-    }
-    // loose fibres
-    let seed = 7;
-    const random = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
-    for (let i = 0; i < 520; i++) {
-      const x = random() * size;
-      const y = random() * size;
-      const reach = 6 + random() * 16;
-      context.strokeStyle = random() < 0.5 ? 'rgba(255, 255, 255, 0.28)' : 'rgba(70, 50, 24, 0.22)';
-      context.lineWidth = 1;
-      context.beginPath();
-      context.moveTo(x, y);
-      context.lineTo(x + reach, y - reach * (0.8 + random() * 0.4));
-      context.stroke();
-    }
-    // shade towards the grooves between strands, at the top and bottom of the tile
-    const shade = context.createLinearGradient(0, 0, 0, size);
-    shade.addColorStop(0, 'rgba(20, 14, 6, 0.55)');
-    shade.addColorStop(0.2, 'rgba(20, 14, 6, 0)');
-    shade.addColorStop(0.8, 'rgba(20, 14, 6, 0)');
-    shade.addColorStop(1, 'rgba(20, 14, 6, 0.55)');
-    context.fillStyle = shade;
-    context.fillRect(0, 0, size, size);
-  }
-  const texture = new CanvasTexture(canvas);
-  texture.wrapS = RepeatWrapping;
-  texture.wrapT = RepeatWrapping;
-  texture.colorSpace = SRGBColorSpace;
-  return texture;
-}
 
 function geometryOf(tube: TubeData, withTexture: boolean): BufferGeometry {
   const geometry = new BufferGeometry();
@@ -110,21 +60,21 @@ export class RopeViewport {
   private readonly scene = new Scene();
   private readonly camera = new PerspectiveCamera(38, 1, 0.1, 100);
   private readonly controls: OrbitControls;
-  private readonly fibres: CanvasTexture;
+  private readonly textures = new Map<RopeMaterialId, CanvasTexture | null>();
   private readonly edge = new MeshBasicMaterial({ color: EDGE_COLOUR, side: BackSide });
   private readonly ropes = new Group();
   private readonly observer: ResizeObserver;
   private readonly host: HTMLElement;
+  private readonly detail: Detail;
 
-  constructor(host: HTMLElement) {
+  constructor(host: HTMLElement, detail: Detail = 'full') {
     this.host = host;
-    this.renderer = new WebGLRenderer({ antialias: true, alpha: true });
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    this.detail = detail;
+    host.dataset['detail'] = detail;
+    this.renderer = new WebGLRenderer({ antialias: detail === 'full', alpha: true });
+    this.renderer.setPixelRatio(detail === 'full' ? Math.min(window.devicePixelRatio, 2) : 1);
     this.renderer.domElement.setAttribute('aria-hidden', 'true');
     host.appendChild(this.renderer.domElement);
-
-    this.fibres = fibreTexture();
-    this.fibres.anisotropy = this.renderer.capabilities.getMaxAnisotropy();
 
     // the diagram convention is "seen from +z", so that is where the camera starts
     this.camera.position.set(0, 0, 9.5);
@@ -153,22 +103,17 @@ export class RopeViewport {
   setRopes(specs: readonly RopeSpec[]): void {
     this.clear();
     for (const spec of specs) {
-      // enough rows for the strands to turn smoothly, without letting a long rope grow without limit
-      const spacing = Math.max(spec.radius * 0.3, curveLength(spec.points, spec.closed) / MAX_ROWS);
-      const points = resample(spec.points, spec.closed, spacing);
-
-      const rope = buildTube(points, spec.closed, spec.radius, { strands: 3, sides: 30 });
+      const { rope, edge, map } = this.surfaces(spec);
+      const look = ROPE_MATERIALS[spec.material];
       const material = new MeshStandardMaterial({
-        color: spec.color,
-        map: this.fibres,
-        bumpMap: this.fibres,
-        bumpScale: 1.4,
-        roughness: 0.9,
+        color: ropeColour(spec.material, spec.index),
+        map,
+        bumpMap: map,
+        bumpScale: look.relief,
+        roughness: look.roughness,
         metalness: 0,
       });
-      this.ropes.add(new Mesh(geometryOf(rope, true), material));
-
-      const edge = buildTube(points, spec.closed, spec.radius * 1.14, { strands: 0, sides: 14 });
+      this.ropes.add(new Mesh(geometryOf(rope, map !== null), material));
       this.ropes.add(new Mesh(geometryOf(edge, false), this.edge));
     }
     this.render();
@@ -185,9 +130,39 @@ export class RopeViewport {
     this.controls.dispose();
     this.clear();
     this.edge.dispose();
-    this.fibres.dispose();
+    for (const texture of this.textures.values()) texture?.dispose();
     this.renderer.dispose();
     this.renderer.domElement.remove();
+  }
+
+  /** The surface of the rope, the slightly larger surface that gives it its edge, and its texture. */
+  private surfaces(spec: RopeSpec): { rope: TubeData; edge: TubeData; map: CanvasTexture | null } {
+    const { points, closed, radius } = spec;
+    if (this.detail === 'plain') {
+      return {
+        rope: buildTube(points, closed, radius, { strands: 0, sides: 8 }),
+        edge: buildTube(points, closed, radius * 1.14, { strands: 0, sides: 8 }),
+        map: null,
+      };
+    }
+    const look = ROPE_MATERIALS[spec.material];
+    // enough rows for the strands to turn smoothly, without letting a long rope grow without limit
+    const fine = resample(points, closed, Math.max(radius * 0.3, curveLength(points, closed) / MAX_ROWS));
+    const rope =
+      look.construction === 'laid'
+        ? buildTube(fine, closed, radius, { strands: 3, sides: 30 })
+        : buildTube(fine, closed, radius, { strands: 0, sides: 24, textureLength: 2 * Math.PI * radius });
+    const edge = buildTube(fine, closed, radius * 1.14, { strands: 0, sides: 14 });
+    return { rope, edge, map: this.texture(spec.material) };
+  }
+
+  private texture(id: RopeMaterialId): CanvasTexture | null {
+    if (!this.textures.has(id)) {
+      const texture = textureFor(ROPE_MATERIALS[id]);
+      if (texture) texture.anisotropy = this.renderer.capabilities.getMaxAnisotropy();
+      this.textures.set(id, texture);
+    }
+    return this.textures.get(id) ?? null;
   }
 
   private clear(): void {
