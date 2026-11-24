@@ -3,7 +3,7 @@
  * colour of the rope multiplies it, and each repeats exactly, so that it can wrap along and round a rope.
  */
 
-import { CanvasTexture, RepeatWrapping, SRGBColorSpace } from 'three';
+import { CanvasTexture, RepeatWrapping, SRGBColorSpace, type Texture, TextureLoader } from 'three';
 import type { RopeMaterial } from './materials.ts';
 
 const SIZE = 256;
@@ -139,4 +139,31 @@ export function textureFor(material: RopeMaterial): CanvasTexture | null {
   if (material.construction === 'laid') return laid(material);
   if (material.construction === 'braided') return braided(material);
   return null;
+}
+
+export interface PhotoMaps {
+  readonly map: Texture;
+  readonly normalMap: Texture;
+  readonly roughnessMap: Texture;
+}
+
+/** How many strands the photograph shows across its height. */
+const STRANDS_IN_PHOTO = 9;
+
+/**
+ * The photographed surface of twisted rope (see public/textures/README.md), as colour, relief and roughness.
+ * Only as many of its strands as the rope has are wrapped round it. `onLoad` is called as each map arrives.
+ */
+export function laidPhoto(strands: number, anisotropy: number, onLoad: () => void): PhotoMaps {
+  const loader = new TextureLoader();
+  const load = (name: string, colour: boolean): Texture => {
+    const texture = loader.load(`/textures/rope-laid-${name}.jpg`, onLoad);
+    texture.wrapS = RepeatWrapping;
+    texture.wrapT = RepeatWrapping;
+    texture.repeat.set(1, strands / STRANDS_IN_PHOTO);
+    texture.anisotropy = anisotropy;
+    if (colour) texture.colorSpace = SRGBColorSpace;
+    return texture;
+  };
+  return { map: load('color', true), normalMap: load('normal', false), roughnessMap: load('roughness', false) };
 }

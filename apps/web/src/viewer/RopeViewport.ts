@@ -29,7 +29,7 @@ import {
 } from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { ROPE_MATERIALS, ropeColour, type RopeMaterialId } from './materials.ts';
-import { textureFor } from './textures.ts';
+import { laidPhoto, textureFor, type PhotoMaps } from './textures.ts';
 import { buildTube, curveLength, resample, type TubeData } from './tube.ts';
 
 export type Detail = 'full' | 'plain';
@@ -63,6 +63,7 @@ export class RopeViewport {
   private readonly textures = new Map<RopeMaterialId, CanvasTexture | null>();
   private readonly edge = new MeshBasicMaterial({ color: EDGE_COLOUR, side: BackSide });
   private readonly ropes = new Group();
+  private photo: PhotoMaps | null = null;
   private readonly observer: ResizeObserver;
   private readonly host: HTMLElement;
   private readonly detail: Detail;
@@ -105,6 +106,20 @@ export class RopeViewport {
     for (const spec of specs) {
       const { rope, edge, map } = this.surfaces(spec);
       const look = ROPE_MATERIALS[spec.material];
+      if (this.detail === 'full' && look.construction === 'laid') {
+        // laid rope is drawn from a photograph of one: colour, relief and roughness
+        this.photo ??= laidPhoto(3, this.renderer.capabilities.getMaxAnisotropy(), this.render);
+        const photographed = new MeshStandardMaterial({
+          color: ropeColour(spec.material, spec.index),
+          ...this.photo,
+          roughness: look.roughness,
+          metalness: 0,
+        });
+        photographed.normalScale.set(1.6, 1.6);
+        this.ropes.add(new Mesh(geometryOf(rope, true), photographed));
+        this.ropes.add(new Mesh(geometryOf(edge, false), this.edge));
+        continue;
+      }
       const material = new MeshStandardMaterial({
         color: ropeColour(spec.material, spec.index),
         map,
@@ -131,6 +146,7 @@ export class RopeViewport {
     this.clear();
     this.edge.dispose();
     for (const texture of this.textures.values()) texture?.dispose();
+    if (this.photo) for (const texture of Object.values(this.photo)) texture.dispose();
     this.renderer.dispose();
     this.renderer.domElement.remove();
   }
@@ -150,10 +166,10 @@ export class RopeViewport {
     const fine = resample(points, closed, Math.max(radius * 0.3, curveLength(points, closed) / MAX_ROWS));
     const rope =
       look.construction === 'laid'
-        ? buildTube(fine, closed, radius, { strands: 3, sides: 30, layLength: look.lay * radius })
+        ? buildTube(fine, closed, radius, { strands: 0, sides: 24, textureLength: look.lay * 2.4 * radius })
         : buildTube(fine, closed, radius, { strands: 0, sides: 24, textureLength: 2 * Math.PI * radius });
     const edge = buildTube(fine, closed, radius * 1.14, { strands: 0, sides: 14 });
-    return { rope, edge, map: this.texture(spec.material) };
+    return { rope, edge, map: look.construction === 'laid' ? null : this.texture(spec.material) };
   }
 
   private texture(id: RopeMaterialId): CanvasTexture | null {
