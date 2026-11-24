@@ -38,14 +38,13 @@
     "link_one": "p y q no tienen factor común: un solo lazo de cuerda, un nudo.",
     "link_other": "p y q comparten el factor {{count}}, así que la cuerda se cierra en {{count}} lazos separados, enlazados entre sí. Cada uno tiene su color.",
     "rope": "Cuerda",
-    "ropeNote": "La cuerda es solo una forma de dibujar. No dice nada de cómo se comporta una cuerda real.",
     "ropes": {
-      "jute": "Yute, como en shibari",
-      "kernmantle": "Alma y funda, como en escalada",
-      "polyester": "Poliéster de tres cordones, como en náutica",
-      "sisal": "Sisal, como en pionerismo",
-      "cotton": "Cordón de algodón trenzado, para trabajo decorativo",
-      "line": "Línea lisa, para teoría de nudos"
+      "jute": "Yute",
+      "kernmantle": "Alma y funda",
+      "polyester": "Poliéster de tres cordones",
+      "sisal": "Sisal",
+      "cotton": "Algodón trenzado",
+      "line": "Línea lisa"
     }
   },
   "footer": {

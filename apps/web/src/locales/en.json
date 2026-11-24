@@ -38,14 +38,13 @@
     "link_one": "p and q have no common factor: one loop of rope, a knot.",
     "link_other": "p and q share the factor {{count}}, so the rope closes into {{count}} separate loops, linked together. Each has its own colour.",
     "rope": "Rope",
-    "ropeNote": "The rope is a way of drawing only. It says nothing about how a real rope behaves.",
     "ropes": {
-      "jute": "Jute, as in shibari",
-      "kernmantle": "Kernmantle, as in climbing",
-      "polyester": "Three-strand polyester, as at sea",
-      "sisal": "Sisal, as in pioneering",
-      "cotton": "Braided cotton cord, for decorative work",
-      "line": "Plain line, for knot theory"
+      "jute": "Jute",
+      "kernmantle": "Kernmantle",
+      "polyester": "Three-strand polyester",
+      "sisal": "Sisal",
+      "cotton": "Braided cotton",
+      "line": "Plain line"
     }
   },
   "footer": {

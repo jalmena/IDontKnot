@@ -146,7 +146,6 @@ export function TorusLab() {
               </option>
             ))}
           </select>
-          <p className="lab__note">{t('lab.ropeNote')}</p>
         </form>
       </div>
 

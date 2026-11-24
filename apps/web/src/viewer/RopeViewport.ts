@@ -150,7 +150,7 @@ export class RopeViewport {
     const fine = resample(points, closed, Math.max(radius * 0.3, curveLength(points, closed) / MAX_ROWS));
     const rope =
       look.construction === 'laid'
-        ? buildTube(fine, closed, radius, { strands: 3, sides: 30 })
+        ? buildTube(fine, closed, radius, { strands: 3, sides: 30, layLength: look.lay * radius })
         : buildTube(fine, closed, radius, { strands: 0, sides: 24, textureLength: 2 * Math.PI * radius });
     const edge = buildTube(fine, closed, radius * 1.14, { strands: 0, sides: 14 });
     return { rope, edge, map: this.texture(spec.material) };

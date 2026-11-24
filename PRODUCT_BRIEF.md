@@ -41,6 +41,8 @@ Its differentiator is that the system reasons about knots through a mathematical
 | 2026-11-24 | Decision records | The seven architecture decision records proposed with the research are accepted. |
 | 2026-11-24 | Server | TypeScript on Node, so that the server validates knots with the same core as the browser. |
 | 2026-11-24 | Library content | Files in the repository, reviewed by pull request and packaged into the image. What users create is stored in the instance's database. |
+| 2026-11-24 | Rope style and discipline | Each discipline has a rope style it is drawn with. Where the discipline is chosen, the rope selector sits beside it and follows the discipline unless a "customise" checkbox is ticked. Rope names carry no discipline. |
+| 2026-11-24 | Library order by discipline | The same knots, ordered by their importance in the chosen discipline; knots a discipline does not use can be hidden. |
 
 ## Open decisions
 

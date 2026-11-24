@@ -19,6 +19,8 @@ export interface RopeMaterial {
   readonly fuzz: number;
   /** Yarns across one strand of a laid rope, or threads round a braided one. */
   readonly yarns: number;
+  /** Laid ropes only: the length of rope, in rope radii, over which a strand goes once round. */
+  readonly lay: number;
   readonly roughness: number;
   /** How strongly the texture reads as relief. */
   readonly relief: number;
@@ -28,9 +30,10 @@ export const ROPE_MATERIALS: Readonly<Record<RopeMaterialId, RopeMaterial>> = {
   jute: {
     construction: 'laid',
     colours: ['#c8a165', '#8b5a3a', '#e4d1a2', '#5e4a39', '#a87f48'],
-    detail: 'rgba(70, 44, 14, 0.5)',
+    detail: 'rgba(70, 44, 14, 0.2)',
     fuzz: 1,
-    yarns: 6,
+    yarns: 5,
+    lay: 11,
     roughness: 1,
     relief: 2.4,
   },
@@ -40,6 +43,7 @@ export const ROPE_MATERIALS: Readonly<Record<RopeMaterialId, RopeMaterial>> = {
     detail: 'rgba(112, 92, 52, 0.38)',
     fuzz: 0.55,
     yarns: 9,
+    lay: 7,
     roughness: 0.95,
     relief: 1.7,
   },
@@ -49,6 +53,7 @@ export const ROPE_MATERIALS: Readonly<Record<RopeMaterialId, RopeMaterial>> = {
     detail: 'rgba(60, 70, 92, 0.2)',
     fuzz: 0.04,
     yarns: 13,
+    lay: 7,
     roughness: 0.5,
     relief: 0.8,
   },
@@ -58,6 +63,7 @@ export const ROPE_MATERIALS: Readonly<Record<RopeMaterialId, RopeMaterial>> = {
     detail: '#1d1d21',
     fuzz: 0,
     yarns: 16,
+    lay: 0,
     roughness: 0.6,
     relief: 1.1,
   },
@@ -67,6 +73,7 @@ export const ROPE_MATERIALS: Readonly<Record<RopeMaterialId, RopeMaterial>> = {
     detail: 'rgba(196, 186, 168, 1)',
     fuzz: 0.2,
     yarns: 12,
+    lay: 0,
     roughness: 0.92,
     relief: 1.3,
   },
@@ -76,6 +83,7 @@ export const ROPE_MATERIALS: Readonly<Record<RopeMaterialId, RopeMaterial>> = {
     detail: '',
     fuzz: 0,
     yarns: 0,
+    lay: 0,
     roughness: 0.6,
     relief: 0,
   },
