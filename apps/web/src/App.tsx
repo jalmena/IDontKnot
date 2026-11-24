@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { Mark } from './brand/Mark.tsx';
 import { LANGUAGES } from './i18n.ts';
+import { byLabel } from './lab/format.ts';
 import { TorusLab } from './lab/TorusLab.tsx';
 
 export function App() {
@@ -19,9 +20,12 @@ export function App() {
             value={i18n.resolvedLanguage ?? 'en'}
             onChange={(event) => void i18n.changeLanguage(event.target.value)}
           >
-            {LANGUAGES.map((language) => (
+            {byLabel(
+              LANGUAGES.map((language) => ({ code: language.code, label: language.name })),
+              i18n.resolvedLanguage ?? 'en',
+            ).map((language) => (
               <option key={language.code} value={language.code} lang={language.code}>
-                {language.name}
+                {language.label}
               </option>
             ))}
           </select>

@@ -39,6 +39,8 @@ Commits are made under the identity configured for this repository and carry no 
 
 Code, identifiers, comments, console output, documentation and commit messages are in English. The interface is in English and Spanish; its text lives in translation files, apart from knot data. Knot names, aliases, mathematical identifiers and codes are never translated.
 
+The options of a selector are listed in alphabetical order of the language in use, unless they have an explicit order of their own.
+
 ## Content
 
 The library covers disciplines where wrong information can hurt someone.

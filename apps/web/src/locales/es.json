@@ -36,7 +36,16 @@
       "disagree": "Los dos no coinciden. Es un defecto: por favor, comunícalo."
     },
     "link_one": "p y q no tienen factor común: un solo lazo de cuerda, un nudo.",
-    "link_other": "p y q comparten el factor {{count}}, así que la cuerda se cierra en {{count}} lazos separados, enlazados entre sí. Cada uno tiene su color."
+    "link_other": "p y q comparten el factor {{count}}, así que la cuerda se cierra en {{count}} lazos separados, enlazados entre sí. Cada uno tiene su color.",
+    "rope": "Cuerda",
+    "ropes": {
+      "jute": "Yute",
+      "kernmantle": "Alma y funda",
+      "polyester": "Poliéster de tres cordones",
+      "sisal": "Sisal",
+      "cotton": "Algodón trenzado",
+      "line": "Línea lisa"
+    }
   },
   "footer": {
     "status": "Prototipo. Nada de lo que aparece aquí prueba que un nudo sea seguro."

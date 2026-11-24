@@ -1,5 +1,5 @@
 import { expect, it } from 'vitest';
-import { polynomialText, terms } from '../src/lab/format.ts';
+import { byLabel, polynomialText, terms } from '../src/lab/format.ts';
 
 it('writes the trefoil polynomial', () => {
   expect(polynomialText({ '1': 1, '3': 1, '4': -1 })).toBe('t + t^3 − t^4');
@@ -18,4 +18,15 @@ it('orders terms by exponent and drops zeros', () => {
 
 it('writes the zero polynomial', () => {
   expect(polynomialText({})).toBe('0');
+});
+
+it('orders options by their label in the language given', () => {
+  const options = [{ label: 'Yute' }, { label: 'Línea lisa' }, { label: 'algodón' }, { label: 'Alma y funda' }];
+  expect(byLabel(options, 'es').map((option) => option.label)).toEqual([
+    'algodón',
+    'Alma y funda',
+    'Línea lisa',
+    'Yute',
+  ]);
+  expect(options[0]?.label).toBe('Yute'); // the original is left as it was
 });

@@ -29,6 +29,52 @@ test('draws the rope', async ({ page }) => {
     .toBeGreaterThan(1000);
 });
 
+test('draws plainly for an automated browser, and fully when asked', async ({ page }) => {
+  await expect(page.getByTestId('rope-canvas')).toHaveAttribute('data-detail', 'plain');
+
+  await page.goto('/?rope=full');
+  const canvas = page.getByTestId('rope-canvas');
+  await expect(canvas).toHaveAttribute('data-detail', 'full');
+  await expect.poll(async () => Number(await canvas.getAttribute('data-triangles'))).toBeGreaterThan(20000);
+});
+
+test('changes the rope it is drawn with', async ({ page }) => {
+  await expect(page.getByLabel('Rope')).toHaveValue('jute');
+  for (const rope of ['kernmantle', 'polyester', 'sisal', 'cotton', 'line']) {
+    await page.getByLabel('Rope').selectOption(rope);
+    await expect
+      .poll(async () => Number(await page.getByTestId('rope-canvas').getAttribute('data-triangles')))
+      .toBeGreaterThan(1000);
+  }
+  await expect(page.getByTestId('verdict')).toHaveText('The two agree.');
+});
+
+test('lists the ropes in alphabetical order of the language in use', async ({ page }) => {
+  const names = () =>
+    page
+      .getByLabel(/^(Rope|Cuerda)$/)
+      .locator('option')
+      .allTextContents();
+  expect(await names()).toEqual([
+    'Braided cotton',
+    'Jute',
+    'Kernmantle',
+    'Plain line',
+    'Sisal',
+    'Three-strand polyester',
+  ]);
+  await page.getByLabel('Language').selectOption('es');
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Laboratorio de nudos tóricos');
+  expect(await names()).toEqual([
+    'Algodón trenzado',
+    'Alma y funda',
+    'Línea lisa',
+    'Poliéster de tres cordones',
+    'Sisal',
+    'Yute',
+  ]);
+});
+
 test('recomputes when the knot changes', async ({ page }) => {
   await page.getByLabel('Passes through the hole (q)').fill('5');
   await expect(page.getByTestId('q-value')).toHaveText('5');
