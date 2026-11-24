@@ -5,16 +5,20 @@ import {
   jonesPolynomial,
   strandOf,
   torusBraidWord,
-  torusKnot,
+  torusLink,
   writhe,
 } from '@idontknot/core';
 import { useId, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { RopeView } from '../viewer/RopeView.tsx';
+import type { RopeSpec } from '../viewer/RopeViewport.ts';
 import { magnitude, polynomialText, terms } from './format.ts';
 
 /** The state sum doubles with every crossing; this keeps the page instant. */
 const MAX_CROSSINGS = 14;
+
+/** One colour per loop of rope, so that the loops of a link can be told apart. */
+const ROPE_COLOURS = ['#f3ead3', '#d9b56c', '#a9c9b4', '#dba183', '#b4c2da'] as const;
 
 /** Names of torus knots in the standard tables. Identifiers, so they are not translated. */
 const TABLE_NAMES: Readonly<Record<string, string>> = {
@@ -60,14 +64,24 @@ export function TorusLab() {
   const pId = useId();
   const qId = useId();
 
-  const coprime = gcd(p, q) === 1;
+  const loops = gcd(p, q);
   const crossingCount = (p - 1) * q;
   const tooLarge = crossingCount > MAX_CROSSINGS;
 
-  const curve = useMemo(() => (coprime ? torusKnot(p, q) : null), [p, q, coprime]);
+  const curves = useMemo(() => torusLink(p, q), [p, q]);
+  const ropes = useMemo<RopeSpec[]>(
+    () =>
+      curves.map((curve, index) => ({
+        points: curve.points,
+        closed: true,
+        radius: p >= 4 ? 0.13 : 0.17,
+        color: ROPE_COLOURS[index % ROPE_COLOURS.length] as string,
+      })),
+    [curves, p],
+  );
   const facts = useMemo(() => {
-    if (!curve || tooLarge) return null;
-    const { diagram } = diagramFromGeometry([curve]);
+    if (tooLarge) return null;
+    const { diagram } = diagramFromGeometry(curves);
     const word = torusBraidWord(p, q);
     return {
       diagram,
@@ -77,10 +91,10 @@ export function TorusLab() {
       fromGeometry: jonesPolynomial(diagram),
       fromBraid: jonesPolynomial(closedBraid(word, p)),
     };
-  }, [curve, tooLarge, p, q]);
+  }, [curves, tooLarge, p, q]);
 
   const agree = facts !== null && polynomialText(facts.fromGeometry) === polynomialText(facts.fromBraid);
-  const tableName = TABLE_NAMES[`${p},${q}`];
+  const tableName = loops === 1 ? TABLE_NAMES[`${p},${q}`] : undefined;
 
   return (
     <section className="lab" aria-labelledby="lab-title">
@@ -90,13 +104,7 @@ export function TorusLab() {
       </div>
 
       <div className="lab__stage">
-        {curve ? (
-          <RopeView points={curve.points} closed radius={p >= 4 ? 0.13 : 0.17} label={t('lab.view.label', { p, q })} />
-        ) : (
-          <p className="lab__message" role="status">
-            {t('lab.notCoprime')}
-          </p>
-        )}
+        <RopeView ropes={ropes} label={t('lab.view.label', { p, q, count: loops })} />
         <form className="lab__controls" onSubmit={(event) => event.preventDefault()}>
           <label htmlFor={pId}>{t('lab.p')}</label>
           <input
@@ -129,9 +137,12 @@ export function TorusLab() {
 
       <div className="lab__facts" aria-live="polite">
         <h2>{t('lab.facts.title')}</h2>
-        {coprime && tooLarge && (
-          <p className="lab__message">{t('lab.tooLarge', { count: crossingCount, max: MAX_CROSSINGS })}</p>
+        {loops > 1 && (
+          <p className="lab__message" data-testid="link-note">
+            {t('lab.link', { count: loops })}
+          </p>
         )}
+        {tooLarge && <p className="lab__message">{t('lab.tooLarge', { count: crossingCount, max: MAX_CROSSINGS })}</p>}
         {facts && (
           <dl>
             {tableName && (
@@ -140,6 +151,8 @@ export function TorusLab() {
                 <dd className="code">{tableName}</dd>
               </>
             )}
+            <dt>{t('lab.facts.loops')}</dt>
+            <dd data-testid="loops">{loops}</dd>
             <dt>{t('lab.facts.crossings')}</dt>
             <dd data-testid="crossings">{facts.diagram.crossings.length}</dd>
             <dt>{t('lab.facts.writhe')}</dt>
@@ -153,9 +166,18 @@ export function TorusLab() {
               <small>{t('lab.facts.codeHelp')}</small>
             </dt>
             <dd className="code">
-              {strandOf(facts.diagram, 'k0')
-                .map(([crossing, pass]) => `${crossing.slice(1)}${pass}`)
-                .join(' ')}
+              {facts.diagram.components.map((component, index) => (
+                <span key={component.id} className="code__line">
+                  <span
+                    className="swatch"
+                    style={{ background: ROPE_COLOURS[index % ROPE_COLOURS.length] }}
+                    aria-hidden="true"
+                  />
+                  {strandOf(facts.diagram, component.id)
+                    .map(([crossing, pass]) => `${crossing.slice(1)}${pass}`)
+                    .join(' ')}
+                </span>
+              ))}
             </dd>
             <dt>{t('lab.facts.jonesGeometry')}</dt>
             <dd>

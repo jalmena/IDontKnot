@@ -1,10 +1,13 @@
 /**
- * A rope as a tube swept along its centerline.
+ * A rope as a surface swept along its centerline.
  *
  * The cross-section is carried along the curve with rotation-minimising frames, computed by the
  * double-reflection method (Wang, Jüttler, Zheng, Liu, 2008). Unlike Frenet frames they do not flip
- * where the curve straightens, so the tube does not twist or pinch. For a closed curve the small
+ * where the curve straightens, so the rope does not twist or pinch. For a closed curve the small
  * mismatch where the curve meets itself is spread evenly along its length.
+ *
+ * The cross-section is either a circle or the outline of three strands laid together, which turn
+ * round the rope as it goes: the shape of laid rope, so that light and shadow fall as they do on one.
  *
  * This module is pure: it produces arrays, and knows nothing about the renderer.
  */
@@ -29,6 +32,44 @@ const unit = (a: readonly number[]): Vec => {
   const length = Math.hypot(a[0]!, a[1]!, a[2]!) || 1;
   return [a[0]! / length, a[1]! / length, a[2]! / length];
 };
+const distance = (a: readonly number[], b: readonly number[]): number =>
+  Math.hypot(a[0]! - b[0]!, a[1]! - b[1]!, a[2]! - b[2]!);
+
+/** The length of the polyline, including the closing segment of a closed one. */
+export function curveLength(points: readonly Point3[], closed: boolean): number {
+  let total = 0;
+  for (let i = 0; i + 1 < points.length; i++) total += distance(points[i]!, points[i + 1]!);
+  return closed && points.length > 1 ? total + distance(points[points.length - 1]!, points[0]!) : total;
+}
+
+/**
+ * The same curve with points no further apart than `spacing`, by Catmull-Rom interpolation.
+ * The original points are kept; new ones are added between them.
+ */
+export function resample(points: readonly Point3[], closed: boolean, spacing: number): Point3[] {
+  const n = points.length;
+  const at = (i: number): Point3 => (closed ? points[((i % n) + n) % n]! : points[Math.min(Math.max(i, 0), n - 1)]!);
+  const out: Point3[] = [];
+  const segments = closed ? n : n - 1;
+  for (let i = 0; i < segments; i++) {
+    const [p0, p1, p2, p3] = [at(i - 1), at(i), at(i + 1), at(i + 2)];
+    const pieces = Math.max(1, Math.ceil(distance(p1, p2) / spacing));
+    for (let k = 0; k < pieces; k++) {
+      const t = k / pieces;
+      const point = [0, 1, 2].map(
+        (axis) =>
+          0.5 *
+          (2 * p1[axis]! +
+            (p2[axis]! - p0[axis]!) * t +
+            (2 * p0[axis]! - 5 * p1[axis]! + 4 * p2[axis]! - p3[axis]!) * t * t +
+            (3 * p1[axis]! - p0[axis]! - 3 * p2[axis]! + p3[axis]!) * t * t * t),
+      );
+      out.push(point as unknown as Point3);
+    }
+  }
+  if (!closed) out.push(points[n - 1]!);
+  return out;
+}
 
 export interface Frames {
   readonly tangents: Vec[];
@@ -72,30 +113,49 @@ export function rotationMinimisingFrames(points: readonly Point3[], closed: bool
       const theta = (-angle * i) / n;
       const r = normals[i]!;
       const side = cross(tangents[i]!, r);
-      normals[i] = unit(
-        axpy([r[0] * Math.cos(theta), r[1] * Math.cos(theta), r[2] * Math.cos(theta)], Math.sin(theta), side),
-      );
+      const turned: Vec = [r[0] * Math.cos(theta), r[1] * Math.cos(theta), r[2] * Math.cos(theta)];
+      normals[i] = unit(axpy(turned, Math.sin(theta), side));
     }
   }
   const binormals = normals.map((r, i) => cross(tangents[i]!, r));
   return { tangents, normals, binormals };
 }
 
+/**
+ * The outline of `strands` round strands laid together, as a radius for each angle, at most 1.
+ * Between two strands the outline dips into a groove.
+ */
+export function strandProfile(angle: number, strands: number): number {
+  if (strands < 2) return 1;
+  const sector = (2 * Math.PI) / strands;
+  const delta = ((((angle + sector / 2) % sector) + sector) % sector) - sector / 2; // angle from the nearest strand's centre
+  const centre = 0.45;
+  const size = 0.62;
+  const reach = centre * Math.cos(delta) + Math.sqrt(size * size - (centre * Math.sin(delta)) ** 2);
+  return reach / (centre + size);
+}
+
 export interface TubeData {
   readonly positions: Float32Array;
   readonly normals: Float32Array;
-  /** A shade per vertex, drawn as three helical strands so that the rope reads as laid rope. */
-  readonly colors: Float32Array;
+  /** u runs along the rope and v across each strand, so that a texture of fibres follows the strands. */
+  readonly uvs: Float32Array;
   readonly indices: Uint32Array;
-  readonly rings: number;
-  readonly sides: number;
+  /** Rows of vertices along the rope and columns round it, counting the repeated last row and column. */
+  readonly rows: number;
+  readonly columns: number;
+  readonly length: number;
 }
 
 export interface TubeOptions {
+  /** Vertices round the rope. */
   readonly sides?: number;
-  readonly color?: readonly [number, number, number];
-  /** Turns of the strands per ring of the tube. */
-  readonly lay?: number;
+  /** 0 or 1 for a round tube; 3 for three-strand laid rope. */
+  readonly strands?: number;
+  /** Length of rope over which a strand goes once round it. */
+  readonly layLength?: number;
+  /** Length of rope covered by one repeat of the texture. */
+  readonly textureLength?: number;
 }
 
 export function buildTube(
@@ -104,56 +164,87 @@ export function buildTube(
   radius: number,
   options: TubeOptions = {},
 ): TubeData {
-  const sides = options.sides ?? 18;
-  const [red, green, blue] = options.color ?? [0.953, 0.918, 0.827];
-  const lay = options.lay ?? 0.035;
-  const rings = points.length;
-  // on a closed rope the strands must meet themselves: a whole number of strand widths round the loop
-  const layPerRing = closed ? Math.max(1, Math.round(rings * lay * 3)) / (3 * rings) : lay;
+  const sides = options.sides ?? 30;
+  const strands = options.strands ?? 3;
+  const layLength = options.layLength ?? 7 * radius;
+  const textureLength = options.textureLength ?? 3 * radius;
+  const n = points.length;
   const frames = rotationMinimisingFrames(points, closed);
 
-  const positions = new Float32Array(rings * sides * 3);
-  const normals = new Float32Array(rings * sides * 3);
-  const colors = new Float32Array(rings * sides * 3);
-  for (let i = 0; i < rings; i++) {
+  const along = new Float64Array(n + 1);
+  for (let i = 0; i < n; i++) along[i + 1] = along[i]! + distance(points[i]!, points[(i + 1) % n]!);
+  const length = closed ? along[n]! : along[n - 1]!;
+
+  // on a closed rope the strands and the texture must meet themselves where the rope does
+  const perStrand = Math.max(strands, 1);
+  const turns = closed ? Math.max(1, Math.round((perStrand * length) / layLength)) / perStrand : length / layLength;
+  const repeats = closed ? Math.max(1, Math.round(length / textureLength)) : length / textureLength;
+
+  // the surface on its own grid, n rows by `sides` columns
+  const grid = new Float64Array(n * sides * 3);
+  for (let i = 0; i < n; i++) {
     const [px, py, pz] = points[i]!;
-    const n = frames.normals[i]!;
-    const b = frames.binormals[i]!;
+    const normal = frames.normals[i]!;
+    const binormal = frames.binormals[i]!;
+    const twist = 2 * Math.PI * turns * (along[i]! / length);
     for (let j = 0; j < sides; j++) {
       const angle = (2 * Math.PI * j) / sides;
+      const reach = radius * strandProfile(angle - twist, strands);
       const [ca, sa] = [Math.cos(angle), Math.sin(angle)];
-      const dx = ca * n[0] + sa * b[0];
-      const dy = ca * n[1] + sa * b[1];
-      const dz = ca * n[2] + sa * b[2];
       const k = (i * sides + j) * 3;
-      positions[k] = px + radius * dx;
-      positions[k + 1] = py + radius * dy;
-      positions[k + 2] = pz + radius * dz;
-      normals[k] = dx;
-      normals[k + 1] = dy;
-      normals[k + 2] = dz;
-      // three strands: darker in the grooves between them
-      const phase = j / sides + i * layPerRing;
-      const shade = 0.62 + 0.38 * Math.pow(0.5 + 0.5 * Math.cos(2 * Math.PI * 3 * phase), 0.7);
-      colors[k] = red * shade;
-      colors[k + 1] = green * shade;
-      colors[k + 2] = blue * shade;
+      grid[k] = px + reach * (ca * normal[0] + sa * binormal[0]);
+      grid[k + 1] = py + reach * (ca * normal[1] + sa * binormal[1]);
+      grid[k + 2] = pz + reach * (ca * normal[2] + sa * binormal[2]);
+    }
+  }
+  const cell = (i: number, j: number): Vec => {
+    const k = (i * sides + j) * 3;
+    return [grid[k]!, grid[k + 1]!, grid[k + 2]!];
+  };
+
+  // the last row and the last column repeat the first, so that the texture can wrap without a seam
+  const rows = closed ? n + 1 : n;
+  const columns = sides + 1;
+  const positions = new Float32Array(rows * columns * 3);
+  const normals = new Float32Array(rows * columns * 3);
+  const uvs = new Float32Array(rows * columns * 2);
+  for (let row = 0; row < rows; row++) {
+    const i = row % n;
+    const before = closed ? (i - 1 + n) % n : Math.max(i - 1, 0);
+    const after = closed ? (i + 1) % n : Math.min(i + 1, n - 1);
+    const travelled = row === n ? length : along[i]!;
+    for (let column = 0; column < columns; column++) {
+      const j = column % sides;
+      const here = cell(i, j);
+      // the normal of the surface, from its neighbours on the grid; it must point away from the centerline
+      const round = sub(cell(i, (j + 1) % sides), cell(i, (j - 1 + sides) % sides));
+      const lengthwise = sub(cell(after, j), cell(before, j));
+      let normal = unit(cross(round, lengthwise));
+      if (dot(normal, sub(here, points[i]!)) < 0) normal = [-normal[0], -normal[1], -normal[2]];
+
+      const k = (row * columns + column) * 3;
+      positions.set(here, k);
+      normals.set(normal, k);
+      const u = repeats * (travelled / length);
+      const v =
+        strands >= 2
+          ? (strands * ((2 * Math.PI * column) / sides - 2 * Math.PI * turns * (travelled / length))) / (2 * Math.PI)
+          : column / sides;
+      uvs.set([u, v], (row * columns + column) * 2);
     }
   }
 
-  const bands = closed ? rings : rings - 1;
-  const indices = new Uint32Array(bands * sides * 6);
+  const indices = new Uint32Array((rows - 1) * sides * 6);
   let at = 0;
-  for (let i = 0; i < bands; i++) {
-    const next = (i + 1) % rings;
-    for (let j = 0; j < sides; j++) {
-      const a = i * sides + j;
-      const b = i * sides + ((j + 1) % sides);
-      const c = next * sides + j;
-      const d = next * sides + ((j + 1) % sides);
-      indices.set([a, c, b, b, c, d], at);
+  for (let row = 0; row < rows - 1; row++) {
+    for (let column = 0; column < sides; column++) {
+      const a = row * columns + column;
+      const b = a + 1;
+      const c = a + columns;
+      const d = c + 1;
+      indices.set([a, b, c, b, d, c], at); // anticlockwise seen from outside, so the outside is the front
       at += 6;
     }
   }
-  return { positions, normals, colors, indices, rings, sides };
+  return { positions, normals, uvs, indices, rows, columns, length };
 }

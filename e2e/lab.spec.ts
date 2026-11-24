@@ -35,11 +35,25 @@ test('recomputes when the knot changes', async ({ page }) => {
   await expect(page.getByTestId('crossings')).toHaveText('5');
   await expect(page.getByTestId('jones-geometry')).toHaveAttribute('aria-label', 't^2 + t^4 − t^5 + t^6 − t^7');
   await expect(page.getByTestId('verdict')).toHaveText('The two agree.');
+});
 
-  // p = 2 and q = 4 share a factor: not one knot
-  await page.getByLabel('Passes through the hole (q)').fill('4');
-  await expect(page.getByRole('status').filter({ hasText: 'share a factor' })).toBeVisible();
-  await expect(page.getByTestId('verdict')).toHaveCount(0);
+test('draws a link of several loops when p and q share a factor, without moving the controls', async ({ page }) => {
+  const slider = page.getByLabel('Passes through the hole (q)');
+  // measured in the page, not in the window, so that scrolling does not count as movement
+  const place = () => slider.evaluate((element) => Math.round(element.getBoundingClientRect().top + window.scrollY));
+  const before = await place();
+  await expect(page.getByTestId('loops')).toHaveText('1');
+
+  // p = 2 and q = 4: two linked loops
+  await slider.fill('4');
+  await expect(page.getByTestId('loops')).toHaveText('2');
+  await expect(page.getByTestId('link-note')).toContainText('2 separate loops');
+  await expect(page.getByTestId('crossings')).toHaveText('4');
+  await expect(page.getByTestId('verdict')).toHaveText('The two agree.');
+
+  // the drawing is still there and the slider has not moved under the pointer
+  await expect(page.getByTestId('rope-canvas').locator('canvas')).toBeVisible();
+  expect(await place()).toBe(before);
 });
 
 test('switches to Spanish and remembers the choice', async ({ page }) => {

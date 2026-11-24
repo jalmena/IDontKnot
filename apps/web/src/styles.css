@@ -273,6 +273,18 @@ dd {
   color: var(--gold-bright);
 }
 
+.code__line {
+  display: block;
+}
+
+.swatch {
+  display: inline-block;
+  width: 0.7em;
+  height: 0.7em;
+  border-radius: 50%;
+  margin-right: 0.5em;
+}
+
 .polynomial {
   font-size: 1.2rem;
   white-space: normal;
