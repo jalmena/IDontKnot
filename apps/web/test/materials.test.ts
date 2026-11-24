@@ -23,10 +23,37 @@ it('cycles through the colours when there are more loops than colours', () => {
   expect(ropeColour('line', 7)).toBe(ROPE_MATERIALS.line.colours[2]);
 });
 
-it('gives only textured constructions a number of yarns', () => {
+it('gives every laid rope a lay and yarns to twist', () => {
   for (const id of ROPE_MATERIAL_IDS) {
     const material = ROPE_MATERIALS[id];
-    if (material.construction === 'smooth') expect(material.yarns).toBe(0);
-    else expect(material.yarns).toBeGreaterThan(0);
+    if (material.construction !== 'laid') continue;
+    expect(material.lay).toBeGreaterThan(2);
+    expect(material.repeat).toBeGreaterThan(0);
+    expect(material.surface.yarns).toBeGreaterThanOrEqual(2);
+    expect(material.surface.fibres).toBeGreaterThanOrEqual(2);
   }
+});
+
+it('gives every braided rope a braid that closes round it, with a colour for each carrier', () => {
+  const divisor = (a: number, b: number): number => (b === 0 ? a : divisor(b, a % b));
+  for (const id of ROPE_MATERIAL_IDS) {
+    const material = ROPE_MATERIALS[id];
+    if (material.construction !== 'braided') continue;
+    const { carriers, crossings, over, warp, weft } = material.surface;
+    expect(carriers % (2 * over)).toBe(0);
+    for (const pattern of [warp, weft]) {
+      expect(divisor(carriers, crossings) % pattern.length).toBe(0);
+      for (const place of pattern) {
+        expect(place).toBeGreaterThanOrEqual(0);
+        expect(place).toBeLessThanOrEqual(1);
+      }
+    }
+    const coloured = [...warp, ...weft].some((place) => place > 0);
+    expect(material.tracers.length > 0).toBe(coloured);
+  }
+});
+
+it('leaves a smooth rope without texture or loose fibres', () => {
+  expect(ROPE_MATERIALS.line.construction).toBe('smooth');
+  expect(ROPE_MATERIALS.line.fuzz).toBeNull();
 });

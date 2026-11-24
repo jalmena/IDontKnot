@@ -17,3 +17,4 @@ All notable changes to this project are recorded here. The format follows [Keep 
 - The first page of the application: a laboratory for torus knots and links, drawn in 3D as laid rope, in English and Spanish.
 - A container image and a two-stage CI workflow.
 - Six rope styles for the 3D view, one per discipline: jute, kernmantle, three-strand polyester, sisal, braided cotton and a plain line.
+- Rope drawn as it is made: laid rope as three strands with their yarns and fibres, braided rope with its woven sheath, loose fibres on natural rope, room lighting and soft shadows where one rope passes over another.
