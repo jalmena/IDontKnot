@@ -87,9 +87,9 @@ As of 2026-11-24. This section is updated with every pull request that changes i
 
 | Part | State |
 | --- | --- |
-| `packages/core` | Diagrams: structure checks (rules T1, T2), the surface a code is drawn on (T3), the faces of rope ends (T5), PD codes, mirror, closure and joining of components. The Kauffman bracket and Jones polynomial. Closed braids and torus braid words. Extraction of a diagram from polylines in space. Not yet: document schema, moves, graded comparison, geometric checks, other invariants. |
+| `packages/core` | Diagrams: structure checks (rules T1, T2), the surface a code is drawn on (T3), the faces of rope ends (T5), PD codes, mirror, closure and joining of components. The Kauffman bracket and Jones polynomial. Closed braids, torus braid words, torus knots and links as curves. Extraction of a diagram from polylines in space. Not yet: document schema, moves, graded comparison, geometric checks, other invariants. |
 | `apps/server` | A health check, a diagram check that uses the core, and serving the built interface. Not yet: accounts, storage, the library. |
-| `apps/web` | The shell in English and Spanish, and one page: a torus knot laboratory with a 3D view and the values the core computes. The viewport draws one closed rope and orbits. Not yet: the worker (the core runs on the main thread), the 2D diagram view, picking, the library, tutorials. |
+| `apps/web` | The shell in English and Spanish, and one page: a torus knot laboratory with a 3D view and the values the core computes. The viewport draws one or several ropes as three-strand laid rope, with a dark edge where one passes in front of another, and orbits. Not yet: the worker (the core runs on the main thread), the 2D diagram view, picking, the library, tutorials. |
 | Container | One image, non-root, `PUID`/`PGID`, `/healthz`. The data directory exists and nothing is stored in it yet. |
 | CI | Two stages on GitHub-hosted runners: commit messages, secrets, audit, types, lint, tests, build; then end-to-end tests and the image. |
 

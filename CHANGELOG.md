@@ -14,5 +14,5 @@ All notable changes to this project are recorded here. The format follows [Keep 
 - The brand identity: mark, wordmark, colours and rules of use.
 - The mathematical core, version 0: diagram validation, planarity, PD codes, the Jones polynomial, closed braids, and extraction of a diagram from a curve in space. It reproduces every reference diagram.
 - A server with a health check and a diagram check.
-- The first page of the application: a torus knot laboratory with a 3D view, in English and Spanish.
+- The first page of the application: a laboratory for torus knots and links, drawn in 3D as laid rope, in English and Spanish.
 - A container image and a two-stage CI workflow.
