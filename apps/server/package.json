@@ -1,0 +1,24 @@
+{
+  "name": "@idontknot/server",
+  "version": "0.0.0",
+  "private": true,
+  "description": "The HTTP API, and the process that serves the built interface",
+  "license": "AGPL-3.0-only",
+  "type": "module",
+  "scripts": {
+    "dev": "node --conditions=source --watch src/index.ts",
+    "start": "node --conditions=source src/index.ts",
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@hono/node-server": "^2.1.0",
+    "@idontknot/core": "workspace:*",
+    "hono": "^4.13.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "typescript": "~6.0.3",
+    "vitest": "^5.1.1"
+  }
+}

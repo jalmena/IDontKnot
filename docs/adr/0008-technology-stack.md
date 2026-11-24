@@ -13,7 +13,7 @@ Versions were read from the npm registry on 2026-11-24.
 
 | Concern | Choice |
 | --- | --- |
-| Language and runtime | TypeScript 7 throughout, Node 24 |
+| Language and runtime | TypeScript throughout, Node 24. TypeScript 6 for now: the linter does not support 7 yet. |
 | Layout | One repository, pnpm workspaces: `packages/core`, `apps/web`, `apps/server` |
 | Interface | React 19, Vite 8, React Router 8, TanStack Query |
 | 3D | Three.js with the classic WebGL renderer, in an imperative viewport module wrapped by one React component |

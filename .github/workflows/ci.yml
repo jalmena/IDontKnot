@@ -1,0 +1,133 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+# Two stages on GitHub-hosted runners: the cheap checks first (commit messages, secrets, dependency audit,
+# types, lint, unit tests, build), and only when they pass the two expensive jobs, side by side.
+jobs:
+  commits:
+    name: Conventional commits
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - uses: astral-sh/setup-uv@v6
+      - name: Check every commit message in the pull request
+        run: uvx --from commitizen cz check --rev-range "origin/${{ github.base_ref }}..HEAD"
+
+  security:
+    name: Security
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - name: Secrets
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+      - name: Dependency audit
+        run: pnpm audit --prod --audit-level high
+
+  checks:
+    name: Checks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm typecheck
+      - run: pnpm lint
+      - run: pnpm format:check
+      - name: Unit and property tests, including the oracle fixtures
+        run: pnpm test
+      - run: pnpm --filter @idontknot/web build
+
+  e2e:
+    name: End to end
+    needs: [security, checks]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Browser, cached between runs
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+      - name: Browser
+        run: pnpm exec playwright install --with-deps chromium
+      - name: User flows on desktop and tablet, with accessibility checks
+        env:
+          CI: '1'
+        run: pnpm e2e
+      - name: Keep the report when it fails
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report
+          retention-days: 7
+
+  image:
+    name: Container image
+    needs: [security, checks]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Build
+        run: docker build -f deploy/Dockerfile --build-arg VERSION=ci -t idontknot:ci .
+      - name: Size budget (350 MB)
+        run: |
+          size=$(docker image inspect idontknot:ci --format '{{.Size}}')
+          echo "image size: $((size / 1024 / 1024)) MB"
+          test "$size" -lt $((350 * 1024 * 1024))
+      - name: Start, answer, and run as the right user
+        run: |
+          mkdir -p ci-data
+          docker run -d --name idk -p 8080:8080 -v "$PWD/ci-data:/data" idontknot:ci
+          for i in $(seq 1 60); do curl -fsS http://127.0.0.1:8080/healthz && break || sleep 1; done
+          curl -fsS http://127.0.0.1:8080/healthz | tee /dev/stderr | grep -q '"status":"ok"'
+          # The index must answer 200 without a session: CasaOS accepts only 200 or 401 there.
+          test "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8080/)" = "200"
+          curl -fsS http://127.0.0.1:8080/ | grep -q "IDontKnot"
+          # The assertion is positive, "= 1000" and not "!= root", so that a command which breaks fails the step.
+          uid=$(docker exec idk stat -c '%u' /proc/1)
+          echo "pid 1 runs as uid $uid"; test "$uid" = "1000"
+          docker rm -f idk
+      - name: Honour PUID and PGID on a root-owned bind mount
+        run: |
+          sudo mkdir -p ci-data-puid && sudo chown root:root ci-data-puid
+          docker run -d --name idkpuid -e PUID=1500 -e PGID=1500 -p 8081:8080 -v "$PWD/ci-data-puid:/data" idontknot:ci
+          for i in $(seq 1 60); do curl -fsS http://127.0.0.1:8081/healthz && break || sleep 1; done
+          curl -fsS http://127.0.0.1:8081/healthz | grep -q '"status":"ok"'
+          uid=$(docker exec idkpuid stat -c '%u' /proc/1)
+          echo "pid 1 runs as uid $uid"; test "$uid" = "1500"
+          test "$(stat -c '%u:%g' ci-data-puid)" = "1500:1500"
+          docker rm -f idkpuid
