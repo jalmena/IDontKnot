@@ -18,3 +18,6 @@ All notable changes to this project are recorded here. The format follows [Keep 
 - A container image and a two-stage CI workflow.
 - Six rope styles for the 3D view, one per discipline: jute, kernmantle, three-strand polyester, sisal, braided cotton and a plain line.
 - Rope drawn as it is made: laid rope as three strands with their yarns and fibres, braided rope with its woven sheath, loose fibres on natural rope, room lighting and soft shadows where one rope passes over another.
+- A 2D diagram of the knot beside the 3D view, with gaps where a rope passes under and numbered crossings.
+- Knot documents in the core: components, named parts of a rope, the diagram, and shapes in space with the rules they must keep.
+- The first knot of the library: a figure-eight knot, checked against the reference diagram.
