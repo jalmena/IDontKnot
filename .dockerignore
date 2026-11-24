@@ -1,0 +1,13 @@
+.git
+.github
+.local
+**/node_modules
+**/dist
+docs
+fixtures
+tools
+e2e
+test-results
+playwright-report
+deploy/data
+*.md

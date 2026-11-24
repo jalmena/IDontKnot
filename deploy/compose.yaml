@@ -1,0 +1,20 @@
+# Builds and runs IDontKnot from a checkout:  docker compose -f deploy/compose.yaml up --build
+name: idontknot
+
+services:
+  idontknot:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+    image: idontknot:local
+    restart: unless-stopped
+    ports:
+      - '8080:8080'
+    volumes:
+      # Everything the application will store lives here. Nothing is stored yet.
+      - ./data:/data
+    environment:
+      # Set these to the owner of the directory above.
+      PUID: '1000'
+      PGID: '1000'
+      TZ: UTC
