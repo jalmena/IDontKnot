@@ -1,0 +1,41 @@
+{
+  "app": {
+    "tagline": "Enciclopedia interactiva y laboratorio de nudos"
+  },
+  "language": {
+    "label": "Idioma"
+  },
+  "lab": {
+    "title": "Laboratorio de nudos tóricos",
+    "intro": "Elige cuántas vueltas da la cuerda alrededor del eje y cuántas veces pasa por el agujero. La curva se dibuja en 3D. Después su diagrama se lee a partir de la forma 3D y se compara con el diagrama construido desde la palabra de trenza.",
+    "p": "Vueltas alrededor del eje (p)",
+    "q": "Pasos por el agujero (q)",
+    "notCoprime": "p y q tienen un factor común, así que la curva serían varios lazos enlazados y no un solo nudo. Elige valores sin factor común.",
+    "tooLarge": "Este nudo tiene {{count}} cruces en esta vista. El prototipo calcula el polinomio de Jones hasta {{max}}.",
+    "view": {
+      "label": "Vista 3D del nudo tórico ({{p}}, {{q}})",
+      "help": "Arrastra para girarlo. Usa la rueda o pellizca para acercar.",
+      "reset": "Restablecer la vista",
+      "unavailable": "El dibujo 3D no está disponible en este navegador. Los valores de esta página se calculan igualmente."
+    },
+    "facts": {
+      "title": "Lo que calcula el núcleo",
+      "tableName": "Nombre en las tablas de nudos",
+      "crossings": "Cruces en esta vista",
+      "writhe": "Retorcimiento de este diagrama",
+      "planar": "El código puede dibujarse sobre una esfera",
+      "yes": "sí",
+      "no": "no",
+      "braid": "Palabra de trenza",
+      "code": "Cruces que encuentra la cuerda",
+      "codeHelp": "o: la cuerda pasa por encima. u: pasa por debajo.",
+      "jonesGeometry": "Polinomio de Jones, desde la curva 3D",
+      "jonesBraid": "Polinomio de Jones, desde la palabra de trenza",
+      "agree": "Los dos coinciden.",
+      "disagree": "Los dos no coinciden. Es un defecto: por favor, comunícalo."
+    }
+  },
+  "footer": {
+    "status": "Prototipo. Nada de lo que aparece aquí prueba que un nudo sea seguro."
+  }
+}
