@@ -7,6 +7,7 @@
  */
 
 import { checkStructure, type Component, type Crossing, type Diagram, type Issue, type Visit } from './diagram.ts';
+import type { Method } from './construction.ts';
 import { isPlanar } from './embedding.ts';
 import { diagramFromGeometry, type Point3, type Polyline } from './geometry.ts';
 
@@ -65,10 +66,11 @@ export interface KnotDocument {
   readonly parts?: readonly Part[];
   readonly topology?: Topology;
   readonly geometry?: { readonly frames: readonly Frame[] };
+  readonly construction?: { readonly methods: readonly Method[] };
 }
 
 export interface DocumentIssue {
-  readonly rule: Issue['rule'] | 'G1' | 'G2' | 'G3' | 'G4' | 'G5';
+  readonly rule: Issue['rule'] | 'G1' | 'G2' | 'G3' | 'G4' | 'G5' | 'C1' | 'C2' | 'C3';
   /** A note records something a reader should know that breaks no rule. */
   readonly level: 'error' | 'note';
   readonly message: string;

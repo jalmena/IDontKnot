@@ -7,6 +7,7 @@ import { describe, expect, it } from 'vitest';
 import {
   checkDocument,
   checkFrame,
+  checkMethod,
   closeOpenComponents,
   documentDiagram,
   framePolylines,
@@ -89,12 +90,13 @@ describe('every knot of the library', () => {
   const folders = readdirSync(library, { withFileTypes: true }).filter((entry) => entry.isDirectory());
 
   it.each(folders.map((folder) => folder.name))(
-    '%s is a valid document, named after its folder, with valid frames',
+    '%s is a valid document, named after its folder, with valid frames and methods',
     (name) => {
       const document = read(`../../../content/knots/${name}/knot.json`) as KnotDocument;
       expect(document.id).toBe(name);
       expect(checkDocument(document)).toEqual([]);
       for (const frame of document.geometry?.frames ?? []) expect(checkFrame(document, frame)).toEqual([]);
+      for (const method of document.construction?.methods ?? []) expect(checkMethod(document, method)).toEqual([]);
     },
   );
 });
