@@ -4,7 +4,13 @@ import { braidedSurface, colourOf, laidSurface, SHADE_UNIT, type Surface } from 
 
 const jute = ROPE_MATERIALS.jute as LaidMaterial;
 const kernmantle = ROPE_MATERIALS.kernmantle as BraidedMaterial;
-const strand = laidSurface({ ...jute.surface, twist: 5, arc: 4.4 }, [4, 2], 256, 128);
+// a rough strand with marked grooves, whatever the ropes of the application are tuned to
+const strand = laidSurface(
+  { ...jute.surface, depth: 0.58, groove: 0.78, variety: 0.55, twist: 5, arc: 4.4 },
+  [4, 2],
+  256,
+  128,
+);
 const sheath = braidedSurface(kernmantle.surface, [5, 2 * Math.PI], 320, 320);
 
 /** How much the shade changes from one texel to the next, on average, between two columns or two rows. */
@@ -36,6 +42,11 @@ describe('the face of a strand of laid rope', () => {
     const middle = (row(60) + row(64) + row(68)) / 3;
     expect(row(2)).toBeLessThan(0.6 * middle);
     expect(row(strand.height - 3)).toBeLessThan(0.6 * middle);
+  });
+
+  it('is no darker at its edges when its grooves are not painted', () => {
+    const plain = laidSurface({ ...jute.surface, depth: 0, groove: 0, variety: 0, twist: 5, arc: 4.4 }, [4, 2], 64, 32);
+    expect(new Set(plain.shade).size).toBe(1);
   });
 
   it('has fibres of different colours', () => {

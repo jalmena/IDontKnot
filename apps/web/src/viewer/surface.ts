@@ -143,6 +143,8 @@ export interface LaidSurface {
   readonly fibreRelief: number;
   /** 0 to 1: how dark the grooves between yarns are. */
   readonly depth: number;
+  /** 0 to 1: how dark the sides of the strand are painted, where it turns into the groove beside it. */
+  readonly groove: number;
   /** 0 to 1: how much yarns and fibres wander. */
   readonly unevenness: number;
   /** 0 to 1: how much fibres differ in lightness and colour. */
@@ -155,7 +157,7 @@ export interface LaidSurface {
  * middle and the grooves where it meets its neighbours at the edges, which are darker.
  */
 export function laidSurface(look: LaidSurface, extent: readonly [number, number], width = 1024, height = 512): Surface {
-  const { yarns, fibres, twist, staple, depth, unevenness, variety } = look;
+  const { yarns, fibres, twist, staple, depth, groove, unevenness, variety } = look;
   // most fibres follow their yarn; on a rough rope some have worked loose and lie at an angle to the rest
   const layers = [
     { turns: twist, density: fibres, weight: 1 },
@@ -193,10 +195,10 @@ export function laidSurface(look: LaidSurface, extent: readonly [number, number]
       look.yarnRelief * (yarn + 0.6 * unevenness * (lump - 0.5)) + look.fibreRelief * (0.3 + 0.7 * yarn) * standing;
     out.shade =
       (1 - depth + depth * Math.pow(yarn, 0.85)) *
-      (0.22 + 0.78 * open) *
+      (1 - groove * (1 - open)) *
       (1 + variety * (tone + 0.4 * (speck - 0.5) + 0.35 * (mottle - 0.5)));
     out.tint = 0.5 + variety * (1.2 * (colour - 0.5) + 0.25 * (lump - 0.5));
-    out.open = (0.25 + 0.75 * open) * (1 - 0.85 * depth * (1 - yarn));
+    out.open = (1 - Math.min(0.9, 2 * groove) * (1 - open)) * (1 - 0.85 * depth * (1 - yarn));
     out.rough = look.roughness + 0.14 * (speck - 0.5);
   });
 }
