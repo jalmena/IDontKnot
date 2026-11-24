@@ -37,12 +37,21 @@ interface Props {
   readonly diagram?: ReactNode;
   /** The heading of the page, written in the top left corner of the view. */
   readonly title?: ReactNode;
+  /** Something for the top right corner of the view, on the line of the title. */
+  readonly corner?: ReactNode;
 }
 
 const NONE: readonly Stretch[] = [];
 
+/**
+ * The margins a picture keeps inside the view, in CSS pixels. At the sides and the bottom, twice the margin
+ * at which the writing starts: a rope that ends nearer the edge than its own thickness looks like a mistake.
+ * At the top, the line the title is written on.
+ */
+export const VIEW_MARGINS = { top: 84, right: 45, bottom: 40, left: 45 } as const;
+
 /** The single React component around the imperative viewport. */
-export function RopeView({ ropes, label, fit, emphasis = NONE, names, diagram, title }: Props) {
+export function RopeView({ ropes, label, fit, emphasis = NONE, names, diagram, title, corner }: Props) {
   const { t } = useTranslation();
   const host = useRef<HTMLDivElement>(null);
   const tags = useRef<HTMLDivElement>(null);
@@ -122,7 +131,12 @@ export function RopeView({ ropes, label, fit, emphasis = NONE, names, diagram, t
           </div>
         )}
         {covered && <div className="rope-view__cover">{diagram}</div>}
-        {title !== undefined && <div className="rope-view__title">{title}</div>}
+        {(title !== undefined || corner !== undefined) && (
+          <div className="rope-view__head">
+            {title}
+            {corner}
+          </div>
+        )}
       </div>
       {unavailable && <p className="rope-view__note">{t('lab.view.unavailable')}</p>}
       <figcaption className="rope-view__caption">

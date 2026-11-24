@@ -40,9 +40,9 @@ test('draws plainly for an automated browser, and fully when asked', async ({ pa
 });
 
 test('changes the rope it is drawn with', async ({ page }) => {
-  await expect(page.getByLabel('Rope')).toHaveValue('jute');
+  await expect(page.getByLabel('Material')).toHaveValue('jute');
   for (const rope of ['kernmantle', 'polyester', 'sisal', 'cotton', 'line']) {
-    await page.getByLabel('Rope').selectOption(rope);
+    await page.getByLabel('Material').selectOption(rope);
     await expect
       .poll(async () => Number(await page.getByTestId('rope-canvas').getAttribute('data-triangles')))
       .toBeGreaterThan(1000);
@@ -52,11 +52,7 @@ test('changes the rope it is drawn with', async ({ page }) => {
 });
 
 test('lists the ropes in alphabetical order of the language in use', async ({ page }) => {
-  const names = () =>
-    page
-      .getByLabel(/^(Rope|Cuerda)$/)
-      .locator('option')
-      .allTextContents();
+  const names = () => page.getByLabel('Material').locator('option').allTextContents();
   expect(await names()).toEqual([
     'Braided cotton',
     'Jute',

@@ -11,15 +11,17 @@ import {
 import { useId, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Diagram2D } from '../diagram/Diagram2D.tsx';
+import { useRope } from '../viewer/RopeChoice.tsx';
 import { RopeSelect } from '../viewer/RopeSelect.tsx';
 import { RopeView } from '../viewer/RopeView.tsx';
-import { ropeColour, type RopeMaterialId } from '../viewer/materials.ts';
+import { ropeColour } from '../viewer/materials.ts';
+import { VIEW_MARGINS } from '../viewer/RopeView.tsx';
 import type { Fit, RopeSpec } from '../viewer/RopeViewport.ts';
 import { polynomialText } from './format.ts';
 import { Polynomial } from './Polynomial.tsx';
 
-/** The box every torus knot of the laboratory fits in, with room above for the title. */
-const FIT: Fit = { centre: [0, 0.3, 0], width: 6.9, height: 7.4 };
+/** The box every torus knot of the laboratory fits in. */
+const FIT: Fit = { centre: [0, 0, 0], width: 6, height: 6, clear: VIEW_MARGINS };
 
 /** The state sum doubles with every crossing; this keeps the page instant. */
 const MAX_CROSSINGS = 14;
@@ -46,7 +48,8 @@ export function TorusLab() {
   const { t } = useTranslation();
   const [p, setP] = useState(2);
   const [q, setQ] = useState(3);
-  const [material, setMaterial] = useState<RopeMaterialId>('jute');
+  const [material, setMaterial] = useRope();
+  const selector = <RopeSelect value={material} onChange={setMaterial} />;
   const pId = useId();
   const qId = useId();
 
@@ -91,6 +94,7 @@ export function TorusLab() {
           ropes={ropes}
           label={t('lab.view.label', { p, q, count: loops })}
           title={<h1 id="lab-title">{t('lab.title')}</h1>}
+          corner={selector}
           fit={FIT}
           {...(facts
             ? {
@@ -108,10 +112,6 @@ export function TorusLab() {
       </div>
 
       <div className="lab__facts panel">
-        <form className="controls" onSubmit={(event) => event.preventDefault()}>
-          <RopeSelect value={material} onChange={setMaterial} />
-        </form>
-
         <h2>{t('lab.turns')}</h2>
         <form className="controls" onSubmit={(event) => event.preventDefault()}>
           <label htmlFor={pId}>{t('lab.p')}</label>

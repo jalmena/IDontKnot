@@ -69,6 +69,11 @@ export interface Fit {
   readonly centre: Point3;
   readonly width: number;
   readonly height: number;
+  /**
+   * How much of each side of the view the box keeps out of, in CSS pixels: the air round it, and room
+   * for what is written over the view.
+   */
+  readonly clear?: { readonly top: number; readonly right: number; readonly bottom: number; readonly left: number };
 }
 
 /** Where a point of the scene is on the canvas, as fractions of its width and height from its top left corner. */
@@ -81,6 +86,11 @@ export interface Placed {
 const EDGE_COLOUR = 0x030d07;
 /** How much of its light a rope keeps while another stretch of rope is emphasised. */
 const DIMMED = 0.26;
+/**
+ * A picture centred exactly looks low. The box is drawn this fraction of the free height above the middle:
+ * the optical centre.
+ */
+const OPTICAL_LIFT = 0.03;
 const MAX_ROWS = 2400;
 const MAX_FIBRES = 12000;
 const KEY_DIRECTION = new Vector3(-5, 7, 4.5).normalize();
@@ -118,6 +128,8 @@ export class RopeViewport {
   private specs: readonly RopeSpec[] = [];
   private stretches: readonly Stretch[] = [];
   private fit: Fit | null = null;
+  /** How far from the middle of the view its centre of attention is drawn, in CSS pixels. */
+  private shift = { right: 0, down: 0 };
   /** Whether the person has turned or zoomed the view since it was last framed. */
   private moved = false;
   /** Called after every drawing: the camera may have moved. */
@@ -183,12 +195,25 @@ export class RopeViewport {
   fitTo(fit: Fit): void {
     this.fit = fit;
     this.moved = false;
+    const width = Math.max(this.host.clientWidth, 1);
+    const height = Math.max(this.host.clientHeight, 1);
+    const clear = fit.clear ?? { top: 0, right: 0, bottom: 0, left: 0 };
+    const free = {
+      width: Math.max(width - clear.left - clear.right, width / 4),
+      height: Math.max(height - clear.top - clear.bottom, height / 4),
+    };
+    // the box fills the free part of the view one way or the other, and sits at its optical centre
     const half = Math.tan((this.camera.fov * Math.PI) / 360);
-    const distance = Math.max(fit.height / (2 * half), fit.width / (2 * half * this.camera.aspect));
+    const perPixel = Math.max(fit.width / free.width, fit.height / free.height);
+    const distance = (perPixel * height) / (2 * half);
+    this.shift = {
+      right: (clear.left - clear.right) / 2,
+      down: (clear.top - clear.bottom) / 2 - OPTICAL_LIFT * free.height,
+    };
     this.controls.target.set(...fit.centre);
     this.camera.position.set(fit.centre[0], fit.centre[1], fit.centre[2] + distance);
     [this.camera.near, this.camera.far] = [distance / 100, distance * 10];
-    this.camera.updateProjectionMatrix();
+    this.camera.setViewOffset(width, height, -this.shift.right, -this.shift.down, width, height);
     [this.controls.minDistance, this.controls.maxDistance] = [distance * 0.2, distance * 2.2];
     this.controls.update();
     this.controls.saveState();
@@ -422,7 +447,7 @@ export class RopeViewport {
     const height = Math.max(this.host.clientHeight, 1);
     this.renderer.setSize(width, height, false);
     this.camera.aspect = width / height;
-    this.camera.updateProjectionMatrix();
+    this.camera.setViewOffset(width, height, -this.shift.right, -this.shift.down, width, height);
     if (this.fit && !this.moved) this.fitTo(this.fit);
     else this.render();
   };

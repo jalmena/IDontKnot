@@ -14,9 +14,11 @@ import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Diagram2D } from '../diagram/Diagram2D.tsx';
 import { Polynomial } from '../lab/Polynomial.tsx';
-import { ropeColour, type RopeMaterialId } from '../viewer/materials.ts';
+import { ropeColour } from '../viewer/materials.ts';
+import { useRope } from '../viewer/RopeChoice.tsx';
 import { RopeSelect } from '../viewer/RopeSelect.tsx';
 import { RopeView } from '../viewer/RopeView.tsx';
+import { VIEW_MARGINS } from '../viewer/RopeView.tsx';
 import type { Fit, RopeSpec, Stretch } from '../viewer/RopeViewport.ts';
 import { inLanguage, type LibraryKnot } from './library.ts';
 import { boundsOf, partShape } from './parts.ts';
@@ -25,6 +27,8 @@ interface Props {
   readonly knot: LibraryKnot;
 }
 
+/** The room a name takes above the rope it names, in CSS pixels. */
+const NAME_HEIGHT = 44;
 const DIAGRAM_LINE = 0.36;
 const DIAGRAM_TEXT = 0.62;
 /** How far above its part a name is written on the diagram, and the room that takes at the top. */
@@ -37,7 +41,8 @@ export function KnotPage({ knot }: Props) {
   const { document, entry } = knot;
   const language = i18n.resolvedLanguage ?? 'en';
   const title = inLanguage(entry.names, language);
-  const [material, setMaterial] = useState<RopeMaterialId>('jute');
+  const [material, setMaterial] = useRope();
+  const selector = <RopeSelect value={material} onChange={setMaterial} />;
   const [pinned, setPinned] = useState<string | null>(null);
   const [pointed, setPointed] = useState<string | null>(null);
   const shown = pointed ?? pinned;
@@ -64,10 +69,15 @@ export function KnotPage({ knot }: Props) {
       }),
     [curves, document],
   );
-  // the rope fills the view from side to side, with a little air
+  // the rope keeps the margins of the view, and leaves room above it for the names of its parts
   const fit = useMemo<Fit>(() => {
-    const [minX, minY, maxX, maxY] = boundsOf(curves, 0.8);
-    return { centre: [(minX + maxX) / 2, (minY + maxY) / 2, 0], width: maxX - minX, height: maxY - minY };
+    const [minX, minY, maxX, maxY] = boundsOf(curves, 0.5);
+    return {
+      centre: [(minX + maxX) / 2, (minY + maxY) / 2, 0],
+      width: maxX - minX,
+      height: maxY - minY,
+      clear: { ...VIEW_MARGINS, top: VIEW_MARGINS.top + NAME_HEIGHT },
+    };
   }, [curves]);
   const facts = useMemo(() => {
     const { diagram, visits } = diagramFromGeometry(curves);
@@ -127,6 +137,7 @@ export function KnotPage({ knot }: Props) {
           ropes={ropes}
           label={t('knot.view', { name: title })}
           title={<h1 id="knot-title">{title}</h1>}
+          corner={selector}
           fit={fit}
           emphasis={emphasis}
           names={names}
@@ -147,10 +158,6 @@ export function KnotPage({ knot }: Props) {
       </div>
 
       <div className="lab__facts panel" aria-live="polite">
-        <form className="controls" onSubmit={(event) => event.preventDefault()}>
-          <RopeSelect value={material} onChange={setMaterial} />
-        </form>
-
         <h2 id="knot-parts">{t('knot.parts.title')}</h2>
         <ul className="parts" aria-labelledby="knot-parts" data-testid="parts">
           {names.map((part) => (

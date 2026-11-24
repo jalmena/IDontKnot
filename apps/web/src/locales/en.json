@@ -46,7 +46,7 @@
     },
     "link_one": "p and q have no common factor: one loop of rope, a knot.",
     "link_other": "p and q share the factor {{count}}, so the rope closes into {{count}} separate loops, linked together. Each has its own colour.",
-    "rope": "Rope",
+    "rope": "Material",
     "ropes": {
       "jute": "Jute",
       "kernmantle": "Kernmantle",

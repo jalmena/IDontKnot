@@ -29,3 +29,4 @@ All notable changes to this project are recorded here. The format follows [Keep 
 - Both pages share one layout that fits one screen of a laptop: the view with the title of the page inside it, and a panel of the same height beside it.
 - The diagram is shown in place of the 3D view, by a switch on the view, instead of beside it.
 - A check that passes is no longer announced; one that fails is shown at the bottom of the panel.
+- The choice of rope is called "Material", sits inside the view opposite the title, and is kept from one page to the next.

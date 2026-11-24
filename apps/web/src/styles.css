@@ -285,8 +285,8 @@ select:hover {
   max-width: none;
 }
 
-/* the heading of the page, level with the first row of the panel beside the view */
-.rope-view__title {
+/* the line at the top of the view: the heading of the page, and opposite it the choice of material */
+.rope-view__head {
   position: absolute;
   top: var(--inset-y);
   left: var(--inset-x);
@@ -294,10 +294,34 @@ select:hover {
   min-height: 2.75rem;
   display: flex;
   align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.25rem 1rem;
   pointer-events: none;
 }
 
-.rope-view__title h1 {
+.rope-view__head > * {
+  pointer-events: auto;
+}
+
+.rope-view__head h1 {
+  pointer-events: none;
+}
+
+/* a labelled choice on one line */
+.choice {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  color: var(--ivory-dim);
+}
+
+.choice select {
+  width: 10.5rem;
+}
+
+.rope-view__head h1 {
   margin: 0;
   font-size: clamp(1.3rem, 2.2vw, 1.7rem);
   text-shadow: 0 1px 6px var(--green-edge);
@@ -432,8 +456,8 @@ dd {
   max-width: none;
 }
 
-/* the heading of the page, level with the first row of the panel beside the view */
-.rope-view__title {
+/* the line at the top of the view: the heading of the page, and opposite it the choice of material */
+.rope-view__head {
   position: absolute;
   top: var(--inset-y);
   left: var(--inset-x);
@@ -441,10 +465,34 @@ dd {
   min-height: 2.75rem;
   display: flex;
   align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.25rem 1rem;
   pointer-events: none;
 }
 
-.rope-view__title h1 {
+.rope-view__head > * {
+  pointer-events: auto;
+}
+
+.rope-view__head h1 {
+  pointer-events: none;
+}
+
+/* a labelled choice on one line */
+.choice {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  color: var(--ivory-dim);
+}
+
+.choice select {
+  width: 10.5rem;
+}
+
+.rope-view__head h1 {
   margin: 0;
   font-size: clamp(1.3rem, 2.2vw, 1.7rem);
   text-shadow: 0 1px 6px var(--green-edge);
