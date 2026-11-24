@@ -16,3 +16,4 @@ All notable changes to this project are recorded here. The format follows [Keep 
 - A server with a health check and a diagram check.
 - The first page of the application: a laboratory for torus knots and links, drawn in 3D as laid rope, in English and Spanish.
 - A container image and a two-stage CI workflow.
+- Six rope styles for the 3D view, one per discipline: jute, kernmantle, three-strand polyester, sisal, braided cotton and a plain line.
