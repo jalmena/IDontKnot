@@ -1,0 +1,6 @@
+packages:
+  - packages/*
+  - apps/*
+
+# Do not install a release until it has been public for three days.
+minimumReleaseAge: 4320

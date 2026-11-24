@@ -1,0 +1,12 @@
+dist
+coverage
+node_modules
+pnpm-lock.yaml
+playwright-report
+test-results
+.local
+fixtures
+tools
+docs/design/brand/svg
+LICENSE
+*.md
