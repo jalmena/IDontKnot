@@ -12,6 +12,7 @@ import {
   jonesPolynomial,
   torusBraidWord,
   torusKnot,
+  torusLink,
   type Point3,
   type Polyline,
 } from '../src/index.ts';
@@ -98,6 +99,40 @@ describe('two linked circles', () => {
     const hopf = [jonesPolynomial(closedBraid([1, 1], 2)), jonesPolynomial(closedBraid([-1, -1], 2))];
     expect(hopf).toContainEqual(jonesPolynomial(extraction.diagram));
   });
+});
+
+describe.each([
+  [2, 2, 2],
+  [2, 4, 2],
+  [4, 2, 2],
+  [3, 3, 3],
+  [2, 6, 2],
+  [3, 6, 3],
+  [4, 6, 2],
+])('the (%i, %i) torus link', (p, q, loops) => {
+  const curves = torusLink(p, q);
+  const extraction = diagramFromGeometry(curves);
+
+  it('has as many loops as the greatest common divisor of p and q', () => {
+    expect(curves).toHaveLength(loops);
+    expect(closedBraid(torusBraidWord(p, q), p).components).toHaveLength(loops);
+  });
+
+  it('gives a valid diagram with (p - 1) q positive crossings', () => {
+    expect(extraction.issues).toEqual([]);
+    expect(checkStructure(extraction.diagram)).toEqual([]);
+    expect(embed(extraction.diagram).genus).toBe(0);
+    expect(extraction.diagram.crossings).toHaveLength((p - 1) * q);
+    expect(extraction.diagram.crossings.every((crossing) => crossing.sign === 1)).toBe(true);
+  });
+
+  it('has the Jones polynomial of the corresponding closed braid', () => {
+    expect(jonesPolynomial(extraction.diagram)).toEqual(jonesPolynomial(closedBraid(torusBraidWord(p, q), p)));
+  });
+});
+
+it('gives one loop, the torus knot, when p and q are coprime', () => {
+  expect(torusLink(3, 4)).toEqual([torusKnot(3, 4)]);
 });
 
 it('reports strands that touch where they cross', () => {

@@ -149,28 +149,48 @@ function gcd(a: number, b: number): number {
   return b === 0 ? Math.abs(a) : gcd(b, a % b);
 }
 
+export interface TorusOptions {
+  /** Points per loop. */
+  readonly samples?: number;
+  /** Distance from the axis of the torus to the centre of its tube. */
+  readonly major?: number;
+  /** Radius of the tube of the torus. */
+  readonly minor?: number;
+}
+
 /**
- * A (p, q) torus knot as a closed polyline: it winds p times round the axis of the torus and q times
- * through its hole. p and q must be coprime. Seen from +z it has (p - 1) q crossings, all positive,
- * and is the closure of the braid word `torusBraidWord(p, q)`.
+ * The (p, q) torus link as closed polylines: rope that winds p times round the axis of a torus and q times
+ * through its hole. It has gcd(p, q) loops, each of them a torus knot; when p and q are coprime it is one knot.
+ * Seen from +z it has (p - 1) q crossings, all positive, and is the closure of the braid word `torusBraidWord(p, q)`.
  */
-export function torusKnot(
-  p: number,
-  q: number,
-  options: { samples?: number; major?: number; minor?: number } = {},
-): Polyline {
+export function torusLink(p: number, q: number, options: TorusOptions = {}): Polyline[] {
+  if (!Number.isInteger(p) || !Number.isInteger(q) || p < 1 || q < 1) {
+    throw new Error('p and q must be positive integers');
+  }
+  const loops = gcd(p, q);
+  const [p1, q1] = [p / loops, q / loops];
+  const samples = options.samples ?? 60 * Math.max(p1, q1);
+  const major = options.major ?? 2;
+  const minor = options.minor ?? 0.8;
+  return Array.from({ length: loops }, (_, loop) => {
+    const points: Point3[] = [];
+    for (let k = 0; k < samples; k++) {
+      // a small offset keeps crossings away from sample points
+      const t = (2 * Math.PI * (k + 0.37)) / samples;
+      const round = p1 * t;
+      // each loop is the same curve, shifted round the tube of the torus
+      const through = q1 * t - (2 * Math.PI * loop) / (loops * p1);
+      const radius = major + minor * Math.cos(through);
+      points.push([radius * Math.cos(round), radius * Math.sin(round), -minor * Math.sin(through)]);
+    }
+    return { id: `k${loop}`, closed: true, points };
+  });
+}
+
+/** The (p, q) torus knot: `torusLink` for coprime p and q, which is a single loop. */
+export function torusKnot(p: number, q: number, options: TorusOptions = {}): Polyline {
   if (!Number.isInteger(p) || !Number.isInteger(q) || p < 1 || q < 1 || gcd(p, q) !== 1) {
     throw new Error('p and q must be positive and coprime');
   }
-  const samples = options.samples ?? 60 * Math.max(p, q);
-  const major = options.major ?? 2;
-  const minor = options.minor ?? 0.8;
-  const points: Point3[] = [];
-  for (let k = 0; k < samples; k++) {
-    // a small offset keeps crossings away from sample points
-    const phi = (2 * Math.PI * (k + 0.37)) / samples;
-    const radius = major + minor * Math.cos(q * phi);
-    points.push([radius * Math.cos(p * phi), radius * Math.sin(p * phi), -minor * Math.sin(q * phi)]);
-  }
-  return { id: 'k0', closed: true, points };
+  return torusLink(p, q, options)[0] as Polyline;
 }
