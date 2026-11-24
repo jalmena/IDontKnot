@@ -6,8 +6,8 @@
  * where the curve straightens, so the rope does not twist or pinch. For a closed curve the small
  * mismatch where the curve meets itself is spread evenly along its length.
  *
- * The cross-section is either a circle or the outline of three strands laid together, which turn
- * round the rope as it goes: the shape of laid rope, so that light and shadow fall as they do on one.
+ * A rope is either one round tube, or the strands of laid rope: tubes that go round the centerline as
+ * the strands of a rope do, so that light and shadow fall as they do on one.
  *
  * This module is pure: it produces arrays, and knows nothing about the renderer.
  */
@@ -121,27 +121,13 @@ export function rotationMinimisingFrames(points: readonly Point3[], closed: bool
   return { tangents, normals, binormals };
 }
 
-/**
- * The outline of `strands` round strands laid together, as a radius for each angle, at most 1.
- * Between two strands the outline dips into a groove.
- */
-export function strandProfile(angle: number, strands: number): number {
-  if (strands < 2) return 1;
-  const sector = (2 * Math.PI) / strands;
-  const delta = ((((angle + sector / 2) % sector) + sector) % sector) - sector / 2; // angle from the nearest strand's centre
-  const centre = 0.45;
-  const size = 0.62;
-  const reach = centre * Math.cos(delta) + Math.sqrt(size * size - (centre * Math.sin(delta)) ** 2);
-  return reach / (centre + size);
-}
-
 export interface TubeData {
   readonly positions: Float32Array;
   readonly normals: Float32Array;
-  /** u runs along the rope and v across each strand, so that a texture of fibres follows the strands. */
+  /** u runs along the rope and v round it, or across each strand of a laid rope. */
   readonly uvs: Float32Array;
   readonly indices: Uint32Array;
-  /** Rows of vertices along the rope and columns round it, counting the repeated last row and column. */
+  /** Rows of vertices along the rope and columns round it (or across each strand), counting repeated ones. */
   readonly rows: number;
   readonly columns: number;
   readonly length: number;
@@ -150,14 +136,11 @@ export interface TubeData {
 export interface TubeOptions {
   /** Vertices round the rope. */
   readonly sides?: number;
-  /** 0 or 1 for a round tube; 3 for three-strand laid rope. */
-  readonly strands?: number;
-  /** Length of rope over which a strand goes once round it. */
-  readonly layLength?: number;
   /** Length of rope covered by one repeat of the texture. */
   readonly textureLength?: number;
 }
 
+/** A round tube along the centerline. */
 export function buildTube(
   points: readonly Point3[],
   closed: boolean,
@@ -165,8 +148,6 @@ export function buildTube(
   options: TubeOptions = {},
 ): TubeData {
   const sides = options.sides ?? 30;
-  const strands = options.strands ?? 3;
-  const layLength = options.layLength ?? 7 * radius;
   const textureLength = options.textureLength ?? 3 * radius;
   const n = points.length;
   const frames = rotationMinimisingFrames(points, closed);
@@ -175,9 +156,7 @@ export function buildTube(
   for (let i = 0; i < n; i++) along[i + 1] = along[i]! + distance(points[i]!, points[(i + 1) % n]!);
   const length = closed ? along[n]! : along[n - 1]!;
 
-  // on a closed rope the strands and the texture must meet themselves where the rope does
-  const perStrand = Math.max(strands, 1);
-  const turns = closed ? Math.max(1, Math.round((perStrand * length) / layLength)) / perStrand : length / layLength;
+  // on a closed rope the texture must meet itself where the rope does
   const repeats = closed ? Math.max(1, Math.round(length / textureLength)) : length / textureLength;
 
   // the surface on its own grid, n rows by `sides` columns
@@ -186,15 +165,13 @@ export function buildTube(
     const [px, py, pz] = points[i]!;
     const normal = frames.normals[i]!;
     const binormal = frames.binormals[i]!;
-    const twist = 2 * Math.PI * turns * (along[i]! / length);
     for (let j = 0; j < sides; j++) {
       const angle = (2 * Math.PI * j) / sides;
-      const reach = radius * strandProfile(angle - twist, strands);
       const [ca, sa] = [Math.cos(angle), Math.sin(angle)];
       const k = (i * sides + j) * 3;
-      grid[k] = px + reach * (ca * normal[0] + sa * binormal[0]);
-      grid[k + 1] = py + reach * (ca * normal[1] + sa * binormal[1]);
-      grid[k + 2] = pz + reach * (ca * normal[2] + sa * binormal[2]);
+      grid[k] = px + radius * (ca * normal[0] + sa * binormal[0]);
+      grid[k + 1] = py + radius * (ca * normal[1] + sa * binormal[1]);
+      grid[k + 2] = pz + radius * (ca * normal[2] + sa * binormal[2]);
     }
   }
   const cell = (i: number, j: number): Vec => {
@@ -225,12 +202,7 @@ export function buildTube(
       const k = (row * columns + column) * 3;
       positions.set(here, k);
       normals.set(normal, k);
-      const u = repeats * (travelled / length);
-      const v =
-        strands >= 2
-          ? (strands * ((2 * Math.PI * column) / sides - 2 * Math.PI * turns * (travelled / length))) / (2 * Math.PI)
-          : column / sides;
-      uvs.set([u, v], (row * columns + column) * 2);
+      uvs.set([repeats * (travelled / length), column / sides], (row * columns + column) * 2);
     }
   }
 
@@ -244,6 +216,109 @@ export function buildTube(
       const d = c + 1;
       indices.set([a, b, c, b, d, c], at); // anticlockwise seen from outside, so the outside is the front
       at += 6;
+    }
+  }
+  return { positions, normals, uvs, indices, rows, columns, length };
+}
+
+/** How much of the way round each strand of a laid rope is drawn, in radians: the rest is hidden inside it. */
+export const LAID_ARC = 4.4;
+
+/** Where the centre of each strand of a laid rope is, and how thick the strand is, as fractions of the rope's radius. */
+export function strandPlace(strands: number): { offset: number; size: number } {
+  const offset = 1 / (1 + Math.sin(Math.PI / strands));
+  return { offset, size: 1 - offset };
+}
+
+export interface LaidOptions {
+  readonly strands?: number;
+  /** Vertices across the part of each strand that is drawn. */
+  readonly sides?: number;
+  /** Length of rope over which a strand goes once round it. */
+  readonly layLength?: number;
+  /** Length of rope covered by one repeat of the texture. */
+  readonly textureLength?: number;
+}
+
+/**
+ * Laid rope as its strands: each a round tube going round the centerline like the thread of a right-handed
+ * screw. Only the outer side of each strand is built. u runs along the rope and v across the strand, from
+ * one groove (0) over its outer side (0.5) to the other groove (1), so that a texture can know where the
+ * grooves are.
+ */
+export function buildLaid(
+  points: readonly Point3[],
+  closed: boolean,
+  radius: number,
+  options: LaidOptions = {},
+): TubeData {
+  const strands = options.strands ?? 3;
+  const sides = options.sides ?? 12;
+  const layLength = options.layLength ?? 6 * radius;
+  const textureLength = options.textureLength ?? 4 * radius;
+  const n = points.length;
+  const frames = rotationMinimisingFrames(points, closed);
+
+  const along = new Float64Array(n + 1);
+  for (let i = 0; i < n; i++) along[i + 1] = along[i]! + distance(points[i]!, points[(i + 1) % n]!);
+  const length = closed ? along[n]! : along[n - 1]!;
+
+  // on a closed rope each strand must meet a strand, and the texture itself, where the rope meets itself
+  const turns = closed ? Math.max(1, Math.round((strands * length) / layLength)) / strands : length / layLength;
+  const repeats = closed ? Math.max(1, Math.round(length / textureLength)) : length / textureLength;
+  const place = strandPlace(strands);
+  const [offset, size] = [radius * place.offset, radius * place.size * 1.04];
+
+  /** How far along the rope a row is; on a closed rope rows may run past either end. */
+  const travelled = (row: number): number =>
+    closed ? along[((row % n) + n) % n]! + Math.floor(row / n) * length : along[Math.min(Math.max(row, 0), n - 1)]!;
+  const centre = (strand: number, row: number): Vec => {
+    const i = closed ? ((row % n) + n) % n : Math.min(Math.max(row, 0), n - 1);
+    const angle = 2 * Math.PI * ((turns * travelled(row)) / length + strand / strands);
+    const [ca, sa] = [Math.cos(angle), Math.sin(angle)];
+    const [normal, binormal] = [frames.normals[i]!, frames.binormals[i]!];
+    return axpy(axpy(points[i]!, offset * ca, normal), offset * sa, binormal);
+  };
+
+  const rows = closed ? n + 1 : n;
+  const columns = sides + 1;
+  const perStrand = rows * columns;
+  const positions = new Float32Array(strands * perStrand * 3);
+  const normals = new Float32Array(strands * perStrand * 3);
+  const uvs = new Float32Array(strands * perStrand * 2);
+  const indices = new Uint32Array(strands * (rows - 1) * sides * 6);
+  let at = 0;
+  for (let strand = 0; strand < strands; strand++) {
+    for (let row = 0; row < rows; row++) {
+      const here = centre(strand, row);
+      const tangent = unit(sub(centre(strand, row + 1), centre(strand, row - 1)));
+      const away = sub(here, points[row % n]!);
+      const outward = unit(axpy(away, -dot(away, tangent), tangent));
+      const side = cross(tangent, outward);
+      const u = repeats * (travelled(row) / length);
+      for (let column = 0; column < columns; column++) {
+        const angle = LAID_ARC * (column / sides - 0.5);
+        const [ca, sa] = [Math.cos(angle), Math.sin(angle)];
+        const normal: Vec = [
+          ca * outward[0] + sa * side[0],
+          ca * outward[1] + sa * side[1],
+          ca * outward[2] + sa * side[2],
+        ];
+        const vertex = strand * perStrand + row * columns + column;
+        positions.set(axpy(here, size, normal), vertex * 3);
+        normals.set(normal, vertex * 3);
+        uvs.set([u, column / sides], vertex * 2);
+      }
+    }
+    for (let row = 0; row < rows - 1; row++) {
+      for (let column = 0; column < sides; column++) {
+        const a = strand * perStrand + row * columns + column;
+        const b = a + 1;
+        const c = a + columns;
+        const d = c + 1;
+        indices.set([a, b, c, b, d, c], at); // anticlockwise seen from outside, so the outside is the front
+        at += 6;
+      }
     }
   }
   return { positions, normals, uvs, indices, rows, columns, length };

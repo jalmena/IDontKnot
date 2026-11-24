@@ -12,5 +12,6 @@ export default defineConfig({
     proxy: { '/api': 'http://127.0.0.1:8080', '/healthz': 'http://127.0.0.1:8080' },
   },
   build: { outDir: 'dist', sourcemap: true, chunkSizeWarningLimit: 900 },
+  worker: { format: 'es' },
   test: { environment: 'node' },
 });
