@@ -12,3 +12,7 @@ All notable changes to this project are recorded here. The format follows [Keep 
 - Twenty-one reference diagrams with expected values, cross-checked against independent software, and the scripts that generate them.
 - The product brief, the architecture overview, the roadmap, and the contributing and security guides.
 - The brand identity: mark, wordmark, colours and rules of use.
+- The mathematical core, version 0: diagram validation, planarity, PD codes, the Jones polynomial, closed braids, and extraction of a diagram from a curve in space. It reproduces every reference diagram.
+- A server with a health check and a diagram check.
+- The first page of the application: a torus knot laboratory with a 3D view, in English and Spanish.
+- A container image and a two-stage CI workflow.

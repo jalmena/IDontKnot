@@ -2,7 +2,29 @@
 
 An interactive encyclopedia and laboratory for knots, rope systems and knot theory, built to be self-hosted.
 
-**Status: decisions taken, implementation starting.** There is no application yet. This repository holds the research, the accepted decisions, the knot document model, the brand identity and a set of machine-checked reference diagrams.
+**Status: first prototype.** The mathematical core exists and reproduces the reference diagrams. The application is one page, a torus knot laboratory, in English and Spanish. There is no library, no tutorial and no account yet; see the [roadmap](ROADMAP.md).
+
+## Run it
+
+Requires Node 24. If `pnpm` is not on your path, put `corepack` in front of each command.
+
+```sh
+pnpm install
+pnpm --filter @idontknot/web build
+pnpm start
+```
+
+Open <http://localhost:8080>. Stop it with Ctrl+C.
+
+While developing, `pnpm dev` runs the interface with live reload on <http://localhost:5173> and the server on port 8080.
+
+| Command | What it does |
+| --- | --- |
+| `pnpm typecheck`, `pnpm lint`, `pnpm format:check` | Static checks |
+| `pnpm test` | Unit and property tests, including the reference diagrams |
+| `pnpm e2e` | The application in a real browser, at desktop and tablet sizes. Run `pnpm exec playwright install chromium` once first. |
+| `docker build -f deploy/Dockerfile -t idontknot:local .` | Builds the container image (Podman works the same way) |
+| `docker run --rm -p 8080:8080 -v ./data:/data idontknot:local` | Runs it |
 
 ## What is here
 
