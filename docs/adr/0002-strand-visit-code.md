@@ -1,6 +1,6 @@
 # 0002. The strand-visit code is the stored form of a diagram
 
-- Status: Proposed
+- Status: Accepted (Product Owner, 2026-11-24)
 - Date: 2026-11-23
 
 ## Context

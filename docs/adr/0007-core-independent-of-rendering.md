@@ -1,9 +1,9 @@
 # 0007. The mathematical core is a standalone library with no rendering dependency
 
-- Status: Proposed
+- Status: Accepted (Product Owner, 2026-11-24)
 - Date: 2026-11-23
 
-This record fixes a boundary. The choice of interface framework and of the wider technology stack is a separate proposal.
+This record fixes a boundary. The interface framework and the rest of the technology stack are in ADR 0008.
 
 ## Context
 

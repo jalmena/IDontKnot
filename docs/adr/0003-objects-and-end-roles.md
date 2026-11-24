@@ -1,6 +1,6 @@
 # 0003. Objects and end roles are part of the topological description
 
-- Status: Proposed
+- Status: Accepted (Product Owner, 2026-11-24)
 - Date: 2026-11-23
 
 ## Context

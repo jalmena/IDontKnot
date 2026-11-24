@@ -1,6 +1,6 @@
 # 0001. A knot is described in four independent layers
 
-- Status: Proposed
+- Status: Accepted (Product Owner, 2026-11-24)
 - Date: 2026-11-23
 
 ## Context

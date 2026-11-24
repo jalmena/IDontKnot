@@ -1,6 +1,6 @@
 # Knot document model
 
-Draft 0.1, a proposal. Nothing here is implemented yet. The reasoning behind it is in the [foundations report](../research/01-mathematical-foundations.md) and the [comparison of representations](../research/02-representation-comparison.md). The decisions it embodies are recorded as proposed [ADRs](../adr/).
+Draft 0.1. Nothing here is implemented yet. The reasoning behind it is in the [foundations report](../research/01-mathematical-foundations.md) and the [comparison of representations](../research/02-representation-comparison.md). The decisions it embodies are recorded in the [decision records](../adr/README.md).
 
 ## 1. Purpose and rules
 

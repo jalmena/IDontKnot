@@ -84,7 +84,7 @@ The representation of geometry is specified in the [knot document model](../spec
 4. Centerline picking and pointer-event dragging.
 5. No physics engine. Scripted, kinematic animation first; a small custom tightening solver in a worker later, in TypeScript unless profiling proves that too slow.
 
-The choice of interface framework (React, Svelte or Vue around Three.js) is a separate decision and belongs to the technology-stack proposal.
+The choice of interface framework (React, Svelte or Vue around Three.js) is recorded in ADR 0008.
 
 ## Main risks
 
