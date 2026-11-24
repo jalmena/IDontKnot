@@ -45,6 +45,11 @@
       "sisal": "Sisal",
       "cotton": "Algodón trenzado",
       "line": "Línea lisa"
+    },
+    "diagram": {
+      "label_one": "Diagrama del nudo visto de frente, con {{count}} cruce",
+      "label_other": "Diagrama del nudo visto de frente, con {{count}} cruces",
+      "caption": "Visto de frente"
     }
   },
   "footer": {

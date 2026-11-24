@@ -45,6 +45,11 @@
       "sisal": "Sisal",
       "cotton": "Braided cotton",
       "line": "Plain line"
+    },
+    "diagram": {
+      "label_one": "Knot diagram seen from the front, with {{count}} crossing",
+      "label_other": "Knot diagram seen from the front, with {{count}} crossings",
+      "caption": "Seen from the front"
     }
   },
   "footer": {
