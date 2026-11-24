@@ -10,7 +10,8 @@
     "explore": "Explore",
     "experiment": "Experiment",
     "missing": "There is nothing at this address.",
-    "home": "Go to the library"
+    "home": "Go to the library",
+    "learn": "Learn"
   },
   "lab": {
     "title": "Torus knot laboratory",
@@ -73,6 +74,20 @@
       "closure": "Jones polynomial, with the two ends joined",
       "unsound": "The shape in space breaks a rule. This is a defect: please report it."
     }
+  },
+  "learn": {
+    "view": "3D view of the {{name}} being tied",
+    "how": "How it is tied",
+    "player": "Playing the steps",
+    "previous": "Previous",
+    "play": "Play",
+    "pause": "Pause",
+    "next": "Next",
+    "progress": "How far the end has come",
+    "speed": "Speed",
+    "end": "The end",
+    "none": "This knot has no method of tying yet.",
+    "unsound": "The steps of this method do not follow from one another. This is a defect: please report it."
   },
   "footer": {
     "status": "Prototype. Nothing here is evidence that a knot is safe to use."

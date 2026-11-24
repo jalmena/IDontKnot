@@ -29,6 +29,8 @@ interface Props {
   readonly fit?: Fit;
   /** Stretches of rope to bring out: the rest is dimmed. */
   readonly emphasis?: readonly Stretch[];
+  /** How much of each rope is laid, from its start, as a fraction of its length. Without it, all of it. */
+  readonly reach?: readonly number[];
   readonly names?: readonly ViewName[];
   /**
    * The diagram of the same ropes. With it the view has a switch, and shows the diagram in place of the
@@ -42,6 +44,7 @@ interface Props {
 }
 
 const NONE: readonly Stretch[] = [];
+const WHOLE: readonly number[] = [];
 
 /**
  * The margins a picture keeps inside the view, in CSS pixels. At the sides and the bottom, twice the margin
@@ -51,7 +54,7 @@ const NONE: readonly Stretch[] = [];
 export const VIEW_MARGINS = { top: 84, right: 45, bottom: 40, left: 45 } as const;
 
 /** The single React component around the imperative viewport. */
-export function RopeView({ ropes, label, fit, emphasis = NONE, names, diagram, title, corner }: Props) {
+export function RopeView({ ropes, label, fit, emphasis = NONE, reach = WHOLE, names, diagram, title, corner }: Props) {
   const { t } = useTranslation();
   const host = useRef<HTMLDivElement>(null);
   const tags = useRef<HTMLDivElement>(null);
@@ -84,6 +87,10 @@ export function RopeView({ ropes, label, fit, emphasis = NONE, names, diagram, t
   useEffect(() => {
     viewport.current?.emphasise(emphasis);
   }, [emphasis]);
+
+  useEffect(() => {
+    viewport.current?.setReach(reach);
+  }, [reach]);
 
   // the names are moved by hand each time the view is drawn: turning it must not wait for React
   useEffect(() => {

@@ -22,6 +22,8 @@ All notable changes to this project are recorded here. The format follows [Keep 
 - Knot documents in the core: components, named parts of a rope, the diagram, and shapes in space with the rules they must keep.
 - The first knot of the library: a figure-eight knot, checked against the reference diagram.
 - A page for a knot of the library, which the application now opens on: the rope in 3D or its diagram, the parts of the rope named on both and brought out when chosen, and what the core computes for it.
+- The construction layer in the core: a method of tying as steps, each checked against the shape and against the operation it names.
+- A page where a knot is tied step by step: the figure-eight knot, with play, pause, single steps, a slider and three speeds, in English and Spanish.
 
 ### Changed
 

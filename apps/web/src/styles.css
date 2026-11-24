@@ -624,6 +624,71 @@ a {
   color: var(--gold-bright);
 }
 
+/* A knot being tied: the buttons that play its steps, and the steps */
+.player,
+.player__row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.6rem;
+}
+
+.player__play {
+  flex: 1;
+  background: var(--gold);
+  border-color: var(--gold);
+  color: var(--green-edge);
+  font-weight: 600;
+}
+
+.player__row input {
+  flex: 1;
+}
+
+.player__row .choice select {
+  width: auto;
+}
+
+button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.steps {
+  margin: 0.4rem 0 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: step;
+  display: grid;
+  gap: 0.5rem;
+}
+
+.steps li {
+  counter-increment: step;
+}
+
+.steps button {
+  display: grid;
+  grid-template-columns: 1.6rem 1fr;
+  gap: 0.6rem;
+  width: 100%;
+  padding: 0.6rem 0.9rem;
+  border-radius: 10px;
+  text-align: left;
+  line-height: 1.35;
+}
+
+.steps button::before {
+  content: counter(step);
+  font-family: var(--font-code);
+  color: var(--gold);
+}
+
+.steps li[aria-current='step'] button {
+  border-color: var(--gold);
+  background: color-mix(in srgb, var(--gold) 16%, var(--green-glow));
+}
+
 /* A knot of the library */
 .parts {
   list-style: none;

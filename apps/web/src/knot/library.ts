@@ -13,6 +13,16 @@ export interface LibraryEntry {
   readonly names: Readonly<Record<string, string>>;
   /** The name of each named part of its ropes, by part and by language code. */
   readonly parts: Readonly<Record<string, Readonly<Record<string, string>>>>;
+  /** For each method of tying: its name, and what each of its steps tells the person to do, by language code. */
+  readonly methods?: Readonly<
+    Record<
+      string,
+      {
+        readonly name: Readonly<Record<string, string>>;
+        readonly steps: Readonly<Record<string, Readonly<Record<string, string>>>>;
+      }
+    >
+  >;
 }
 
 export interface LibraryKnot {

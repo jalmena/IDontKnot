@@ -5,17 +5,23 @@ import { byLabel } from './lab/format.ts';
 import { KnotPage } from './knot/KnotPage.tsx';
 import { KNOTS } from './knot/library.ts';
 import { TorusLab } from './lab/TorusLab.tsx';
+import { LearnPage } from './learn/LearnPage.tsx';
 import { Link, usePath } from './route.tsx';
 
 /** The knot the library opens on, while it has no index of its own. */
 const FIRST_KNOT = 'figure-eight';
 const LAB = '/lab';
+const LEARN = '/learn';
 
 export function App() {
   const { t, i18n } = useTranslation();
   const path = usePath();
   const inLibrary = path === '/' || path.startsWith('/knots/');
   const inLab = path === LAB;
+  const inLearn = path === LEARN || path.startsWith(`${LEARN}/`);
+  const lesson = inLearn
+    ? KNOTS[path === LEARN ? FIRST_KNOT : path.slice(LEARN.length + 1).replace(/\/$/, '')]
+    : undefined;
   const knot = inLibrary
     ? KNOTS[path === '/' ? FIRST_KNOT : path.slice('/knots/'.length).replace(/\/$/, '')]
     : undefined;
@@ -33,6 +39,9 @@ export function App() {
           </Link>
           <Link to={LAB} current={inLab}>
             {t('nav.experiment')}
+          </Link>
+          <Link to={LEARN} current={inLearn}>
+            {t('nav.learn')}
           </Link>
         </nav>
         <label className="language">
@@ -57,9 +66,11 @@ export function App() {
           <KnotPage knot={knot} />
         ) : inLab ? (
           <TorusLab />
+        ) : lesson ? (
+          <LearnPage knot={lesson} />
         ) : (
           <section className="missing">
-            <h1>{inLibrary ? t('knot.missing') : t('nav.missing')}</h1>
+            <h1>{inLibrary || inLearn ? t('knot.missing') : t('nav.missing')}</h1>
             <p>
               <Link to="/">{t('nav.home')}</Link>
             </p>

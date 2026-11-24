@@ -1,6 +1,6 @@
 # Knot document model
 
-Draft 0.1. Implemented in `packages/core`: components, parts, the topology layer, and geometry frames with curves and rules G1 to G5. Not yet implemented: shapes of rigid objects, the construction layer, library entries, the JSON Schema. The reasoning behind it is in the [foundations report](../research/01-mathematical-foundations.md) and the [comparison of representations](../research/02-representation-comparison.md). The decisions it embodies are recorded in the [decision records](../adr/README.md).
+Draft 0.1. Implemented in `packages/core`: components, parts, the topology layer, geometry frames with curves and rules G1 to G5, and the construction layer for methods led with the end of a rope (operations `cross` and `tuck`, rules C1 to C3). Not yet implemented: shapes of rigid objects, the other operations, library entries, the JSON Schema. The reasoning behind it is in the [foundations report](../research/01-mathematical-foundations.md) and the [comparison of representations](../research/02-representation-comparison.md). The decisions it embodies are recorded in the [decision records](../adr/README.md).
 
 ## 1. Purpose and rules
 
@@ -164,6 +164,28 @@ The operations are a small vocabulary. Each has a defined effect on the diagram,
 | `slip-over` | Drop a loop over a post | The object's `open` end crosses strands | Yes, relative to the object |
 | `join`, `cut` | Splice, attach, cut | Changes components and junctions | Reserved |
 
+### Methods shown on a frame
+
+The first implementation covers methods in which the end of a rope is led along the finished shape. Such a method names the frame it is shown on and how much rope is laid before the first step; each step says how far the end has come when it is done:
+
+```json
+{ "id": "with-the-end", "frame": "dressed", "start": 12,
+  "steps": [
+    { "id": "make-loop", "op": "cross", "actor": ["rope","end"], "pass": "over", "to": 37.8,
+      "result": { "crossings": [ {"id":"c1","sign":1} ], "strands": { "rope": [ ["c1","u"], ["c1","o"] ] } } }
+  ] }
+```
+
+`start` and `to` are material coordinates. The state at a coordinate is the frame with the rope cut there.
+
+| Rule | Statement |
+| --- | --- |
+| C1 | Each step's result is the diagram of the frame with the rope cut at the step's `to`, up to renaming of crossings. |
+| C2 | Each step's result follows from the state before it by the operation it names. For `cross`, the last crossing the end visits is new, it passes it as `pass` says, and without it the diagram is the state before. For `tuck`, the same for as many crossings as `passes` has entries. An operation the implementation cannot check is noted, not refused. |
+| C3 | The last step's `to` is the length of the rope, and its result is the diagram of the topology layer. |
+
+A step may instead carry a frame of its own; that is not implemented yet.
+
 Two facts make this table more than a list (both are argued in the foundations report):
 
 - The first three operations are exactly the Reidemeister moves, performed by hand. They never change the knot while the ends are held.
@@ -188,7 +210,7 @@ There is no boolean "same knot" function. Identification against a table returns
 
 ## 8. Library entries (outline)
 
-A separate document type, specified later with the content model. A provisional first form exists beside each knot document, `entry.json`, and holds only the name of the knot and the names of its parts, by language. What an entry will hold:
+A separate document type, specified later with the content model. A provisional first form exists beside each knot document, `entry.json`, and holds only names and instructions, by language: the name of the knot, the names of its parts, and for each method its name and what each step tells the person to do. What an entry will hold:
 
 - Identity: canonical name, names by language, synonyms, reference numbers.
 - Classification: disciplines, purposes, structural tags.
