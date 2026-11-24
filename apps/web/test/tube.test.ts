@@ -1,6 +1,7 @@
 import { torusKnot, type Point3 } from '@idontknot/core';
 import { describe, expect, it } from 'vitest';
 import {
+  buildCap,
   buildLaid,
   buildTube,
   curveLength,
@@ -222,4 +223,34 @@ it('faces outward: every triangle is anticlockwise when seen from outside the ro
       expect(dot(face, at(tube.normals, i0, 3))).toBeGreaterThan(0);
     }
   }
+});
+
+describe('the cut end of an open rope', () => {
+  const line: Point3[] = Array.from({ length: 6 }, (_, i) => [i, 0.5 * i, 0]);
+  const along = [1, 0.5, 0].map((x) => x / Math.hypot(1, 0.5));
+
+  it.each(['start', 'end'] as const)('is a flat disc at the %s, facing away from the rope', (end) => {
+    const cap = buildCap(line, 0.2, end, 10);
+    const centre = at(cap.positions, 0, 3);
+    expect(centre).toEqual(end === 'start' ? [0, 0, 0] : [5, 2.5, 0]);
+    const facing = at(cap.normals, 0, 3);
+    expect(dot(facing, along)).toBeCloseTo(end === 'start' ? -1 : 1, 6);
+    for (let j = 1; j <= 10; j++) {
+      const spoke = at(cap.positions, j, 3).map((x, axis) => x - centre[axis]!);
+      expect(length(spoke)).toBeCloseTo(0.2, 6);
+      expect(dot(spoke, along)).toBeCloseTo(0, 6);
+    }
+    // every triangle is anticlockwise seen from the side the disc faces
+    for (let k = 0; k < cap.indices.length; k += 3) {
+      const [p0, p1, p2] = [0, 1, 2].map((corner) => at(cap.positions, cap.indices[k + corner]!, 3));
+      const e1 = p1!.map((x, axis) => x - p0![axis]!);
+      const e2 = p2!.map((x, axis) => x - p0![axis]!);
+      const face = [
+        e1[1]! * e2[2]! - e1[2]! * e2[1]!,
+        e1[2]! * e2[0]! - e1[0]! * e2[2]!,
+        e1[0]! * e2[1]! - e1[1]! * e2[0]!,
+      ];
+      expect(dot(face, facing)).toBeGreaterThan(0);
+    }
+  });
 });

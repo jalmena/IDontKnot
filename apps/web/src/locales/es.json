@@ -5,9 +5,16 @@
   "language": {
     "label": "Idioma"
   },
+  "nav": {
+    "label": "Secciones",
+    "explore": "Explorar",
+    "experiment": "Experimentar",
+    "missing": "No hay nada en esta dirección.",
+    "home": "Ir a la biblioteca"
+  },
   "lab": {
     "title": "Laboratorio de nudos tóricos",
-    "intro": "Elige cuántas vueltas da la cuerda alrededor del eje y cuántas veces pasa por el agujero. La cuerda se dibuja en 3D. Después su diagrama se lee a partir de la forma 3D y se compara con el diagrama construido desde la palabra de trenza.",
+    "turns": "Vueltas de la cuerda",
     "p": "Vueltas alrededor del eje (p)",
     "q": "Pasos por el agujero (q)",
     "tooLarge": "Esto tiene {{count}} cruces en esta vista. El prototipo calcula el polinomio de Jones hasta {{max}}.",
@@ -16,7 +23,10 @@
       "reset": "Restablecer la vista",
       "unavailable": "El dibujo 3D no está disponible en este navegador. Los valores de esta página se calculan igualmente.",
       "label_one": "Vista 3D del nudo tórico ({{p}}, {{q}})",
-      "label_other": "Vista 3D del enlace tórico ({{p}}, {{q}}): {{count}} lazos de cuerda enlazados"
+      "label_other": "Vista 3D del enlace tórico ({{p}}, {{q}}): {{count}} lazos de cuerda enlazados",
+      "switch": "Vista",
+      "rope": "3D",
+      "diagram": "Diagrama"
     },
     "facts": {
       "title": "Lo que calcula el núcleo",
@@ -32,12 +42,11 @@
       "codeHelp": "o: la cuerda pasa por encima. u: pasa por debajo.",
       "jonesGeometry": "Polinomio de Jones, desde la curva 3D",
       "jonesBraid": "Polinomio de Jones, desde la palabra de trenza",
-      "agree": "Los dos coinciden.",
       "disagree": "Los dos no coinciden. Es un defecto: por favor, comunícalo."
     },
     "link_one": "p y q no tienen factor común: un solo lazo de cuerda, un nudo.",
     "link_other": "p y q comparten el factor {{count}}, así que la cuerda se cierra en {{count}} lazos separados, enlazados entre sí. Cada uno tiene su color.",
-    "rope": "Cuerda",
+    "rope": "Material",
     "ropes": {
       "jute": "Yute",
       "kernmantle": "Alma y funda",
@@ -50,6 +59,19 @@
       "label_one": "Diagrama del nudo visto de frente, con {{count}} cruce",
       "label_other": "Diagrama del nudo visto de frente, con {{count}} cruces",
       "caption": "Visto de frente"
+    }
+  },
+  "knot": {
+    "view": "Vista 3D del {{name}}",
+    "missing": "Ese nudo no está en la biblioteca.",
+    "parts": {
+      "title": "Partes de la cuerda"
+    },
+    "facts": {
+      "alternating": "La cuerda pasa por encima y por debajo alternativamente",
+      "endsOutside": "Los dos extremos quedan fuera del nudo",
+      "closure": "Polinomio de Jones, uniendo los dos extremos",
+      "unsound": "La forma en el espacio incumple una regla. Es un defecto: por favor, comunícalo."
     }
   },
   "footer": {

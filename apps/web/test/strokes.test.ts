@@ -26,6 +26,15 @@ describe('the diagram of the trefoil', () => {
     expect(labels.map((label) => label.id)).toEqual(['c1', 'c2', 'c3']);
     for (const label of labels) expect(Math.hypot(label.at[0], label.at[1])).toBeGreaterThan(0.5);
   });
+
+  it('writes each number in the gap between the two ropes, on the side away from the middle', () => {
+    for (const label of crossingLabels([curve], visits)) {
+      expect(Math.hypot(label.clear[0], label.clear[1])).toBeCloseTo(1, 9);
+      // the crossings of this trefoil lie round the middle, and their ropes cross evenly about the way out
+      const out = Math.hypot(label.at[0], label.at[1]);
+      expect((label.clear[0] * label.at[0] + label.clear[1] * label.at[1]) / out).toBeGreaterThan(0.99);
+    }
+  });
 });
 
 it('draws each loop of a link, broken only where that loop passes under', () => {

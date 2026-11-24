@@ -323,3 +323,39 @@ export function buildLaid(
   }
   return { positions, normals, uvs, indices, rows, columns, length };
 }
+
+/**
+ * A flat disc that closes one end of an open rope, facing away from it: where the rope was cut.
+ */
+export function buildCap(points: readonly Point3[], radius: number, end: 'start' | 'end', sides = 24): TubeData {
+  const frames = rotationMinimisingFrames(points, false);
+  const i = end === 'start' ? 0 : points.length - 1;
+  const [normal, binormal] = [frames.normals[i]!, frames.binormals[i]!];
+  const facing = end === 'start' ? (frames.tangents[i]!.map((x) => -x) as Vec) : frames.tangents[i]!;
+  const positions = new Float32Array((sides + 1) * 3);
+  const normals = new Float32Array((sides + 1) * 3);
+  positions.set(points[i]!, 0);
+  normals.set(facing, 0);
+  for (let j = 0; j < sides; j++) {
+    const angle = (2 * Math.PI * j) / sides;
+    positions.set(
+      axpy(axpy(points[i]!, radius * Math.cos(angle), normal), radius * Math.sin(angle), binormal),
+      (j + 1) * 3,
+    );
+    normals.set(facing, (j + 1) * 3);
+  }
+  const indices = new Uint32Array(sides * 3);
+  for (let j = 0; j < sides; j++) {
+    const [here, next] = [j + 1, ((j + 1) % sides) + 1];
+    indices.set(end === 'start' ? [0, next, here] : [0, here, next], j * 3); // the front is the side away from the rope
+  }
+  return {
+    positions,
+    normals,
+    uvs: new Float32Array((sides + 1) * 2),
+    indices,
+    rows: 1,
+    columns: sides + 1,
+    length: 0,
+  };
+}

@@ -4,3 +4,4 @@ export * from './operations.ts';
 export * from './jones.ts';
 export * from './braid.ts';
 export * from './geometry.ts';
+export * from './document.ts';

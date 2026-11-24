@@ -2,10 +2,10 @@ import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
 
 test.beforeEach(async ({ page }) => {
-  await page.goto('/');
+  await page.goto('/lab');
 });
 
-test('opens on the torus knot laboratory, in English, showing the trefoil', async ({ page }) => {
+test('opens the torus knot laboratory, in English, showing the trefoil', async ({ page }) => {
   await expect(page).toHaveTitle('IDontKnot');
   await expect(page.locator('html')).toHaveAttribute('lang', 'en');
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Torus knot laboratory');
@@ -13,7 +13,8 @@ test('opens on the torus knot laboratory, in English, showing the trefoil', asyn
   await expect(page.getByTestId('crossings')).toHaveText('3');
   await expect(page.getByTestId('jones-geometry')).toHaveAttribute('aria-label', 't + t^3 − t^4');
   await expect(page.getByTestId('jones-braid')).toHaveAttribute('aria-label', 't + t^3 − t^4');
-  await expect(page.getByTestId('verdict')).toHaveText('The two agree.');
+  await expect(page.getByTestId('facts')).toHaveAttribute('data-checked', 'ok');
+  await expect(page.getByTestId('verdict')).toHaveCount(0);
 });
 
 test('draws the rope', async ({ page }) => {
@@ -32,29 +33,26 @@ test('draws the rope', async ({ page }) => {
 test('draws plainly for an automated browser, and fully when asked', async ({ page }) => {
   await expect(page.getByTestId('rope-canvas')).toHaveAttribute('data-detail', 'plain');
 
-  await page.goto('/?rope=full');
+  await page.goto('/lab?rope=full');
   const canvas = page.getByTestId('rope-canvas');
   await expect(canvas).toHaveAttribute('data-detail', 'full');
   await expect.poll(async () => Number(await canvas.getAttribute('data-triangles'))).toBeGreaterThan(20000);
 });
 
 test('changes the rope it is drawn with', async ({ page }) => {
-  await expect(page.getByLabel('Rope')).toHaveValue('jute');
+  await expect(page.getByLabel('Material')).toHaveValue('jute');
   for (const rope of ['kernmantle', 'polyester', 'sisal', 'cotton', 'line']) {
-    await page.getByLabel('Rope').selectOption(rope);
+    await page.getByLabel('Material').selectOption(rope);
     await expect
       .poll(async () => Number(await page.getByTestId('rope-canvas').getAttribute('data-triangles')))
       .toBeGreaterThan(1000);
   }
-  await expect(page.getByTestId('verdict')).toHaveText('The two agree.');
+  await expect(page.getByTestId('facts')).toHaveAttribute('data-checked', 'ok');
+  await expect(page.getByTestId('verdict')).toHaveCount(0);
 });
 
 test('lists the ropes in alphabetical order of the language in use', async ({ page }) => {
-  const names = () =>
-    page
-      .getByLabel(/^(Rope|Cuerda)$/)
-      .locator('option')
-      .allTextContents();
+  const names = () => page.getByLabel('Material').locator('option').allTextContents();
   expect(await names()).toEqual([
     'Braided cotton',
     'Jute',
@@ -75,14 +73,21 @@ test('lists the ropes in alphabetical order of the language in use', async ({ pa
   ]);
 });
 
-test('draws the knot diagram, broken where the rope passes under', async ({ page }) => {
+test('shows the knot diagram in place of the rope when asked, broken where the rope passes under', async ({ page }) => {
   const diagram = page.getByTestId('diagram');
+  await expect(diagram).toHaveCount(0);
+  await page.getByRole('button', { name: 'Diagram' }).click();
   await expect(diagram).toBeVisible();
   await expect(diagram.locator('polyline')).toHaveCount(3);
   await expect(diagram.locator('text')).toHaveText(['1', '2', '3']);
 
   await page.getByLabel('Passes through the hole (q)').fill('5');
   await expect(diagram.locator('polyline')).toHaveCount(5);
+
+  // back to the rope: the 3D picture is still there, as it was left
+  await page.getByRole('button', { name: '3D' }).click();
+  await expect(diagram).toHaveCount(0);
+  await expect(page.getByTestId('rope-canvas').locator('canvas')).toBeVisible();
 });
 
 test('recomputes when the knot changes', async ({ page }) => {
@@ -90,7 +95,8 @@ test('recomputes when the knot changes', async ({ page }) => {
   await expect(page.getByTestId('q-value')).toHaveText('5');
   await expect(page.getByTestId('crossings')).toHaveText('5');
   await expect(page.getByTestId('jones-geometry')).toHaveAttribute('aria-label', 't^2 + t^4 − t^5 + t^6 − t^7');
-  await expect(page.getByTestId('verdict')).toHaveText('The two agree.');
+  await expect(page.getByTestId('facts')).toHaveAttribute('data-checked', 'ok');
+  await expect(page.getByTestId('verdict')).toHaveCount(0);
 });
 
 test('draws a link of several loops when p and q share a factor, without moving the controls', async ({ page }) => {
@@ -105,7 +111,8 @@ test('draws a link of several loops when p and q share a factor, without moving 
   await expect(page.getByTestId('loops')).toHaveText('2');
   await expect(page.getByTestId('link-note')).toContainText('2 separate loops');
   await expect(page.getByTestId('crossings')).toHaveText('4');
-  await expect(page.getByTestId('verdict')).toHaveText('The two agree.');
+  await expect(page.getByTestId('facts')).toHaveAttribute('data-checked', 'ok');
+  await expect(page.getByTestId('verdict')).toHaveCount(0);
 
   // the drawing is still there and the slider has not moved under the pointer
   await expect(page.getByTestId('rope-canvas').locator('canvas')).toBeVisible();
@@ -116,21 +123,36 @@ test('switches to Spanish and remembers the choice', async ({ page }) => {
   await page.getByLabel('Language').selectOption('es');
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Laboratorio de nudos tóricos');
   await expect(page.locator('html')).toHaveAttribute('lang', 'es');
-  await expect(page.getByTestId('verdict')).toHaveText('Los dos coinciden.');
+  await expect(page.getByTestId('facts')).toHaveAttribute('data-checked', 'ok');
 
   await page.reload();
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Laboratorio de nudos tóricos');
 });
 
 test('has no accessibility violations that axe can detect', async ({ page }) => {
-  await expect(page.getByTestId('verdict')).toBeVisible();
+  await expect(page.getByTestId('facts')).toBeVisible();
   const results = await new AxeBuilder({ page }).analyze();
   expect(results.violations.map((violation) => `${violation.id}: ${violation.help}`)).toEqual([]);
 });
 
-test('serves the interface for any path, and the health check', async ({ page, request }) => {
-  await page.goto('/some/deep/link');
-  await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
+test('shows the rope, its controls and what the core computes on one screen of a laptop', async ({
+  page,
+  viewport,
+}) => {
+  test.skip((viewport?.width ?? 0) < 900, 'on a narrow screen the panel goes under the view');
+  await expect(page.getByTestId('facts')).toBeVisible();
+  const edges = (selector: string) =>
+    page.locator(selector).evaluate((element) => {
+      const box = element.getBoundingClientRect();
+      return { top: Math.round(box.top + window.scrollY), bottom: Math.round(box.bottom + window.scrollY) };
+    });
+  const [view, panel] = [await edges('.rope-view'), await edges('.panel')];
+  expect(panel.bottom).toBeLessThanOrEqual(viewport?.height ?? 0);
+  // side by side, the view and the panel are one height
+  expect(panel).toEqual(view);
+});
+
+test('serves the health check', async ({ request }) => {
   const health = await request.get('/healthz');
   expect(health.ok()).toBe(true);
   expect(await health.json()).toMatchObject({ status: 'ok' });

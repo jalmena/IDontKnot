@@ -1,6 +1,6 @@
 # Knot document model
 
-Draft 0.1. Nothing here is implemented yet. The reasoning behind it is in the [foundations report](../research/01-mathematical-foundations.md) and the [comparison of representations](../research/02-representation-comparison.md). The decisions it embodies are recorded in the [decision records](../adr/README.md).
+Draft 0.1. Implemented in `packages/core`: components, parts, the topology layer, and geometry frames with curves and rules G1 to G5. Not yet implemented: shapes of rigid objects, the construction layer, library entries, the JSON Schema. The reasoning behind it is in the [foundations report](../research/01-mathematical-foundations.md) and the [comparison of representations](../research/02-representation-comparison.md). The decisions it embodies are recorded in the [decision records](../adr/README.md).
 
 ## 1. Purpose and rules
 
@@ -114,18 +114,23 @@ Splices, eyes and nets need points where three or more rope ends meet. The forma
 
 - A **frame** is one configuration in space. A document may hold several: the finished knot, a loosened view, one per construction step.
 - A **curve** is the rope's centerline. Each control point carries its material coordinate, so frames can be interpolated point for point and parts stay attached to the same rope material.
-- **Curve types**: `polyline`; `catmull-rom` (centripetal, passing through its points); `bspline` (uniform cubic). The specification will define how each is sampled to a polyline, so that independent tools obtain the same curve within a stated tolerance. The polyline is the form every algorithm works on.
+- **Curve types**: `polyline`; `catmull-rom` (centripetal, passing through its points); `bspline` (uniform cubic, not yet defined). The polyline is the form every algorithm works on, and the format defines how a curve becomes one, so that independent tools obtain the same polyline:
+  - A `polyline` is its own points.
+  - Each span of a `catmull-rom` curve, from one control point to the next, is cut into 12 pieces of equal parameter. The parameter is centripetal: the knots are spaced by the square root of the distance between control points. At an open end, the missing neighbour is the mirror image of the next point through the end point. A closed curve has one more span, from its last point back to its first.
+  - Along a span the material coordinate advances in proportion to the length of the polyline, from the coordinate of one control point to that of the next. A closed curve returns to its start at the length of its rope.
 - **Shapes** for rigid objects: `pole` (segment with radius), `ring` (centre, normal, ring radius, bar radius), `curve` (any centerline with a radius).
 
 ### Validity
 
 | Rule | Statement |
 | --- | --- |
-| G1 | Material coordinates increase along each curve and the sampled length matches the difference in *s* within tolerance (rope does not stretch). |
+| G1 | Material coordinates increase along each curve, an open curve runs from 0 to the length of its rope, and the sampled length of each span matches its difference in *s* within tolerance (rope does not stretch). |
 | G2 | No overlap: points of rope that are not neighbours along the rope stay at least the sum of their radii apart, within tolerance. The same holds between ropes and shapes. |
 | G3 | The radius of curvature is nowhere smaller than the rope radius, within tolerance. |
 | G4 | If the frame declares `realises`, projecting it along −z yields a diagram equal to the declared one up to renaming of crossings. |
 | G5 | The projection is generic: no two crossings coincide and no strand is seen end-on. |
+
+The tolerances of the first implementation: a span may differ from its difference in *s* by 2 % (or 2 % of the radius, for a very short span); centerlines may come 5 % closer than the sum of their radii, and a bend be 5 % tighter than the radius. For G2, two points of one rope are neighbours when they are less than one tightest turn apart along it: π times the diameter. "Equal up to renaming of crossings" in G4 means the same components passing over and under in the same order at crossings of the same signs; a closed component may start anywhere along itself.
 
 ## 6. Construction layer
 
@@ -183,7 +188,7 @@ There is no boolean "same knot" function. Identification against a table returns
 
 ## 8. Library entries (outline)
 
-A separate document type, specified later with the content model:
+A separate document type, specified later with the content model. A provisional first form exists beside each knot document, `entry.json`, and holds only the name of the knot and the names of its parts, by language. What an entry will hold:
 
 - Identity: canonical name, names by language, synonyms, reference numbers.
 - Classification: disciplines, purposes, structural tags.
@@ -223,5 +228,5 @@ A separate document type, specified later with the content model:
 1. A compact representation for doubled rope.
 2. How named openings (the loop a step tucks through) are referenced. Faces are derivable from the diagram, but a stable, readable way to name one is not settled.
 3. Whether geometry frames for construction steps are authored, generated, or both. This depends on how good generated geometry turns out to be.
-4. The exact sampling rules and tolerances for curves.
+4. The sampling rule of `bspline` curves, and whether the tolerances of section 5 hold up once more knots are authored.
 5. The name of the format. `idk-knot` is a working name.

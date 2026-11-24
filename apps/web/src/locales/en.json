@@ -5,9 +5,16 @@
   "language": {
     "label": "Language"
   },
+  "nav": {
+    "label": "Sections",
+    "explore": "Explore",
+    "experiment": "Experiment",
+    "missing": "There is nothing at this address.",
+    "home": "Go to the library"
+  },
   "lab": {
     "title": "Torus knot laboratory",
-    "intro": "Choose how many times the rope winds round the axis and how many times it passes through the hole. The rope is drawn in 3D. Its diagram is then read back from the 3D shape and compared with the diagram built from the braid word.",
+    "turns": "Turns of the rope",
     "p": "Turns round the axis (p)",
     "q": "Passes through the hole (q)",
     "tooLarge": "This has {{count}} crossings in this view. The prototype computes the Jones polynomial for up to {{max}}.",
@@ -16,7 +23,10 @@
       "reset": "Reset the view",
       "unavailable": "3D drawing is not available in this browser. The values on this page are still computed.",
       "label_one": "3D view of the ({{p}}, {{q}}) torus knot",
-      "label_other": "3D view of the ({{p}}, {{q}}) torus link: {{count}} linked loops of rope"
+      "label_other": "3D view of the ({{p}}, {{q}}) torus link: {{count}} linked loops of rope",
+      "switch": "View",
+      "rope": "3D",
+      "diagram": "Diagram"
     },
     "facts": {
       "title": "What the core computes",
@@ -32,12 +42,11 @@
       "codeHelp": "o: the rope passes over. u: it passes under.",
       "jonesGeometry": "Jones polynomial, from the 3D curve",
       "jonesBraid": "Jones polynomial, from the braid word",
-      "agree": "The two agree.",
       "disagree": "The two disagree. That is a defect: please report it."
     },
     "link_one": "p and q have no common factor: one loop of rope, a knot.",
     "link_other": "p and q share the factor {{count}}, so the rope closes into {{count}} separate loops, linked together. Each has its own colour.",
-    "rope": "Rope",
+    "rope": "Material",
     "ropes": {
       "jute": "Jute",
       "kernmantle": "Kernmantle",
@@ -50,6 +59,19 @@
       "label_one": "Knot diagram seen from the front, with {{count}} crossing",
       "label_other": "Knot diagram seen from the front, with {{count}} crossings",
       "caption": "Seen from the front"
+    }
+  },
+  "knot": {
+    "view": "3D view of the {{name}}",
+    "missing": "There is no such knot in the library.",
+    "parts": {
+      "title": "Parts of the rope"
+    },
+    "facts": {
+      "alternating": "The rope passes over and under in turn",
+      "endsOutside": "Both ends lie outside the knot",
+      "closure": "Jones polynomial, with the two ends joined",
+      "unsound": "The shape in space breaks a rule. This is a defect: please report it."
     }
   },
   "footer": {

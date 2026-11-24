@@ -46,3 +46,13 @@ it('is the same every time, and different for another seed', () => {
   expect(buildFuzz(points, true, radius, options).positions).toEqual(fuzz.positions);
   expect(buildFuzz(points, true, radius, { ...options, seed: 20 }).positions).not.toEqual(fuzz.positions);
 });
+
+it('says how far along the rope each fibre is', () => {
+  expect(fuzz.alongs).toHaveLength(fuzz.strengths.length);
+  for (let fibre = 0; fibre < fibres; fibre += 5) {
+    const ends = Array.from(fuzz.alongs.slice(fibre * FUZZ_PIECES * 2, (fibre + 1) * FUZZ_PIECES * 2));
+    expect(new Set(ends).size).toBe(1);
+    expect(ends[0]).toBeGreaterThanOrEqual(0);
+    expect(ends[0]).toBeLessThanOrEqual(1);
+  }
+});

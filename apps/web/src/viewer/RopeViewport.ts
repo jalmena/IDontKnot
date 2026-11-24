@@ -44,7 +44,7 @@ import { buildFuzz } from './fuzz.ts';
 import { ROPE_MATERIALS, ropeColour, type RopeMaterialId } from './materials.ts';
 import { rgbOf, toned } from './images.ts';
 import { RopeTextures } from './textures.ts';
-import { buildLaid, buildTube, curveLength, resample, type TubeData } from './tube.ts';
+import { buildCap, buildLaid, buildTube, curveLength, resample, type TubeData } from './tube.ts';
 
 export type Detail = 'full' | 'plain';
 
@@ -57,7 +57,40 @@ export interface RopeSpec {
   readonly index: number;
 }
 
+/** A stretch of one rope: `rope` is its place in the list given to `setRopes`; from and to are fractions of its length. */
+export interface Stretch {
+  readonly rope: number;
+  readonly from: number;
+  readonly to: number;
+}
+
+/** What the camera should take in: a box in the x-y plane, seen from +z. */
+export interface Fit {
+  readonly centre: Point3;
+  readonly width: number;
+  readonly height: number;
+  /**
+   * How much of each side of the view the box keeps out of, in CSS pixels: the air round it, and room
+   * for what is written over the view.
+   */
+  readonly clear?: { readonly top: number; readonly right: number; readonly bottom: number; readonly left: number };
+}
+
+/** Where a point of the scene is on the canvas, as fractions of its width and height from its top left corner. */
+export interface Placed {
+  readonly x: number;
+  readonly y: number;
+  readonly hidden: boolean;
+}
+
 const EDGE_COLOUR = 0x030d07;
+/** How much of its light a rope keeps while another stretch of rope is emphasised. */
+const DIMMED = 0.26;
+/**
+ * A picture centred exactly looks low. The box is drawn this fraction of the free height above the middle:
+ * the optical centre.
+ */
+const OPTICAL_LIFT = 0.03;
 const MAX_ROWS = 2400;
 const MAX_FIBRES = 12000;
 const KEY_DIRECTION = new Vector3(-5, 7, 4.5).normalize();
@@ -69,6 +102,16 @@ function geometryOf(tube: TubeData, withTexture: boolean): BufferGeometry {
   if (withTexture) geometry.setAttribute('uv', new BufferAttribute(tube.uvs, 2));
   geometry.setIndex(new BufferAttribute(tube.indices, 1));
   return geometry;
+}
+
+/** How far along its rope each vertex of a surface is, from 0 to 1: its texture runs along the rope. */
+function alongOf(tube: TubeData): Float32Array {
+  const count = tube.uvs.length / 2;
+  const along = new Float32Array(count);
+  let furthest = 0;
+  for (let k = 0; k < count; k++) furthest = Math.max(furthest, tube.uvs[2 * k]!);
+  for (let k = 0; k < count; k++) along[k] = tube.uvs[2 * k]! / (furthest || 1);
+  return along;
 }
 
 export class RopeViewport {
@@ -83,6 +126,14 @@ export class RopeViewport {
   private readonly key = new DirectionalLight(0xfff3e0, 3.2);
   private environment: Texture | null = null;
   private specs: readonly RopeSpec[] = [];
+  private stretches: readonly Stretch[] = [];
+  private fit: Fit | null = null;
+  /** How far from the middle of the view its centre of attention is drawn, in CSS pixels. */
+  private shift = { right: 0, down: 0 };
+  /** Whether the person has turned or zoomed the view since it was last framed. */
+  private moved = false;
+  /** Called after every drawing: the camera may have moved. */
+  onDraw: (() => void) | null = null;
   private readonly observer: ResizeObserver;
   private readonly host: HTMLElement;
   private readonly detail: Detail;
@@ -109,6 +160,7 @@ export class RopeViewport {
     this.controls.minDistance = 2.5;
     this.controls.maxDistance = 20;
     this.controls.addEventListener('change', this.render);
+    this.controls.addEventListener('start', this.touched);
     this.controls.saveState();
 
     this.observer = new ResizeObserver(this.resize);
@@ -120,22 +172,72 @@ export class RopeViewport {
   setRopes(specs: readonly RopeSpec[]): void {
     this.specs = specs;
     this.clear();
-    for (const spec of specs) {
-      if (this.detail === 'plain') this.drawPlain(spec);
-      else this.drawFull(spec);
-    }
+    specs.forEach((spec, place) => {
+      if (this.detail === 'plain') this.drawPlain(spec, place);
+      else this.drawFull(spec, place);
+    });
     if (this.detail === 'full') this.aimShadows(specs);
+    this.shade();
     this.render();
   }
 
+  /** Dims all the rope except these stretches of it. With none, every rope is drawn as it is. */
+  emphasise(stretches: readonly Stretch[]): void {
+    this.stretches = stretches;
+    this.shade();
+    this.render();
+  }
+
+  /**
+   * Moves the camera to +z of a box in the x-y plane, far enough to take all of it in. The view keeps to
+   * that as its size changes, until the person turns or zooms it.
+   */
+  fitTo(fit: Fit): void {
+    this.fit = fit;
+    this.moved = false;
+    const width = Math.max(this.host.clientWidth, 1);
+    const height = Math.max(this.host.clientHeight, 1);
+    const clear = fit.clear ?? { top: 0, right: 0, bottom: 0, left: 0 };
+    const free = {
+      width: Math.max(width - clear.left - clear.right, width / 4),
+      height: Math.max(height - clear.top - clear.bottom, height / 4),
+    };
+    // the box fills the free part of the view one way or the other, and sits at its optical centre
+    const half = Math.tan((this.camera.fov * Math.PI) / 360);
+    const perPixel = Math.max(fit.width / free.width, fit.height / free.height);
+    const distance = (perPixel * height) / (2 * half);
+    this.shift = {
+      right: (clear.left - clear.right) / 2,
+      down: (clear.top - clear.bottom) / 2 - OPTICAL_LIFT * free.height,
+    };
+    this.controls.target.set(...fit.centre);
+    this.camera.position.set(fit.centre[0], fit.centre[1], fit.centre[2] + distance);
+    [this.camera.near, this.camera.far] = [distance / 100, distance * 10];
+    this.camera.setViewOffset(width, height, -this.shift.right, -this.shift.down, width, height);
+    [this.controls.minDistance, this.controls.maxDistance] = [distance * 0.2, distance * 2.2];
+    this.controls.update();
+    this.controls.saveState();
+    this.render();
+  }
+
+  /** Where a point of the scene is on the canvas now. */
+  place(point: Point3): Placed {
+    const seen = new Vector3(...point).project(this.camera);
+    const hidden = seen.z > 1 || Math.abs(seen.x) > 1 || Math.abs(seen.y) > 1;
+    return { x: (seen.x + 1) / 2, y: (1 - seen.y) / 2, hidden };
+  }
+
   resetView(): void {
-    this.controls.reset();
+    if (this.fit) this.fitTo(this.fit);
+    else this.controls.reset();
+    this.moved = false;
     this.render();
   }
 
   dispose(): void {
     this.observer.disconnect();
     this.controls.removeEventListener('change', this.render);
+    this.controls.removeEventListener('start', this.touched);
     this.controls.dispose();
     this.clear();
     this.edge.dispose();
@@ -201,15 +303,44 @@ export class RopeViewport {
     this.renderer.shadowMap.needsUpdate = true;
   }
 
-  private drawPlain({ points, closed, radius, material, index }: RopeSpec): void {
+  /** Adds a surface of the rope at this place in the list, ready to be dimmed stretch by stretch. */
+  private add(place: number, geometry: BufferGeometry, material: Material, along: Float32Array): Mesh {
+    geometry.setAttribute('color', new BufferAttribute(new Float32Array(along.length * 3).fill(1), 3));
+    const mesh = new Mesh(geometry, material);
+    mesh.userData = { rope: place, along };
+    this.ropes.add(mesh);
+    return mesh;
+  }
+
+  /** The two cut ends of an open rope. */
+  private addEnds(place: number, points: readonly Point3[], radius: number, material: () => Material): Mesh[] {
+    return (['start', 'end'] as const).map((end) => {
+      const cap = buildCap(points, radius, end);
+      return this.add(
+        place,
+        geometryOf(cap, false),
+        material(),
+        new Float32Array(cap.columns).fill(end === 'start' ? 0 : 1),
+      );
+    });
+  }
+
+  private drawPlain({ points, closed, radius, material, index }: RopeSpec, place: number): void {
     const rope = buildTube(points, closed, radius, { sides: 8 });
     const hull = buildTube(points, closed, radius * 1.14, { sides: 8 });
-    const flat = new MeshStandardMaterial({ color: ropeColour(material, index), roughness: 0.6, metalness: 0 });
-    this.ropes.add(new Mesh(geometryOf(rope, false), flat));
+    const flat = (): Material =>
+      new MeshStandardMaterial({
+        color: ropeColour(material, index),
+        roughness: 0.6,
+        metalness: 0,
+        vertexColors: true,
+      });
+    this.add(place, geometryOf(rope, false), flat(), alongOf(rope));
+    if (!closed) this.addEnds(place, points, radius, flat);
     this.ropes.add(new Mesh(geometryOf(hull, false), this.edge));
   }
 
-  private drawFull({ points, closed, radius, material, index }: RopeSpec): void {
+  private drawFull({ points, closed, radius, material, index }: RopeSpec, place: number): void {
     const look = ROPE_MATERIALS[material];
     // enough rows for the strands to turn smoothly, without letting a long rope grow without limit
     const fine = resample(points, closed, Math.max(radius * 0.22, curveLength(points, closed) / MAX_ROWS));
@@ -239,13 +370,24 @@ export class RopeViewport {
       sheen: look.sheen,
       sheenRoughness: 0.6,
       sheenColor: new Color(...toned(rgbOf(colour), 0.25).map((c) => c / 255)),
+      vertexColors: true,
     });
     skin.normalScale.set(look.relief, look.relief);
     skin.color.multiplyScalar(look.brightness);
-    const rope = new Mesh(geometryOf(surface, maps !== null), skin);
+    const rope = this.add(place, geometryOf(surface, maps !== null), skin, alongOf(surface));
     rope.castShadow = true;
     rope.receiveShadow = true;
-    this.ropes.add(rope);
+    if (!closed) {
+      // where the rope was cut, the ends of its fibres show: darker, and dull
+      const cut = (): Material =>
+        new MeshPhysicalMaterial({
+          color: new Color(...toned(rgbOf(colour), -0.4).map((c) => c / 255)).multiplyScalar(look.brightness),
+          roughness: 1,
+          metalness: 0,
+          vertexColors: true,
+        });
+      for (const end of this.addEnds(place, fine, radius * 0.97, cut)) end.castShadow = true;
+    }
 
     if (look.fuzz) {
       // a long rope has thinner fuzz rather than ever more fibres
@@ -265,8 +407,29 @@ export class RopeViewport {
       }
       const geometry = new BufferGeometry();
       geometry.setAttribute('position', new BufferAttribute(fuzz.positions, 3));
-      geometry.setAttribute('color', new BufferAttribute(colours, 4));
-      this.ropes.add(new LineSegments(geometry, this.loose));
+      geometry.setAttribute('color', new BufferAttribute(colours.slice(), 4));
+      const fibres = new LineSegments(geometry, this.loose);
+      fibres.userData = { rope: place, along: fuzz.alongs, lit: colours };
+      this.ropes.add(fibres);
+    }
+  }
+
+  /** Gives every vertex its light: all of it, or little where another stretch of rope is emphasised. */
+  private shade(): void {
+    for (const child of this.ropes.children) {
+      const { rope, along, lit } = child.userData as { rope?: number; along?: Float32Array; lit?: Float32Array };
+      if (rope === undefined || !along) continue;
+      const mine = this.stretches.filter((stretch) => stretch.rope === rope);
+      const colour = (child as Mesh<BufferGeometry>).geometry.getAttribute('color') as BufferAttribute;
+      const values = colour.array as Float32Array;
+      const size = colour.itemSize;
+      for (let k = 0; k < along.length; k++) {
+        const at = along[k]!;
+        const full = this.stretches.length === 0 || mine.some((stretch) => at >= stretch.from && at <= stretch.to);
+        const light = full ? 1 : DIMMED;
+        for (let c = 0; c < 3; c++) values[k * size + c] = (lit ? lit[k * size + c]! : 1) * light;
+      }
+      colour.needsUpdate = true;
     }
   }
 
@@ -284,12 +447,18 @@ export class RopeViewport {
     const height = Math.max(this.host.clientHeight, 1);
     this.renderer.setSize(width, height, false);
     this.camera.aspect = width / height;
-    this.camera.updateProjectionMatrix();
-    this.render();
+    this.camera.setViewOffset(width, height, -this.shift.right, -this.shift.down, width, height);
+    if (this.fit && !this.moved) this.fitTo(this.fit);
+    else this.render();
+  };
+
+  private readonly touched = (): void => {
+    this.moved = true;
   };
 
   private readonly render = (): void => {
     this.renderer.render(this.scene, this.camera);
+    this.onDraw?.();
     // how much was drawn in the last frame, so that a test can tell a drawn rope from an empty canvas
     this.host.dataset['triangles'] = String(this.renderer.info.render.triangles);
   };
