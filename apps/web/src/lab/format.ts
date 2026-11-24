@@ -45,3 +45,12 @@ export function polynomialText(polynomial: Readonly<Record<string, number>>): st
     })
     .join('');
 }
+
+/**
+ * The options of a selector in alphabetical order of their label in the given language.
+ * Use it for every selector whose options have no order of their own.
+ */
+export function byLabel<T extends { readonly label: string }>(options: readonly T[], language: string): T[] {
+  const collator = new Intl.Collator(language, { sensitivity: 'base', numeric: true });
+  return [...options].sort((a, b) => collator.compare(a.label, b.label));
+}

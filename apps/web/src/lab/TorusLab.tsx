@@ -13,7 +13,7 @@ import { useTranslation } from 'react-i18next';
 import { RopeView } from '../viewer/RopeView.tsx';
 import { ROPE_MATERIAL_IDS, ropeColour, type RopeMaterialId } from '../viewer/materials.ts';
 import type { RopeSpec } from '../viewer/RopeViewport.ts';
-import { magnitude, polynomialText, terms } from './format.ts';
+import { byLabel, magnitude, polynomialText, terms } from './format.ts';
 
 /** The state sum doubles with every crossing; this keeps the page instant. */
 const MAX_CROSSINGS = 14;
@@ -56,7 +56,7 @@ function Polynomial({ value, testId }: { value: Readonly<Record<string, number>>
 }
 
 export function TorusLab() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [p, setP] = useState(2);
   const [q, setQ] = useState(3);
   const [material, setMaterial] = useState<RopeMaterialId>('jute');
@@ -64,6 +64,15 @@ export function TorusLab() {
   const pId = useId();
   const qId = useId();
 
+  const language = i18n.resolvedLanguage ?? 'en';
+  const ropeOptions = useMemo(
+    () =>
+      byLabel(
+        ROPE_MATERIAL_IDS.map((id) => ({ id, label: t(`lab.ropes.${id}`) })),
+        language,
+      ),
+    [t, language],
+  );
   const loops = gcd(p, q);
   const crossingCount = (p - 1) * q;
   const tooLarge = crossingCount > MAX_CROSSINGS;
@@ -140,9 +149,9 @@ export function TorusLab() {
             value={material}
             onChange={(event) => setMaterial(event.target.value as RopeMaterialId)}
           >
-            {ROPE_MATERIAL_IDS.map((id) => (
-              <option key={id} value={id}>
-                {t(`lab.ropes.${id}`)}
+            {ropeOptions.map((option) => (
+              <option key={option.id} value={option.id}>
+                {option.label}
               </option>
             ))}
           </select>
