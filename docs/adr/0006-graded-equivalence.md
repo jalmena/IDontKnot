@@ -1,6 +1,6 @@
 # 0006. Comparisons return a grade and its evidence, never a boolean
 
-- Status: Proposed
+- Status: Accepted (Product Owner, 2026-11-24)
 - Date: 2026-11-23
 
 ## Context

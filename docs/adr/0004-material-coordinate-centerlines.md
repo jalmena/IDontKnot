@@ -1,6 +1,6 @@
 # 0004. Geometry is a centerline in material coordinates and rope-diameter units
 
-- Status: Proposed
+- Status: Accepted (Product Owner, 2026-11-24)
 - Date: 2026-11-23
 
 ## Context

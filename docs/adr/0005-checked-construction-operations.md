@@ -1,6 +1,6 @@
 # 0005. Tying is a sequence of operations with checked effects
 
-- Status: Proposed
+- Status: Accepted (Product Owner, 2026-11-24)
 - Date: 2026-11-23
 
 ## Context
