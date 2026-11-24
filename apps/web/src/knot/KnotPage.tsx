@@ -25,8 +25,8 @@ interface Props {
   readonly knot: LibraryKnot;
 }
 
-const DIAGRAM_LINE = 0.42;
-const DIAGRAM_TEXT = 0.5;
+const DIAGRAM_LINE = 0.36;
+const DIAGRAM_TEXT = 0.62;
 /** How far above its part a name is written on the diagram, and the room that takes at the top. */
 const NAME_RISE = 1.2;
 const NAME_ROOM = 1.4;
@@ -64,15 +64,11 @@ export function KnotPage({ knot }: Props) {
       }),
     [curves, document],
   );
-  const bounds = useMemo(() => boundsOf(curves, 1.6), [curves]);
-  const fit = useMemo<Fit>(
-    () => ({
-      centre: [(bounds[0] + bounds[2]) / 2, (bounds[1] + bounds[3]) / 2, 0],
-      width: bounds[2] - bounds[0],
-      height: bounds[3] - bounds[1],
-    }),
-    [bounds],
-  );
+  // the rope fills the view from side to side, with a little air
+  const fit = useMemo<Fit>(() => {
+    const [minX, minY, maxX, maxY] = boundsOf(curves, 0.8);
+    return { centre: [(minX + maxX) / 2, (minY + maxY) / 2, 0], width: maxX - minX, height: maxY - minY };
+  }, [curves]);
   const facts = useMemo(() => {
     const { diagram, visits } = diagramFromGeometry(curves);
     const passes = diagram.components.flatMap((component) => strandOf(diagram, component.id).map(([, pass]) => pass));
@@ -103,44 +99,60 @@ export function KnotPage({ knot }: Props) {
       })),
     [parts, shown, entry, language],
   );
-  const length = document.components.find((component) => component.kind === 'rope')?.length;
+  // on the diagram a name sits above its part; the name of an end of the rope is written outward from
+  // where that end leaves the knot, so that it does not run over the knot, and the drawing makes room for it
+  const drawing = useMemo(() => {
+    const [minX, minY, maxX, maxY] = boundsOf(curves, 1.6);
+    let room = 0;
+    const placed = names.map(({ at, ...rest }, i) => {
+      const { inner, outer } = parts[i]!;
+      if (!inner || !outer || inner[0] === outer[0]) return { ...rest, at: [at[0], at[1] + NAME_RISE] as const };
+      const leftward = outer[0] < inner[0];
+      const reach = rest.text.length * DIAGRAM_TEXT * 0.56 + 0.5;
+      room = Math.max(room, leftward ? minX - (inner[0] - reach) : inner[0] + reach - maxX);
+      return {
+        ...rest,
+        at: [inner[0], inner[1] + NAME_RISE] as const,
+        anchor: leftward ? ('end' as const) : ('start' as const),
+      };
+    });
+    // the same room on both sides, so that the knot stays in the middle as it is in the 3D view
+    return { bounds: [minX - room, minY, maxX + room, maxY + NAME_ROOM] as const, names: placed };
+  }, [curves, names, parts]);
 
   return (
-    <section className="knot" aria-labelledby="knot-title">
-      <div className="knot__head">
-        <h1 id="knot-title">{title}</h1>
-        <form className="knot__rope" onSubmit={(event) => event.preventDefault()}>
-          <RopeSelect value={material} onChange={setMaterial} />
-        </form>
+    <section className="lab" aria-labelledby="knot-title">
+      <div className="lab__stage">
+        <RopeView
+          ropes={ropes}
+          label={t('knot.view', { name: title })}
+          title={<h1 id="knot-title">{title}</h1>}
+          fit={fit}
+          emphasis={emphasis}
+          names={names}
+          diagram={
+            <Diagram2D
+              curves={curves}
+              visits={facts.visits}
+              colours={curves.map((_, index) => ropeColour(material, index))}
+              label={t('lab.diagram.label', { count: facts.diagram.crossings.length })}
+              bounds={drawing.bounds}
+              line={DIAGRAM_LINE}
+              text={DIAGRAM_TEXT}
+              marked={marked}
+              names={drawing.names}
+            />
+          }
+        />
       </div>
 
-      <RopeView
-        ropes={ropes}
-        label={t('knot.view', { name: title })}
-        fit={fit}
-        emphasis={emphasis}
-        names={names}
-        wide
-      />
+      <div className="lab__facts panel" aria-live="polite">
+        <form className="controls" onSubmit={(event) => event.preventDefault()}>
+          <RopeSelect value={material} onChange={setMaterial} />
+        </form>
 
-      <figure className="knot__diagram">
-        <Diagram2D
-          curves={curves}
-          visits={facts.visits}
-          colours={curves.map((_, index) => ropeColour(material, index))}
-          label={t('lab.diagram.label', { count: facts.diagram.crossings.length })}
-          bounds={[bounds[0], bounds[1], bounds[2], bounds[3] + NAME_ROOM]}
-          line={DIAGRAM_LINE}
-          text={DIAGRAM_TEXT}
-          marked={marked}
-          names={names.map(({ at, ...rest }) => ({ ...rest, at: [at[0], at[1] + NAME_RISE] as const }))}
-        />
-        <figcaption>{t('lab.diagram.caption')}</figcaption>
-      </figure>
-
-      <div className="knot__parts">
         <h2 id="knot-parts">{t('knot.parts.title')}</h2>
-        <ul aria-labelledby="knot-parts" data-testid="parts">
+        <ul className="parts" aria-labelledby="knot-parts" data-testid="parts">
           {names.map((part) => (
             <li key={part.id}>
               <button
@@ -157,48 +169,53 @@ export function KnotPage({ knot }: Props) {
             </li>
           ))}
         </ul>
-        <p className="knot__hint">{t('knot.parts.hint')}</p>
-      </div>
 
-      <div className="knot__facts panel" aria-live="polite">
         <h2>{t('lab.facts.title')}</h2>
-        <dl>
-          <dt>{t('lab.facts.crossings')}</dt>
-          <dd data-testid="crossings">{facts.diagram.crossings.length}</dd>
-          <dt>{t('knot.facts.alternating')}</dt>
-          <dd>{facts.alternating ? t('lab.facts.yes') : t('lab.facts.no')}</dd>
-          <dt>{t('lab.facts.writhe')}</dt>
-          <dd>{facts.writhe > 0 ? `+${facts.writhe}` : facts.writhe}</dd>
-          <dt>{t('knot.facts.endsOutside')}</dt>
-          <dd>{facts.endsOutside ? t('lab.facts.yes') : t('lab.facts.no')}</dd>
-          {length !== undefined && (
-            <>
-              <dt>{t('knot.facts.length')}</dt>
-              <dd>{t('knot.facts.diameters', { count: Math.round(length) })}</dd>
-            </>
-          )}
-          <dt>
-            {t('lab.facts.code')}
-            <small>{t('lab.facts.codeHelp')}</small>
-          </dt>
-          <dd className="code">
-            {facts.diagram.components.map((component, index) => (
-              <span key={component.id} className="code__line">
-                <span className="swatch" style={{ background: ropeColour(material, index) }} aria-hidden="true" />
-                {strandOf(facts.diagram, component.id)
-                  .map(([crossing, pass]) => `${crossing.slice(1)}${pass}`)
-                  .join(' ')}
-              </span>
-            ))}
-          </dd>
-          <dt>{t('knot.facts.closure')}</dt>
-          <dd>
-            <Polynomial value={facts.closure} testId="jones-closure" />
-          </dd>
+        <dl className="facts" data-testid="facts" data-checked={facts.sound ? 'ok' : 'failed'}>
+          <div>
+            <dt>{t('lab.facts.crossings')}</dt>
+            <dd data-testid="crossings">{facts.diagram.crossings.length}</dd>
+          </div>
+          <div>
+            <dt>{t('lab.facts.writhe')}</dt>
+            <dd>{facts.writhe > 0 ? `+${facts.writhe}` : facts.writhe}</dd>
+          </div>
+          <div>
+            <dt>{t('knot.facts.alternating')}</dt>
+            <dd>{facts.alternating ? t('lab.facts.yes') : t('lab.facts.no')}</dd>
+          </div>
+          <div>
+            <dt>{t('knot.facts.endsOutside')}</dt>
+            <dd>{facts.endsOutside ? t('lab.facts.yes') : t('lab.facts.no')}</dd>
+          </div>
+          <div className="facts__wide">
+            <dt>
+              {t('lab.facts.code')}
+              <small>{t('lab.facts.codeHelp')}</small>
+            </dt>
+            <dd className="code">
+              {facts.diagram.components.map((component, index) => (
+                <span key={component.id} className="code__line">
+                  <span className="swatch" style={{ background: ropeColour(material, index) }} aria-hidden="true" />
+                  {strandOf(facts.diagram, component.id)
+                    .map(([crossing, pass]) => `${crossing.slice(1)}${pass}`)
+                    .join(' ')}
+                </span>
+              ))}
+            </dd>
+          </div>
+          <div className="facts__wide">
+            <dt>{t('knot.facts.closure')}</dt>
+            <dd>
+              <Polynomial value={facts.closure} testId="jones-closure" />
+            </dd>
+          </div>
         </dl>
-        <p className={facts.sound ? 'verdict verdict--ok' : 'verdict verdict--bad'} data-testid="verdict">
-          {facts.sound ? t('knot.facts.sound') : t('knot.facts.unsound')}
-        </p>
+        {!facts.sound && (
+          <p className="verdict" role="alert" data-testid="verdict">
+            {t('knot.facts.unsound')}
+          </p>
+        )}
       </div>
     </section>
   );

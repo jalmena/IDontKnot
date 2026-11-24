@@ -76,10 +76,9 @@ describe('the figure-eight knot of the library', () => {
   });
 
   it('is its own mirror image turned upside down, as the figure-eight knot is', () => {
-    // every control point of the knot has its opposite through the centre; only the standing part is longer
-    const body = rope.points.slice(2);
-    body.forEach(([x, y, z], i) => {
-      const [ox, oy, oz] = body[body.length - 1 - i] as CurvePoint;
+    // every control point of the rope has its opposite through the centre
+    rope.points.forEach(([x, y, z], i) => {
+      const [ox, oy, oz] = rope.points[rope.points.length - 1 - i] as CurvePoint;
       expect([x + ox, y + oy, z + oz]).toEqual([0, 0, 0]);
     });
   });

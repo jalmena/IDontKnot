@@ -14,6 +14,9 @@ export interface PartShape {
   readonly points: readonly Point3[];
   /** The point its name hangs on: the middle of a straight part, the top of a loop. */
   readonly anchor: Point3;
+  /** For a part that reaches an end of the rope: the point where it leaves the rest of the rope, and that end. */
+  readonly inner: Point3 | null;
+  readonly outer: Point3 | null;
 }
 
 /** Kinds of part that go round: their name sits at their highest point, outside them. */
@@ -36,7 +39,10 @@ export function partShape(part: Part, curve: FrameCurve, length: number): PartSh
   const anchor = ROUND.has(part.type)
     ? points.reduce((highest, point) => (point[1] > highest[1] ? point : highest))
     : pointAt(curve, (part.from + part.to) / 2);
-  return { id: part.id, type: part.type, from: part.from / length, to: part.to / length, points, anchor };
+  const first = points[0] as Point3;
+  const last = points[points.length - 1] as Point3;
+  const [inner, outer] = part.from <= 0 ? [last, first] : part.to >= length ? [first, last] : [null, null];
+  return { id: part.id, type: part.type, from: part.from / length, to: part.to / length, points, anchor, inner, outer };
 }
 
 export type Bounds = readonly [minX: number, minY: number, maxX: number, maxY: number];

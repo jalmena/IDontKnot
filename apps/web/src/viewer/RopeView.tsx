@@ -1,5 +1,5 @@
 import type { Point3 } from '@idontknot/core';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { RopeViewport, type Detail, type Fit, type RopeSpec, type Stretch } from './RopeViewport.ts';
 
@@ -30,19 +30,26 @@ interface Props {
   /** Stretches of rope to bring out: the rest is dimmed. */
   readonly emphasis?: readonly Stretch[];
   readonly names?: readonly ViewName[];
-  /** A view much wider than tall, for a knot laid along a rope. */
-  readonly wide?: boolean;
+  /**
+   * The diagram of the same ropes. With it the view has a switch, and shows the diagram in place of the
+   * 3D picture when asked: the picture stays underneath, as it was left.
+   */
+  readonly diagram?: ReactNode;
+  /** The heading of the page, written in the top left corner of the view. */
+  readonly title?: ReactNode;
 }
 
 const NONE: readonly Stretch[] = [];
 
 /** The single React component around the imperative viewport. */
-export function RopeView({ ropes, label, fit, emphasis = NONE, names, wide = false }: Props) {
+export function RopeView({ ropes, label, fit, emphasis = NONE, names, diagram, title }: Props) {
   const { t } = useTranslation();
   const host = useRef<HTMLDivElement>(null);
   const tags = useRef<HTMLDivElement>(null);
   const viewport = useRef<RopeViewport | null>(null);
   const [unavailable, setUnavailable] = useState(false);
+  const [flat, setFlat] = useState(false);
+  const covered = flat && diagram !== undefined;
 
   useEffect(() => {
     if (!host.current) return;
@@ -79,9 +86,12 @@ export function RopeView({ ropes, label, fit, emphasis = NONE, names, wide = fal
         const tag = elements[i] as HTMLElement | undefined;
         if (!tag) return;
         const { x, y, hidden } = view.place(name.at);
-        tag.style.left = `${(100 * x).toFixed(2)}%`;
-        tag.style.top = `${(100 * y).toFixed(2)}%`;
         tag.hidden = hidden;
+        // a name near the edge of the view stays whole, inside it
+        const width = tags.current?.clientWidth ?? 0;
+        const reach = tag.offsetWidth / 2 + 8;
+        tag.style.left = `${Math.min(Math.max(x * width, reach), Math.max(width - reach, reach)).toFixed(1)}px`;
+        tag.style.top = `${(100 * y).toFixed(2)}%`;
       });
     };
     view.onDraw = place;
@@ -92,9 +102,16 @@ export function RopeView({ ropes, label, fit, emphasis = NONE, names, wide = fal
   }, [names]);
 
   return (
-    <figure className={wide ? 'rope-view rope-view--wide' : 'rope-view'}>
+    <figure className="rope-view">
       <div className="rope-view__stage">
-        <div ref={host} className="rope-view__canvas" role="img" aria-label={label} data-testid="rope-canvas" />
+        <div
+          ref={host}
+          className="rope-view__canvas"
+          role="img"
+          aria-label={label}
+          aria-hidden={covered || undefined}
+          data-testid="rope-canvas"
+        />
         {names && (
           <div ref={tags} className="rope-view__names" aria-hidden="true">
             {names.map((name) => (
@@ -104,17 +121,30 @@ export function RopeView({ ropes, label, fit, emphasis = NONE, names, wide = fal
             ))}
           </div>
         )}
+        {covered && <div className="rope-view__cover">{diagram}</div>}
+        {title !== undefined && <div className="rope-view__title">{title}</div>}
       </div>
-      {unavailable ? (
-        <p className="rope-view__note">{t('lab.view.unavailable')}</p>
-      ) : (
-        <figcaption className="rope-view__caption">
-          <span>{t('lab.view.help')}</span>
+      {unavailable && <p className="rope-view__note">{t('lab.view.unavailable')}</p>}
+      <figcaption className="rope-view__caption">
+        {diagram !== undefined && (
+          <span className="switch" role="group" aria-label={t('lab.view.switch')}>
+            <button type="button" aria-pressed={!covered} onClick={() => setFlat(false)}>
+              {t('lab.view.rope')}
+            </button>
+            <button type="button" aria-pressed={covered} onClick={() => setFlat(true)}>
+              {t('lab.view.diagram')}
+            </button>
+          </span>
+        )}
+        <span className="rope-view__help">
+          {covered ? t('lab.diagram.caption') : unavailable ? '' : t('lab.view.help')}
+        </span>
+        {!covered && !unavailable && (
           <button type="button" onClick={() => viewport.current?.resetView()}>
             {t('lab.view.reset')}
           </button>
-        </figcaption>
-      )}
+        )}
+      </figcaption>
     </figure>
   );
 }

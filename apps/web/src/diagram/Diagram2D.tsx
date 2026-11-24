@@ -8,6 +8,8 @@ export interface DiagramName {
   readonly text: string;
   readonly at: readonly [x: number, y: number];
   readonly marked: boolean;
+  /** Which part of the writing is at `at`: its middle unless said otherwise. */
+  readonly anchor?: 'start' | 'middle' | 'end';
 }
 
 interface Props {
@@ -85,7 +87,7 @@ export function Diagram2D({ curves, visits, colours, label, bounds, line = LINE,
           x={name.at[0]}
           y={-name.at[1]}
           fontSize={text}
-          textAnchor="middle"
+          textAnchor={name.anchor ?? 'middle'}
         >
           {name.text}
         </text>

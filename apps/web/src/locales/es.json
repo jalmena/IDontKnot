@@ -14,7 +14,7 @@
   },
   "lab": {
     "title": "Laboratorio de nudos tóricos",
-    "intro": "Elige cuántas vueltas da la cuerda alrededor del eje y cuántas veces pasa por el agujero. La cuerda se dibuja en 3D. Después su diagrama se lee a partir de la forma 3D y se compara con el diagrama construido desde la palabra de trenza.",
+    "turns": "Vueltas de la cuerda",
     "p": "Vueltas alrededor del eje (p)",
     "q": "Pasos por el agujero (q)",
     "tooLarge": "Esto tiene {{count}} cruces en esta vista. El prototipo calcula el polinomio de Jones hasta {{max}}.",
@@ -23,7 +23,10 @@
       "reset": "Restablecer la vista",
       "unavailable": "El dibujo 3D no está disponible en este navegador. Los valores de esta página se calculan igualmente.",
       "label_one": "Vista 3D del nudo tórico ({{p}}, {{q}})",
-      "label_other": "Vista 3D del enlace tórico ({{p}}, {{q}}): {{count}} lazos de cuerda enlazados"
+      "label_other": "Vista 3D del enlace tórico ({{p}}, {{q}}): {{count}} lazos de cuerda enlazados",
+      "switch": "Vista",
+      "rope": "3D",
+      "diagram": "Diagrama"
     },
     "facts": {
       "title": "Lo que calcula el núcleo",
@@ -39,7 +42,6 @@
       "codeHelp": "o: la cuerda pasa por encima. u: pasa por debajo.",
       "jonesGeometry": "Polinomio de Jones, desde la curva 3D",
       "jonesBraid": "Polinomio de Jones, desde la palabra de trenza",
-      "agree": "Los dos coinciden.",
       "disagree": "Los dos no coinciden. Es un defecto: por favor, comunícalo."
     },
     "link_one": "p y q no tienen factor común: un solo lazo de cuerda, un nudo.",
@@ -63,17 +65,12 @@
     "view": "Vista 3D del {{name}}",
     "missing": "Ese nudo no está en la biblioteca.",
     "parts": {
-      "title": "Partes de la cuerda",
-      "hint": "Elige una parte para destacarla en las dos vistas."
+      "title": "Partes de la cuerda"
     },
     "facts": {
       "alternating": "La cuerda pasa por encima y por debajo alternativamente",
       "endsOutside": "Los dos extremos quedan fuera del nudo",
-      "length": "Cuerda dibujada",
-      "diameters_one": "{{count}} diámetro de cuerda",
-      "diameters_other": "{{count}} diámetros de cuerda",
       "closure": "Polinomio de Jones, uniendo los dos extremos",
-      "sound": "La forma en el espacio es el diagrama guardado y cumple todas las reglas de geometría.",
       "unsound": "La forma en el espacio incumple una regla. Es un defecto: por favor, comunícalo."
     }
   },

@@ -12,15 +12,25 @@ test('opens on the figure-eight knot of the library, with what the core computes
 
   await expect(page.getByTestId('crossings')).toHaveText('4');
   await expect(page.getByTestId('jones-closure')).toHaveAttribute('aria-label', 't^(-2) − t^(-1) + 1 − t + t^2');
-  await expect(page.getByTestId('verdict')).toContainText('The shape in space is the stored diagram');
+  // the shape in space is the stored diagram and keeps the rules of geometry: nothing needs saying
+  await expect(page.getByTestId('facts')).toHaveAttribute('data-checked', 'ok');
+  await expect(page.getByTestId('verdict')).toHaveCount(0);
 });
 
-test('draws the open rope, and its diagram with crossings numbered and parts named', async ({ page }) => {
+test('draws the open rope with its parts named, and its diagram in its place when asked', async ({ page }) => {
   await expect
     .poll(async () => Number(await page.getByTestId('rope-canvas').getAttribute('data-triangles')))
     .toBeGreaterThan(1000);
+  await expect(page.locator('.rope-view__names .tag')).toHaveText([
+    'Standing part',
+    'First loop',
+    'Second loop',
+    'Tail',
+  ]);
 
   const diagram = page.getByTestId('diagram');
+  await expect(diagram).toHaveCount(0);
+  await page.getByRole('button', { name: 'Diagram' }).click();
   // a rope that passes under four times is drawn in five pieces
   await expect(diagram.locator('polyline')).toHaveCount(5);
   await expect(diagram.locator('text')).toHaveText([
@@ -33,32 +43,47 @@ test('draws the open rope, and its diagram with crossings numbered and parts nam
     'Second loop',
     'Tail',
   ]);
-  await expect(page.locator('.rope-view__names .tag')).toHaveText([
-    'Standing part',
-    'First loop',
-    'Second loop',
-    'Tail',
-  ]);
+
+  await page.getByRole('button', { name: '3D' }).click();
+  await expect(diagram).toHaveCount(0);
 });
 
-test('brings out the part of the rope that is chosen, in both views', async ({ page }) => {
+test('brings out the part of the rope that is chosen, on the rope and on its diagram', async ({ page }) => {
   const loop = page.getByTestId('parts').getByRole('button', { name: 'First loop' });
-  const marked = page.getByTestId('diagram').locator('.diagram__marked');
-  await expect(marked).toHaveCount(0);
+  const onRope = page.locator('.rope-view__names .tag--marked');
+  await expect(onRope).toHaveCount(0);
 
   await loop.click();
   await expect(loop).toHaveAttribute('aria-pressed', 'true');
-  await expect(marked).toHaveCount(1);
-  await expect(page.getByTestId('diagram').locator('.diagram__name--marked')).toHaveText('First loop');
-  await expect(page.locator('.rope-view__names .tag--marked')).toHaveText('First loop');
+  await expect(onRope).toHaveText('First loop');
 
-  // moving away keeps the choice; choosing it again lets it go
-  await page.getByRole('heading', { level: 1 }).hover();
-  await expect(marked).toHaveCount(1);
+  // moving away keeps the choice, and so does changing to the diagram
+  await page.mouse.move(2, 2);
+  await expect(onRope).toHaveText('First loop');
+  await page.getByRole('button', { name: 'Diagram' }).click();
+  const diagram = page.getByTestId('diagram');
+  await expect(diagram.locator('.diagram__marked')).toHaveCount(1);
+  await expect(diagram.locator('.diagram__name--marked')).toHaveText('First loop');
+
+  // choosing it again lets it go
   await loop.click();
-  await page.getByRole('heading', { level: 1 }).hover();
+  await page.mouse.move(2, 2);
   await expect(loop).toHaveAttribute('aria-pressed', 'false');
-  await expect(marked).toHaveCount(0);
+  await expect(diagram.locator('.diagram__marked')).toHaveCount(0);
+});
+
+test('shows everything about the knot on one screen of a laptop', async ({ page, viewport }) => {
+  test.skip((viewport?.width ?? 0) < 900, 'on a narrow screen the panel goes under the view');
+  await expect(page.getByTestId('facts')).toBeVisible();
+  const edges = (selector: string) =>
+    page.locator(selector).evaluate((element) => {
+      const box = element.getBoundingClientRect();
+      return { top: Math.round(box.top + window.scrollY), bottom: Math.round(box.bottom + window.scrollY) };
+    });
+  const [view, panel] = [await edges('.rope-view'), await edges('.panel')];
+  expect(panel.bottom).toBeLessThanOrEqual(viewport?.height ?? 0);
+  // side by side, the view and the panel are one height
+  expect(panel).toEqual(view);
 });
 
 test('names the knot and its parts in Spanish', async ({ page }) => {
@@ -94,7 +119,7 @@ test('opens a knot by its address, and says so when there is no such knot or pag
 });
 
 test('has no accessibility violations that axe can detect', async ({ page }) => {
-  await expect(page.getByTestId('verdict')).toBeVisible();
+  await expect(page.getByTestId('facts')).toBeVisible();
   await page.getByTestId('parts').getByRole('button', { name: 'Tail' }).click();
   const results = await new AxeBuilder({ page }).analyze();
   expect(results.violations.map((violation) => `${violation.id}: ${violation.help}`)).toEqual([]);

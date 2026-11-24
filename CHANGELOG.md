@@ -21,8 +21,11 @@ All notable changes to this project are recorded here. The format follows [Keep 
 - A 2D diagram of the knot beside the 3D view, with gaps where a rope passes under and numbered crossings.
 - Knot documents in the core: components, named parts of a rope, the diagram, and shapes in space with the rules they must keep.
 - The first knot of the library: a figure-eight knot, checked against the reference diagram.
-- A page for a knot of the library, which the application now opens on: the rope in 3D, its diagram, the parts of the rope named on both views and brought out when chosen, and what the core computes for it.
+- A page for a knot of the library, which the application now opens on: the rope in 3D or its diagram, the parts of the rope named on both and brought out when chosen, and what the core computes for it.
 
 ### Changed
 
 - The torus knot laboratory moved to `/lab`.
+- Both pages share one layout that fits one screen of a laptop: the view with the title of the page inside it, and a panel of the same height beside it.
+- The diagram is shown in place of the 3D view, by a switch on the view, instead of beside it.
+- A check that passes is no longer announced; one that fails is shown at the bottom of the panel.

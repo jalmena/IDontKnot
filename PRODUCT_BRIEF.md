@@ -47,6 +47,9 @@ Its differentiator is that the system reasons about knots through a mathematical
 | 2026-11-24 | First knot | The figure-eight knot is the first knot of the library, and the one a knot page is built round. |
 | 2026-11-24 | Parts of a rope | The names of the parts (standing part, loops, tail) are written on both the 3D view and the diagram. Choosing a part brings it out in both. |
 | 2026-11-24 | Home page | The application opens on the library ("Explore"). The torus knot laboratory is "Experiment". |
+| 2026-11-24 | Page layout | Every page shows everything on one screen of a laptop, and all pages share one layout: the view on the left with the title of the page inside it, and beside it a panel of the same height with the controls and what the core computes. Both boxes keep to one grid of margins and columns. The knot is centred and fills the view. |
+| 2026-11-24 | Diagram | The 2D diagram is not shown beside the 3D view: a switch on the view shows one or the other in the same place. |
+| 2026-11-24 | Checks | A check that passes says nothing. One that fails is shown at the bottom edge of the panel. |
 
 ## Open decisions
 

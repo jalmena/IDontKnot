@@ -22,6 +22,10 @@
   --font-code: ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
   --radius: 14px;
   --gap: clamp(1rem, 2.5vw, 2rem);
+  /* the margin inside a box, and the gap between the two columns of a panel */
+  --inset-x: 1.4rem;
+  --inset-y: 1.25rem;
+  --columns: 1.5rem;
 
   color-scheme: dark;
 }
@@ -86,7 +90,7 @@ p {
   align-items: center;
   gap: 1rem 1.5rem;
   flex-wrap: wrap;
-  padding: 1.1rem 0;
+  padding: 0.8rem 0;
   border-bottom: 1px solid var(--green-line);
 }
 
@@ -179,36 +183,32 @@ select:hover {
   display: grid;
   gap: var(--gap);
   grid-template-columns: minmax(0, 1fr);
-  grid-template-areas: 'intro' 'stage' 'facts';
-}
-
-.lab__intro {
-  grid-area: intro;
+  grid-template-areas: 'stage' 'facts';
 }
 
 .lab__stage {
   grid-area: stage;
   display: grid;
-  gap: 1rem;
-  align-content: start;
 }
 
+/* beside each other, the view and the panel are as tall as the taller of the two */
 .lab__facts {
   grid-area: facts;
-  align-self: start;
 }
 
 .panel {
+  display: flex;
+  flex-direction: column;
   background: color-mix(in srgb, var(--green-edge) 55%, transparent);
   border: 1px solid var(--green-line);
   border-radius: var(--radius);
-  padding: 1.25rem 1.4rem;
+  padding: var(--inset-y) var(--inset-x);
 }
 
 @media (min-width: 900px) {
   .lab {
     grid-template-columns: minmax(0, 1.25fr) minmax(20rem, 1fr);
-    grid-template-areas: 'intro intro' 'stage facts';
+    grid-template-areas: 'stage facts';
   }
 }
 
@@ -219,6 +219,8 @@ select:hover {
 }
 
 .rope-view {
+  display: flex;
+  flex-direction: column;
   margin: 0;
   border: 1px solid var(--green-line);
   border-radius: var(--radius);
@@ -227,17 +229,21 @@ select:hover {
 }
 
 .rope-view__canvas {
-  aspect-ratio: 4 / 3;
-  width: 100%;
+  position: absolute;
+  inset: 0;
   touch-action: none;
-}
-
-.rope-view--wide .rope-view__canvas {
-  aspect-ratio: 5 / 2;
 }
 
 .rope-view__stage {
   position: relative;
+  flex: 1 1 auto;
+}
+
+/* the picture is at least three quarters as tall as it is wide, and taller when the panel beside it is */
+.rope-view__stage::before {
+  content: '';
+  display: block;
+  padding-top: 75%;
 }
 
 .rope-view__names {
@@ -264,6 +270,65 @@ select:hover {
   font-weight: 600;
 }
 
+.rope-view__cover {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 0.5rem;
+  background: radial-gradient(90% 80% at 50% 45%, var(--green-glow), var(--green-edge));
+}
+
+.rope-view__cover .diagram {
+  width: 100%;
+  height: 100%;
+  max-width: none;
+}
+
+/* the heading of the page, level with the first row of the panel beside the view */
+.rope-view__title {
+  position: absolute;
+  top: var(--inset-y);
+  left: var(--inset-x);
+  right: var(--inset-x);
+  min-height: 2.75rem;
+  display: flex;
+  align-items: center;
+  pointer-events: none;
+}
+
+.rope-view__title h1 {
+  margin: 0;
+  font-size: clamp(1.3rem, 2.2vw, 1.7rem);
+  text-shadow: 0 1px 6px var(--green-edge);
+}
+
+.rope-view__help {
+  flex: 1 1 10rem;
+}
+
+/* Two buttons of which one is chosen */
+.switch {
+  display: inline-flex;
+}
+
+.switch button:first-child {
+  border-radius: 999px 0 0 999px;
+}
+
+.switch button:last-child {
+  border-radius: 0 999px 999px 0;
+  border-left: 0;
+}
+
+.switch button[aria-pressed='true'],
+.parts button[aria-pressed='true'] {
+  background: var(--gold);
+  border-color: var(--gold);
+  color: var(--green-edge);
+  font-weight: 600;
+}
+
 .rope-view__canvas canvas {
   display: block;
   width: 100%;
@@ -278,33 +343,35 @@ select:hover {
   gap: 1rem;
   flex-wrap: wrap;
   margin: 0;
-  padding: 0.6rem 0.9rem;
+  padding: 0.6rem var(--inset-x);
   border-top: 1px solid var(--green-line);
   color: var(--ivory-dim);
   font-size: 0.9rem;
   max-width: none;
 }
 
-.lab__controls {
+/* Labelled controls: the label in the left half of the panel, the control in the right half */
+.controls {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(8rem, 14rem) 2ch;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   align-items: center;
-  gap: 0.6rem 1rem;
+  gap: 0 var(--columns);
+  margin-bottom: 1rem;
 }
 
-.lab__rope {
-  grid-column: 2 / 4;
+.controls select {
+  width: 100%;
   border-radius: 10px;
 }
 
-.lab__note {
-  grid-column: 1 / 4;
-  margin: 0;
-  color: var(--ivory-dim);
-  font-size: 0.85rem;
+.controls__slider {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
 }
 
-.lab__controls output {
+.controls__slider output {
+  min-width: 2ch;
   font-family: var(--font-code);
   color: var(--gold-bright);
   text-align: right;
@@ -318,15 +385,28 @@ input[type='range'] {
 
 dl {
   margin: 0;
+}
+
+.facts {
   display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: 0.15rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0 var(--columns);
+}
+
+.facts__wide {
+  grid-column: 1 / -1;
+}
+
+@media (max-width: 30rem) {
+  .facts {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 
 dt {
   color: var(--ivory-dim);
   font-size: 0.9rem;
-  margin-top: 0.7rem;
+  margin-top: 0.4rem;
 }
 
 dt small {
@@ -346,11 +426,124 @@ dd {
   color: var(--gold-bright);
 }
 
-.lab__diagram {
-  margin: 0 0 0.5rem;
-  text-align: center;
+.diagram {
+  width: 100%;
+  height: 100%;
+  max-width: none;
+}
+
+/* the heading of the page, level with the first row of the panel beside the view */
+.rope-view__title {
+  position: absolute;
+  top: var(--inset-y);
+  left: var(--inset-x);
+  right: var(--inset-x);
+  min-height: 2.75rem;
+  display: flex;
+  align-items: center;
+  pointer-events: none;
+}
+
+.rope-view__title h1 {
+  margin: 0;
+  font-size: clamp(1.3rem, 2.2vw, 1.7rem);
+  text-shadow: 0 1px 6px var(--green-edge);
+}
+
+.rope-view__help {
+  flex: 1 1 10rem;
+}
+
+/* Two buttons of which one is chosen */
+.switch {
+  display: inline-flex;
+}
+
+.switch button:first-child {
+  border-radius: 999px 0 0 999px;
+}
+
+.switch button:last-child {
+  border-radius: 0 999px 999px 0;
+  border-left: 0;
+}
+
+.switch button[aria-pressed='true'],
+.parts button[aria-pressed='true'] {
+  background: var(--gold);
+  border-color: var(--gold);
+  color: var(--green-edge);
+  font-weight: 600;
+}
+
+.rope-view__canvas canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.rope-view__caption,
+.rope-view__note {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin: 0;
+  padding: 0.6rem var(--inset-x);
+  border-top: 1px solid var(--green-line);
   color: var(--ivory-dim);
-  font-size: 0.85rem;
+  font-size: 0.9rem;
+  max-width: none;
+}
+
+input[type='range'] {
+  width: 100%;
+  min-height: 2.75rem;
+  accent-color: var(--gold);
+}
+
+dl {
+  margin: 0;
+}
+
+.facts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0 var(--columns);
+}
+
+.facts__wide {
+  grid-column: 1 / -1;
+}
+
+@media (max-width: 30rem) {
+  .facts {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+dt {
+  color: var(--ivory-dim);
+  font-size: 0.9rem;
+  margin-top: 0.4rem;
+}
+
+dt small {
+  display: block;
+  font-size: 0.8rem;
+}
+
+dd {
+  margin: 0;
+  font-size: 1.1rem;
+  overflow-wrap: anywhere;
+}
+
+.code {
+  font-family: var(--font-code);
+  font-size: 0.95rem;
+  color: var(--gold-bright);
 }
 
 .diagram {
@@ -384,61 +577,13 @@ a {
 }
 
 /* A knot of the library */
-.knot {
-  display: grid;
-  gap: var(--gap);
-  grid-template-columns: minmax(0, 1fr);
-}
-
-.knot__head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem 1.5rem;
-  flex-wrap: wrap;
-}
-
-.knot__head h1 {
-  margin: 0;
-}
-
-.knot__rope {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.6rem;
-}
-
-.knot__diagram {
-  margin: 0;
-  text-align: center;
-  color: var(--ivory-dim);
-  font-size: 0.85rem;
-}
-
-.knot__diagram .diagram {
-  max-width: none;
-}
-
-.knot__parts ul {
+.parts {
   list-style: none;
-  margin: 0 0 0.6rem;
+  margin: 0 0 1.2rem;
   padding: 0;
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
-}
-
-.knot__parts button[aria-pressed='true'] {
-  background: var(--gold);
-  border-color: var(--gold);
-  color: var(--green-edge);
-  font-weight: 600;
-}
-
-.knot__hint {
-  margin: 0;
-  color: var(--ivory-dim);
-  font-size: 0.9rem;
 }
 
 .code__line {
@@ -463,21 +608,26 @@ a {
   margin-left: 0.12em;
 }
 
+/* the part of a panel that changes as the knot does */
+.panel__live {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+/* a check that failed: it sits on the bottom edge of its panel */
 .verdict {
-  margin: 1.1rem 0 0;
+  margin: auto 0 0;
   padding: 0.6rem 0.9rem;
   border-radius: 10px;
   font-weight: 600;
-}
-
-.verdict--ok {
-  background: color-mix(in srgb, var(--gold) 18%, transparent);
-  color: var(--gold-bright);
-}
-
-.verdict--bad {
+  max-width: none;
   background: color-mix(in srgb, var(--bad) 20%, transparent);
   color: var(--bad);
+}
+
+.facts {
+  margin-bottom: 0.8rem;
 }
 
 @media (prefers-reduced-motion: reduce) {

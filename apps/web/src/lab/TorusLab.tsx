@@ -14,9 +14,12 @@ import { Diagram2D } from '../diagram/Diagram2D.tsx';
 import { RopeSelect } from '../viewer/RopeSelect.tsx';
 import { RopeView } from '../viewer/RopeView.tsx';
 import { ropeColour, type RopeMaterialId } from '../viewer/materials.ts';
-import type { RopeSpec } from '../viewer/RopeViewport.ts';
+import type { Fit, RopeSpec } from '../viewer/RopeViewport.ts';
 import { polynomialText } from './format.ts';
 import { Polynomial } from './Polynomial.tsx';
+
+/** The box every torus knot of the laboratory fits in, with room above for the title. */
+const FIT: Fit = { centre: [0, 0.3, 0], width: 6.9, height: 7.4 };
 
 /** The state sum doubles with every crossing; this keeps the page instant. */
 const MAX_CROSSINGS = 14;
@@ -83,110 +86,140 @@ export function TorusLab() {
 
   return (
     <section className="lab" aria-labelledby="lab-title">
-      <div className="lab__intro">
-        <h1 id="lab-title">{t('lab.title')}</h1>
-        <p>{t('lab.intro')}</p>
-      </div>
-
       <div className="lab__stage">
-        <RopeView ropes={ropes} label={t('lab.view.label', { p, q, count: loops })} />
-        <form className="lab__controls" onSubmit={(event) => event.preventDefault()}>
-          <label htmlFor={pId}>{t('lab.p')}</label>
-          <input
-            id={pId}
-            type="range"
-            min={2}
-            max={5}
-            step={1}
-            value={p}
-            onChange={(event) => setP(Number(event.target.value))}
-          />
-          <output htmlFor={pId} data-testid="p-value">
-            {p}
-          </output>
-          <label htmlFor={qId}>{t('lab.q')}</label>
-          <input
-            id={qId}
-            type="range"
-            min={2}
-            max={9}
-            step={1}
-            value={q}
-            onChange={(event) => setQ(Number(event.target.value))}
-          />
-          <output htmlFor={qId} data-testid="q-value">
-            {q}
-          </output>
-          <RopeSelect value={material} onChange={setMaterial} className="lab__rope" />
-        </form>
+        <RopeView
+          ropes={ropes}
+          label={t('lab.view.label', { p, q, count: loops })}
+          title={<h1 id="lab-title">{t('lab.title')}</h1>}
+          fit={FIT}
+          {...(facts
+            ? {
+                diagram: (
+                  <Diagram2D
+                    curves={curves}
+                    visits={facts.visits}
+                    colours={curves.map((_, index) => ropeColour(material, index))}
+                    label={t('lab.diagram.label', { count: facts.diagram.crossings.length })}
+                  />
+                ),
+              }
+            : {})}
+        />
       </div>
 
-      <div className="lab__facts panel" aria-live="polite">
-        <h2>{t('lab.facts.title')}</h2>
-        {loops > 1 && (
-          <p className="lab__message" data-testid="link-note">
-            {t('lab.link', { count: loops })}
-          </p>
-        )}
-        {tooLarge && <p className="lab__message">{t('lab.tooLarge', { count: crossingCount, max: MAX_CROSSINGS })}</p>}
-        {facts && (
-          <figure className="lab__diagram">
-            <Diagram2D
-              curves={curves}
-              visits={facts.visits}
-              colours={curves.map((_, index) => ropeColour(material, index))}
-              label={t('lab.diagram.label', { count: facts.diagram.crossings.length })}
+      <div className="lab__facts panel">
+        <form className="controls" onSubmit={(event) => event.preventDefault()}>
+          <RopeSelect value={material} onChange={setMaterial} />
+        </form>
+
+        <h2>{t('lab.turns')}</h2>
+        <form className="controls" onSubmit={(event) => event.preventDefault()}>
+          <label htmlFor={pId}>{t('lab.p')}</label>
+          <span className="controls__slider">
+            <input
+              id={pId}
+              type="range"
+              min={2}
+              max={5}
+              step={1}
+              value={p}
+              onChange={(event) => setP(Number(event.target.value))}
             />
-            <figcaption>{t('lab.diagram.caption')}</figcaption>
-          </figure>
-        )}
-        {facts && (
-          <dl>
-            {tableName && (
-              <>
-                <dt>{t('lab.facts.tableName')}</dt>
-                <dd className="code">{tableName}</dd>
-              </>
-            )}
-            <dt>{t('lab.facts.loops')}</dt>
-            <dd data-testid="loops">{loops}</dd>
-            <dt>{t('lab.facts.crossings')}</dt>
-            <dd data-testid="crossings">{facts.diagram.crossings.length}</dd>
-            <dt>{t('lab.facts.writhe')}</dt>
-            <dd>{facts.writhe > 0 ? `+${facts.writhe}` : facts.writhe}</dd>
-            <dt>{t('lab.facts.planar')}</dt>
-            <dd>{facts.planar ? t('lab.facts.yes') : t('lab.facts.no')}</dd>
-            <dt>{t('lab.facts.braid')}</dt>
-            <dd className="code">{facts.word.join(' ')}</dd>
-            <dt>
-              {t('lab.facts.code')}
-              <small>{t('lab.facts.codeHelp')}</small>
-            </dt>
-            <dd className="code">
-              {facts.diagram.components.map((component, index) => (
-                <span key={component.id} className="code__line">
-                  <span className="swatch" style={{ background: ropeColour(material, index) }} aria-hidden="true" />
-                  {strandOf(facts.diagram, component.id)
-                    .map(([crossing, pass]) => `${crossing.slice(1)}${pass}`)
-                    .join(' ')}
-                </span>
-              ))}
-            </dd>
-            <dt>{t('lab.facts.jonesGeometry')}</dt>
-            <dd>
-              <Polynomial value={facts.fromGeometry} testId="jones-geometry" />
-            </dd>
-            <dt>{t('lab.facts.jonesBraid')}</dt>
-            <dd>
-              <Polynomial value={facts.fromBraid} testId="jones-braid" />
-            </dd>
-          </dl>
-        )}
-        {facts && (
-          <p className={agree ? 'verdict verdict--ok' : 'verdict verdict--bad'} data-testid="verdict">
-            {agree ? t('lab.facts.agree') : t('lab.facts.disagree')}
-          </p>
-        )}
+            <output htmlFor={pId} data-testid="p-value">
+              {p}
+            </output>
+          </span>
+          <label htmlFor={qId}>{t('lab.q')}</label>
+          <span className="controls__slider">
+            <input
+              id={qId}
+              type="range"
+              min={2}
+              max={9}
+              step={1}
+              value={q}
+              onChange={(event) => setQ(Number(event.target.value))}
+            />
+            <output htmlFor={qId} data-testid="q-value">
+              {q}
+            </output>
+          </span>
+        </form>
+
+        <div className="panel__live" aria-live="polite">
+          <h2>{t('lab.facts.title')}</h2>
+          {loops > 1 && (
+            <p className="lab__message" data-testid="link-note">
+              {t('lab.link', { count: loops })}
+            </p>
+          )}
+          {tooLarge && (
+            <p className="lab__message">{t('lab.tooLarge', { count: crossingCount, max: MAX_CROSSINGS })}</p>
+          )}
+          {facts && (
+            <dl className="facts" data-testid="facts" data-checked={agree ? 'ok' : 'failed'}>
+              {tableName && (
+                <div>
+                  <dt>{t('lab.facts.tableName')}</dt>
+                  <dd className="code">{tableName}</dd>
+                </div>
+              )}
+              <div>
+                <dt>{t('lab.facts.loops')}</dt>
+                <dd data-testid="loops">{loops}</dd>
+              </div>
+              <div>
+                <dt>{t('lab.facts.crossings')}</dt>
+                <dd data-testid="crossings">{facts.diagram.crossings.length}</dd>
+              </div>
+              <div>
+                <dt>{t('lab.facts.writhe')}</dt>
+                <dd>{facts.writhe > 0 ? `+${facts.writhe}` : facts.writhe}</dd>
+              </div>
+              <div>
+                <dt>{t('lab.facts.planar')}</dt>
+                <dd>{facts.planar ? t('lab.facts.yes') : t('lab.facts.no')}</dd>
+              </div>
+              <div>
+                <dt>{t('lab.facts.braid')}</dt>
+                <dd className="code">{facts.word.join(' ')}</dd>
+              </div>
+              <div className="facts__wide">
+                <dt>
+                  {t('lab.facts.code')}
+                  <small>{t('lab.facts.codeHelp')}</small>
+                </dt>
+                <dd className="code">
+                  {facts.diagram.components.map((component, index) => (
+                    <span key={component.id} className="code__line">
+                      <span className="swatch" style={{ background: ropeColour(material, index) }} aria-hidden="true" />
+                      {strandOf(facts.diagram, component.id)
+                        .map(([crossing, pass]) => `${crossing.slice(1)}${pass}`)
+                        .join(' ')}
+                    </span>
+                  ))}
+                </dd>
+              </div>
+              <div>
+                <dt>{t('lab.facts.jonesGeometry')}</dt>
+                <dd>
+                  <Polynomial value={facts.fromGeometry} testId="jones-geometry" />
+                </dd>
+              </div>
+              <div>
+                <dt>{t('lab.facts.jonesBraid')}</dt>
+                <dd>
+                  <Polynomial value={facts.fromBraid} testId="jones-braid" />
+                </dd>
+              </div>
+            </dl>
+          )}
+          {facts && !agree && (
+            <p className="verdict" role="alert" data-testid="verdict">
+              {t('lab.facts.disagree')}
+            </p>
+          )}
+        </div>
       </div>
     </section>
   );

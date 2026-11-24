@@ -47,6 +47,16 @@ it('hangs the name of a straight part on its middle, and the name of a loop on i
   expect(partShape(part('second-loop'), curve, length).anchor[0]).toBeLessThan(0);
 });
 
+it('knows which parts reach an end of the rope, and where they leave the rest of it', () => {
+  const standing = partShape(part('standing-part'), curve, length);
+  expect(standing.outer).toEqual(curve.points[0]);
+  expect(standing.inner).toEqual(pointAt(curve, part('standing-part').to));
+  const tail = partShape(part('tail'), curve, length);
+  expect(tail.outer).toEqual(curve.points.at(-1));
+  expect(tail.inner).toEqual(pointAt(curve, part('tail').from));
+  expect(partShape(part('first-loop'), curve, length).inner).toBeNull();
+});
+
 it('boxes the curves with a margin', () => {
   expect(
     boundsOf(
@@ -62,6 +72,6 @@ it('boxes the curves with a margin', () => {
     ),
   ).toEqual([-0.5, -2.5, 4.5, 1.5]);
   const [minX, minY, maxX, maxY] = boundsOf([curve], 0);
-  expect([minX, maxX]).toEqual([-16, 10.5]);
+  expect([minX, maxX]).toEqual([-9.6, 9.6]); // and its two ends are as long as each other
   expect(minY).toBeCloseTo(-maxY, 6); // the knot is as tall above its rope as below it
 });

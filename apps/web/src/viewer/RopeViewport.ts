@@ -117,6 +117,9 @@ export class RopeViewport {
   private environment: Texture | null = null;
   private specs: readonly RopeSpec[] = [];
   private stretches: readonly Stretch[] = [];
+  private fit: Fit | null = null;
+  /** Whether the person has turned or zoomed the view since it was last framed. */
+  private moved = false;
   /** Called after every drawing: the camera may have moved. */
   onDraw: (() => void) | null = null;
   private readonly observer: ResizeObserver;
@@ -145,6 +148,7 @@ export class RopeViewport {
     this.controls.minDistance = 2.5;
     this.controls.maxDistance = 20;
     this.controls.addEventListener('change', this.render);
+    this.controls.addEventListener('start', this.touched);
     this.controls.saveState();
 
     this.observer = new ResizeObserver(this.resize);
@@ -172,10 +176,15 @@ export class RopeViewport {
     this.render();
   }
 
-  /** Moves the camera to +z of a box in the x-y plane, far enough to take all of it in. */
+  /**
+   * Moves the camera to +z of a box in the x-y plane, far enough to take all of it in. The view keeps to
+   * that as its size changes, until the person turns or zooms it.
+   */
   fitTo(fit: Fit): void {
+    this.fit = fit;
+    this.moved = false;
     const half = Math.tan((this.camera.fov * Math.PI) / 360);
-    const distance = 1.08 * Math.max(fit.height / (2 * half), fit.width / (2 * half * this.camera.aspect));
+    const distance = Math.max(fit.height / (2 * half), fit.width / (2 * half * this.camera.aspect));
     this.controls.target.set(...fit.centre);
     this.camera.position.set(fit.centre[0], fit.centre[1], fit.centre[2] + distance);
     [this.camera.near, this.camera.far] = [distance / 100, distance * 10];
@@ -194,13 +203,16 @@ export class RopeViewport {
   }
 
   resetView(): void {
-    this.controls.reset();
+    if (this.fit) this.fitTo(this.fit);
+    else this.controls.reset();
+    this.moved = false;
     this.render();
   }
 
   dispose(): void {
     this.observer.disconnect();
     this.controls.removeEventListener('change', this.render);
+    this.controls.removeEventListener('start', this.touched);
     this.controls.dispose();
     this.clear();
     this.edge.dispose();
@@ -411,7 +423,12 @@ export class RopeViewport {
     this.renderer.setSize(width, height, false);
     this.camera.aspect = width / height;
     this.camera.updateProjectionMatrix();
-    this.render();
+    if (this.fit && !this.moved) this.fitTo(this.fit);
+    else this.render();
+  };
+
+  private readonly touched = (): void => {
+    this.moved = true;
   };
 
   private readonly render = (): void => {
