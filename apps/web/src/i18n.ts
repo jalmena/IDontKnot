@@ -1,13 +1,11 @@
 import i18n from 'i18next';
 import LanguageDetector from 'i18next-browser-languagedetector';
 import { initReactI18next } from 'react-i18next';
+import { LANGUAGES } from './languages.ts';
 import en from './locales/en.json';
 import es from './locales/es.json';
 
-export const LANGUAGES = [
-  { code: 'en', name: 'English' },
-  { code: 'es', name: 'Español' },
-] as const;
+export { LANGUAGES };
 
 // English unless the person has chosen otherwise; the choice is remembered in the browser.
 void i18n

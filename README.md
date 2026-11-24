@@ -2,7 +2,7 @@
 
 An interactive encyclopedia and laboratory for knots, rope systems and knot theory, built to be self-hosted.
 
-**Status: first prototype.** The mathematical core exists and reproduces the reference diagrams. The application is one page, a torus knot laboratory, in English and Spanish. There is no library, no tutorial and no account yet; see the [roadmap](ROADMAP.md).
+**Status: first prototype.** The mathematical core exists and reproduces the reference diagrams. The application has two pages, in English and Spanish: one knot of the library, a figure-eight knot, to inspect in 3D and as a diagram, and a torus knot laboratory. There is no library index, no tutorial and no account yet; see the [roadmap](ROADMAP.md).
 
 ## Run it
 

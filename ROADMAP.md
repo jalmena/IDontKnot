@@ -7,10 +7,10 @@ A roadmap is a plan, not a promise. Nothing listed here exists until its phase i
 | Area | Status |
 | --- | --- |
 | Research | Done. See [docs/research](docs/research/). Open checks are listed at the end of each report. |
-| Product discovery | Mostly done. Decisions are in [PRODUCT_BRIEF.md](PRODUCT_BRIEF.md). Open: 3D interaction details, the first set of knots, content licence. |
+| Product discovery | Mostly done. Decisions are in [PRODUCT_BRIEF.md](PRODUCT_BRIEF.md). Open: 3D interaction details, the knots after the first, content licence. |
 | Architecture | Decided. See [ARCHITECTURE.md](ARCHITECTURE.md) and [docs/adr](docs/adr/README.md). |
 | Design and branding | The identity is decided: [docs/design/brand](docs/design/brand/README.md). Open: a light variant, themes by discipline, iconography, motion. |
-| Implementation | Started. Phase 1 and most of phase 2 are done; see [ARCHITECTURE.md](ARCHITECTURE.md) for exactly what exists. |
+| Implementation | Phases 1 and 3 are done, and phase 2 except graded comparison; see [ARCHITECTURE.md](ARCHITECTURE.md) for exactly what exists. Not yet measured on a real tablet. |
 
 ## Phases
 

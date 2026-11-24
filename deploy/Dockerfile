@@ -13,6 +13,7 @@ RUN pnpm install --frozen-lockfile
 COPY tsconfig.base.json ./
 COPY packages/core packages/core
 COPY apps/web apps/web
+COPY content content
 RUN pnpm --filter @idontknot/web build
 
 # ---- production dependencies of the server ---------------------------------

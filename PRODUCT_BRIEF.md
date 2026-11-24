@@ -43,6 +43,10 @@ Its differentiator is that the system reasons about knots through a mathematical
 | 2026-11-24 | Library content | Files in the repository, reviewed by pull request and packaged into the image. What users create is stored in the instance's database. |
 | 2026-11-24 | Rope style and discipline | Each discipline has a rope style it is drawn with. Where the discipline is chosen, the rope selector sits beside it and follows the discipline unless a "customise" checkbox is ticked. Rope names carry no discipline. |
 | 2026-11-24 | Library order by discipline | The same knots, ordered by their importance in the chosen discipline; knots a discipline does not use can be hidden. |
+| 2026-11-24 | Rope drawing | Each rope is drawn as it is made, with treated jute for shibari. How light each rope is, and how strongly the grooves of laid rope are marked, were chosen from rendered alternatives. |
+| 2026-11-24 | First knot | The figure-eight knot is the first knot of the library, and the one a knot page is built round. |
+| 2026-11-24 | Parts of a rope | The names of the parts (standing part, loops, tail) are written on both the 3D view and the diagram. Choosing a part brings it out in both. |
+| 2026-11-24 | Home page | The application opens on the library ("Explore"). The torus knot laboratory is "Experiment". |
 
 ## Open decisions
 

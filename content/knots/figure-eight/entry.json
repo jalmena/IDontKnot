@@ -1,0 +1,15 @@
+{
+  "format": "idk-entry",
+  "formatVersion": "0.1.0",
+  "knot": "figure-eight",
+  "names": {
+    "en": "Figure-eight knot",
+    "es": "Nudo de ocho"
+  },
+  "parts": {
+    "standing-part": { "en": "Standing part", "es": "Firme" },
+    "first-loop": { "en": "First loop", "es": "Primer bucle" },
+    "second-loop": { "en": "Second loop", "es": "Segundo bucle" },
+    "tail": { "en": "Tail", "es": "Chicote" }
+  }
+}

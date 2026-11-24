@@ -2,10 +2,10 @@ import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
 
 test.beforeEach(async ({ page }) => {
-  await page.goto('/');
+  await page.goto('/lab');
 });
 
-test('opens on the torus knot laboratory, in English, showing the trefoil', async ({ page }) => {
+test('opens the torus knot laboratory, in English, showing the trefoil', async ({ page }) => {
   await expect(page).toHaveTitle('IDontKnot');
   await expect(page.locator('html')).toHaveAttribute('lang', 'en');
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Torus knot laboratory');
@@ -32,7 +32,7 @@ test('draws the rope', async ({ page }) => {
 test('draws plainly for an automated browser, and fully when asked', async ({ page }) => {
   await expect(page.getByTestId('rope-canvas')).toHaveAttribute('data-detail', 'plain');
 
-  await page.goto('/?rope=full');
+  await page.goto('/lab?rope=full');
   const canvas = page.getByTestId('rope-canvas');
   await expect(canvas).toHaveAttribute('data-detail', 'full');
   await expect.poll(async () => Number(await canvas.getAttribute('data-triangles'))).toBeGreaterThan(20000);
@@ -128,9 +128,7 @@ test('has no accessibility violations that axe can detect', async ({ page }) => 
   expect(results.violations.map((violation) => `${violation.id}: ${violation.help}`)).toEqual([]);
 });
 
-test('serves the interface for any path, and the health check', async ({ page, request }) => {
-  await page.goto('/some/deep/link');
-  await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
+test('serves the health check', async ({ request }) => {
   const health = await request.get('/healthz');
   expect(health.ok()).toBe(true);
   expect(await health.json()).toMatchObject({ status: 'ok' });

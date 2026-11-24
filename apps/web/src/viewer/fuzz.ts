@@ -25,6 +25,8 @@ export interface FuzzData {
   readonly strengths: Float32Array;
   /** Three values per end: the way the rope's surface faces where the fibre leaves it. */
   readonly facings: Float32Array;
+  /** One value per end: how far along the rope the fibre is, from 0 at its start to 1 at its end. */
+  readonly alongs: Float32Array;
 }
 
 /** Straight pieces in each fibre. */
@@ -46,6 +48,7 @@ export function buildFuzz(points: readonly Point3[], closed: boolean, radius: nu
   const positions = new Float32Array(count * FUZZ_PIECES * 6);
   const strengths = new Float32Array(count * FUZZ_PIECES * 2);
   const facings = new Float32Array(count * FUZZ_PIECES * 6);
+  const alongs = new Float32Array(count * FUZZ_PIECES * 2);
   for (let fibre = 0; fibre < count; fibre++) {
     const i = Math.min(Math.floor(random() * n), n - 1);
     const [tangent, normal, binormal] = [frames.tangents[i]!, frames.normals[i]!, frames.binormals[i]!];
@@ -78,10 +81,11 @@ export function buildFuzz(points: readonly Point3[], closed: boolean, radius: nu
       strengths[at + 1] = 1 - (k + 1) / FUZZ_PIECES;
       facings.set(outward, at * 3);
       facings.set(outward, at * 3 + 3);
+      alongs[at] = alongs[at + 1] = (i + between) / n;
       here = tip;
       // a loose fibre bends as it goes, and tends back towards the rope
       heading = heading.map((x, axis) => x / size + loose * (1.1 * (random() - 0.5) - 0.22 * outward[axis]!));
     }
   }
-  return { positions, strengths, facings };
+  return { positions, strengths, facings, alongs };
 }

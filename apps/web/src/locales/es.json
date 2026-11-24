@@ -5,6 +5,13 @@
   "language": {
     "label": "Idioma"
   },
+  "nav": {
+    "label": "Secciones",
+    "explore": "Explorar",
+    "experiment": "Experimentar",
+    "missing": "No hay nada en esta dirección.",
+    "home": "Ir a la biblioteca"
+  },
   "lab": {
     "title": "Laboratorio de nudos tóricos",
     "intro": "Elige cuántas vueltas da la cuerda alrededor del eje y cuántas veces pasa por el agujero. La cuerda se dibuja en 3D. Después su diagrama se lee a partir de la forma 3D y se compara con el diagrama construido desde la palabra de trenza.",
@@ -50,6 +57,24 @@
       "label_one": "Diagrama del nudo visto de frente, con {{count}} cruce",
       "label_other": "Diagrama del nudo visto de frente, con {{count}} cruces",
       "caption": "Visto de frente"
+    }
+  },
+  "knot": {
+    "view": "Vista 3D del {{name}}",
+    "missing": "Ese nudo no está en la biblioteca.",
+    "parts": {
+      "title": "Partes de la cuerda",
+      "hint": "Elige una parte para destacarla en las dos vistas."
+    },
+    "facts": {
+      "alternating": "La cuerda pasa por encima y por debajo alternativamente",
+      "endsOutside": "Los dos extremos quedan fuera del nudo",
+      "length": "Cuerda dibujada",
+      "diameters_one": "{{count}} diámetro de cuerda",
+      "diameters_other": "{{count}} diámetros de cuerda",
+      "closure": "Polinomio de Jones, uniendo los dos extremos",
+      "sound": "La forma en el espacio es el diagrama guardado y cumple todas las reglas de geometría.",
+      "unsound": "La forma en el espacio incumple una regla. Es un defecto: por favor, comunícalo."
     }
   },
   "footer": {

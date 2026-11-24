@@ -11,10 +11,12 @@ import {
 import { useId, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Diagram2D } from '../diagram/Diagram2D.tsx';
+import { RopeSelect } from '../viewer/RopeSelect.tsx';
 import { RopeView } from '../viewer/RopeView.tsx';
-import { ROPE_MATERIAL_IDS, ropeColour, type RopeMaterialId } from '../viewer/materials.ts';
+import { ropeColour, type RopeMaterialId } from '../viewer/materials.ts';
 import type { RopeSpec } from '../viewer/RopeViewport.ts';
-import { byLabel, magnitude, polynomialText, terms } from './format.ts';
+import { polynomialText } from './format.ts';
+import { Polynomial } from './Polynomial.tsx';
 
 /** The state sum doubles with every crossing; this keeps the page instant. */
 const MAX_CROSSINGS = 14;
@@ -37,43 +39,14 @@ function gcd(a: number, b: number): number {
   return b === 0 ? a : gcd(b, a % b);
 }
 
-function Polynomial({ value, testId }: { value: Readonly<Record<string, number>>; testId: string }) {
-  return (
-    <span className="polynomial" role="math" aria-label={polynomialText(value)} data-testid={testId}>
-      {terms(value).map((term, index) => (
-        <span key={term.exponent} aria-hidden="true">
-          {index === 0 ? (term.coefficient < 0 ? '−' : '') : term.coefficient < 0 ? ' − ' : ' + '}
-          {magnitude(term)}
-          {term.exponent !== '0' && (
-            <>
-              <i>t</i>
-              {term.exponent !== '1' && <sup>{term.exponent.replace('-', '−')}</sup>}
-            </>
-          )}
-        </span>
-      ))}
-    </span>
-  );
-}
-
 export function TorusLab() {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const [p, setP] = useState(2);
   const [q, setQ] = useState(3);
   const [material, setMaterial] = useState<RopeMaterialId>('jute');
-  const ropeId = useId();
   const pId = useId();
   const qId = useId();
 
-  const language = i18n.resolvedLanguage ?? 'en';
-  const ropeOptions = useMemo(
-    () =>
-      byLabel(
-        ROPE_MATERIAL_IDS.map((id) => ({ id, label: t(`lab.ropes.${id}`) })),
-        language,
-      ),
-    [t, language],
-  );
   const loops = gcd(p, q);
   const crossingCount = (p - 1) * q;
   const tooLarge = crossingCount > MAX_CROSSINGS;
@@ -144,23 +117,11 @@ export function TorusLab() {
           <output htmlFor={qId} data-testid="q-value">
             {q}
           </output>
-          <label htmlFor={ropeId}>{t('lab.rope')}</label>
-          <select
-            id={ropeId}
-            className="lab__rope"
-            value={material}
-            onChange={(event) => setMaterial(event.target.value as RopeMaterialId)}
-          >
-            {ropeOptions.map((option) => (
-              <option key={option.id} value={option.id}>
-                {option.label}
-              </option>
-            ))}
-          </select>
+          <RopeSelect value={material} onChange={setMaterial} className="lab__rope" />
         </form>
       </div>
 
-      <div className="lab__facts" aria-live="polite">
+      <div className="lab__facts panel" aria-live="polite">
         <h2>{t('lab.facts.title')}</h2>
         {loops > 1 && (
           <p className="lab__message" data-testid="link-note">

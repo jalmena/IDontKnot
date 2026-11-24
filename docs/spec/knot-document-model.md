@@ -188,7 +188,7 @@ There is no boolean "same knot" function. Identification against a table returns
 
 ## 8. Library entries (outline)
 
-A separate document type, specified later with the content model:
+A separate document type, specified later with the content model. A provisional first form exists beside each knot document, `entry.json`, and holds only the name of the knot and the names of its parts, by language. What an entry will hold:
 
 - Identity: canonical name, names by language, synonyms, reference numbers.
 - Classification: disciplines, purposes, structural tags.
