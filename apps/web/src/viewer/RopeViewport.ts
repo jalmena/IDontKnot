@@ -191,6 +191,10 @@ export class RopeViewport {
   private readonly light = new Vector3(...LIGHT_FROM_THE_SIDE).normalize();
   /** How far from the middle of the view its centre of attention is drawn, in CSS pixels. */
   private shift = { right: 0, down: 0 };
+  /** The middle of the box that is framed, and the distance from which it fills the view. */
+  private framed: { centre: Vector3; distance: number } | null = null;
+  /** Whether the eye is being placed by the viewport itself. */
+  private placing = false;
   /** Whether the person has turned or zoomed the view since it was last framed. */
   private moved = false;
   /** Whether the last drawing left out the images of a rope, because they had not arrived. */
@@ -227,7 +231,7 @@ export class RopeViewport {
     this.controls.enablePan = false;
     this.controls.minDistance = 2.5;
     this.controls.maxDistance = 20;
-    this.controls.addEventListener('change', this.render);
+    this.controls.addEventListener('change', this.turned);
     this.controls.addEventListener('start', this.touched);
     this.controls.saveState();
 
@@ -282,8 +286,35 @@ export class RopeViewport {
    * giving them draws.
    */
   fitTo(fit: Fit, draw = true): void {
-    this.fit = fit;
     this.moved = false;
+    const distance = this.frame(fit);
+    this.controls.target.set(...fit.centre);
+    this.camera.position.set(fit.centre[0], fit.centre[1], fit.centre[2] + distance);
+    this.settle(draw);
+  }
+
+  /**
+   * Frames another box as the last one is being looked at: from the same side, and as near to it in
+   * proportion. What changes shape under the eye is followed; it is not looked at afresh, from the front.
+   */
+  follow(fit: Fit, draw = true): void {
+    const before = this.framed;
+    if (!before || !this.moved) return this.fitTo(fit, draw);
+    const ratio = this.frame(fit) / before.distance;
+    // where the eye is from what it looks at, and how far that had been moved off the middle of the box
+    const eye = this.camera.position.clone().sub(this.controls.target).multiplyScalar(ratio);
+    const aside = this.controls.target.clone().sub(before.centre).multiplyScalar(ratio);
+    this.controls.target.set(...fit.centre).add(aside);
+    this.camera.position.copy(this.controls.target).add(eye);
+    this.settle(draw);
+  }
+
+  /**
+   * Takes a box as what the view frames, and sets all that follows from its size but where the eye is.
+   * It gives the distance from which the box, seen from the front, fills the free part of the view.
+   */
+  private frame(fit: Fit): number {
+    this.fit = fit;
     const width = Math.max(this.host.clientWidth, 1);
     const height = Math.max(this.host.clientHeight, 1);
     const clear = fit.clear ?? { top: 0, right: 0, bottom: 0, left: 0 };
@@ -299,13 +330,20 @@ export class RopeViewport {
       right: (clear.left - clear.right) / 2,
       down: (clear.top - clear.bottom) / 2 - OPTICAL_LIFT * free.height,
     };
-    this.controls.target.set(...fit.centre);
-    this.camera.position.set(fit.centre[0], fit.centre[1], fit.centre[2] + distance);
     [this.camera.near, this.camera.far] = [distance / 100, distance * 10];
     this.camera.setViewOffset(width, height, -this.shift.right, -this.shift.down, width, height);
     [this.controls.minDistance, this.controls.maxDistance] = [distance * 0.2, distance * 2.2];
+    this.framed = { centre: new Vector3(...fit.centre), distance };
+    return distance;
+  }
+
+  /** After the eye has been placed: the controls take it from there, and the shadows are aimed again. */
+  private settle(draw: boolean): void {
+    // placing the eye is not the person turning the view: nothing is drawn for it here
+    this.placing = true;
     this.controls.update();
-    this.controls.saveState();
+    this.placing = false;
+    if (!this.moved) this.controls.saveState();
     if (this.detail === 'full') this.aimShadows(this.specs);
     if (draw) this.render();
   }
@@ -349,7 +387,7 @@ export class RopeViewport {
   dispose(): void {
     if (this.wait !== null) window.clearTimeout(this.wait);
     this.observer.disconnect();
-    this.controls.removeEventListener('change', this.render);
+    this.controls.removeEventListener('change', this.turned);
     this.controls.removeEventListener('start', this.touched);
     this.controls.dispose();
     this.clear();
@@ -662,6 +700,11 @@ export class RopeViewport {
 
   private readonly touched = (): void => {
     this.moved = true;
+  };
+
+  /** The person has turned the view, or it is still coming to rest. */
+  private readonly turned = (): void => {
+    if (!this.placing) this.render();
   };
 
   private readonly render = (): void => {

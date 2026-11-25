@@ -221,6 +221,7 @@ export function KnotPage({ knot }: Props) {
           title={<h1 id="knot-title">{title}</h1>}
           corner={<RopeSelect value={material} onChange={setMaterial} />}
           fit={fit}
+          subject={document}
           light={light}
           emphasis={pulled ? NOTHING : emphasis}
           reach={reach}

@@ -34,6 +34,11 @@ interface Props {
   readonly corner?: ReactNode;
   /** Where the key light stands, seen from the ropes. Without it, to one side and above. */
   readonly light?: Point3;
+  /**
+   * What the view shows, whatever it is: while it stays the same, a new `fit` follows it from where the
+   * person is looking instead of framing it afresh. A knot that tightens is still the same knot.
+   */
+  readonly subject?: unknown;
 }
 
 const NONE: readonly Stretch[] = [];
@@ -58,6 +63,7 @@ export function RopeView({
   title,
   corner,
   light = LIGHT_FROM_THE_SIDE,
+  subject,
 }: Props) {
   const { t } = useTranslation();
   const host = useRef<HTMLDivElement>(null);
@@ -83,13 +89,20 @@ export function RopeView({
   // when the ropes change with the framing or the light, as they do while a knot is tightened, the picture
   // is drawn once, by the ropes, which come last
   const drawn = useRef<readonly RopeSpec[] | null>(null);
+  // a new framing of the same subject follows it, from wherever the person is looking; of another, begins afresh
+  const framed = useRef<unknown>(undefined);
   useEffect(() => {
-    if (fit) viewport.current?.fitTo(fit, drawn.current === ropes);
-  }, [fit, ropes]);
+    if (!fit) return;
+    const same = subject !== undefined && framed.current === subject;
+    framed.current = subject;
+    if (same) viewport.current?.follow(fit, drawn.current === ropes);
+    else viewport.current?.fitTo(fit, drawn.current === ropes);
+    // only a new framing frames again: new ropes alone leave the view as the person has it
+  }, [fit]);
 
   useEffect(() => {
     viewport.current?.setLight(light, drawn.current === ropes);
-  }, [light, ropes]);
+  }, [light]);
 
   useEffect(() => {
     viewport.current?.setRopes(ropes);

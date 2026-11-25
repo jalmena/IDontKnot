@@ -186,6 +186,43 @@ test('is loose at once when a tight knot is tied again', async ({ page }) => {
   expect(await reached(page)).toBeCloseTo(STOPS[0]!, 1);
 });
 
+test('keeps the view as the person has turned it, through tightening, loosening and another rope', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await expect.poll(() => triangles(page)).toBeGreaterThan(1000);
+  // where the name of a part is written tells from where the knot is seen
+  const where = () =>
+    page
+      .locator('.rope-view__names .tag')
+      .nth(1)
+      .evaluate((tag: HTMLElement) => `${tag.style.left} ${tag.style.top}`);
+  const front = await where();
+
+  const box = await page.getByTestId('rope-canvas').boundingBox();
+  if (!box) throw new Error('the view is drawn');
+  const [x, y] = [box.x + box.width / 2, box.y + box.height / 2];
+  await page.mouse.move(x, y);
+  await page.mouse.down();
+  await page.mouse.move(x + 70, y - 45, { steps: 8 });
+  await page.mouse.up();
+  await expect.poll(where).not.toBe(front);
+  const turned = await where();
+
+  const panel = page.getByTestId('panel');
+  await page.getByTestId('tighten').click();
+  await expect(panel).toHaveAttribute('data-tightened', '1');
+  await page.getByTestId('tighten').click();
+  await expect(panel).toHaveAttribute('data-tightened', '0');
+  await expect.poll(where).toBe(turned);
+
+  await page.getByLabel('Material').selectOption('sisal');
+  await expect.poll(() => triangles(page)).toBeGreaterThan(1000);
+  expect(await where()).toBe(turned);
+
+  // only when asked is the knot seen from the front again
+  await page.getByRole('button', { name: 'Reset the view' }).click();
+  await expect.poll(where).toBe(front);
+});
+
 test('shows a step done at once when the person has asked for less movement', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await steps(page).getByRole('button').first().click();
