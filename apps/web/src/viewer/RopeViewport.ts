@@ -48,6 +48,13 @@ import { buildCap, buildLaid, buildTube, curveLength, resample, type TubeData } 
 
 export type Detail = 'full' | 'plain';
 
+/**
+ * How long the first picture waits for the images of its rope, in milliseconds. A browser that kept them
+ * on an earlier visit hands them over within that time, and the rope is then first seen as it will stay;
+ * otherwise it is shown without them, and again with them once they are computed.
+ */
+const PATIENCE = 200;
+
 export interface RopeSpec {
   readonly points: readonly Point3[];
   readonly closed: boolean;
@@ -132,6 +139,11 @@ export class RopeViewport {
   private shift = { right: 0, down: 0 };
   /** Whether the person has turned or zoomed the view since it was last framed. */
   private moved = false;
+  /** Whether the last drawing left out the images of a rope, because they had not arrived. */
+  private bare = false;
+  /** Whether the picture has been shown yet, and the wait for the images of its rope while it has not. */
+  private shown: boolean;
+  private wait: number | null = null;
   /** Called after every drawing: the camera may have moved. */
   onDraw: (() => void) | null = null;
   private readonly observer: ResizeObserver;
@@ -146,6 +158,8 @@ export class RopeViewport {
     this.renderer.setPixelRatio(detail === 'full' ? Math.min(window.devicePixelRatio, 2) : 1);
     this.renderer.domElement.setAttribute('aria-hidden', 'true');
     host.appendChild(this.renderer.domElement);
+    this.shown = detail === 'plain';
+    if (!this.shown) this.renderer.domElement.style.visibility = 'hidden';
     // a rope whose images are still being computed is drawn without them, and again when they arrive
     this.textures = new RopeTextures(this.renderer.capabilities.getMaxAnisotropy(), () => this.setRopes(this.specs));
 
@@ -172,6 +186,7 @@ export class RopeViewport {
   setRopes(specs: readonly RopeSpec[]): void {
     this.specs = specs;
     this.clear();
+    this.bare = false;
     specs.forEach((spec, place) => {
       if (this.detail === 'plain') this.drawPlain(spec, place);
       else this.drawFull(spec, place);
@@ -179,6 +194,10 @@ export class RopeViewport {
     if (this.detail === 'full') this.aimShadows(specs);
     this.shade();
     this.render();
+    if (!this.shown && specs.length > 0) {
+      if (this.bare) this.wait ??= window.setTimeout(this.show, PATIENCE);
+      else this.show();
+    }
   }
 
   /** Dims all the rope except these stretches of it. With none, every rope is drawn as it is. */
@@ -235,6 +254,7 @@ export class RopeViewport {
   }
 
   dispose(): void {
+    if (this.wait !== null) window.clearTimeout(this.wait);
     this.observer.disconnect();
     this.controls.removeEventListener('change', this.render);
     this.controls.removeEventListener('start', this.touched);
@@ -346,6 +366,7 @@ export class RopeViewport {
     const fine = resample(points, closed, Math.max(radius * 0.22, curveLength(points, closed) / MAX_ROWS));
     const colour = ropeColour(material, index);
     const maps = this.textures.mapsFor(material, index);
+    if (!maps && look.construction !== 'smooth') this.bare = true;
 
     const surface =
       look.construction === 'laid'
@@ -452,6 +473,13 @@ export class RopeViewport {
     else this.render();
   };
 
+  private readonly show = (): void => {
+    if (this.wait !== null) window.clearTimeout(this.wait);
+    this.wait = null;
+    this.shown = true;
+    this.renderer.domElement.style.visibility = '';
+  };
+
   private readonly touched = (): void => {
     this.moved = true;
   };
@@ -461,5 +489,7 @@ export class RopeViewport {
     this.onDraw?.();
     // how much was drawn in the last frame, so that a test can tell a drawn rope from an empty canvas
     this.host.dataset['triangles'] = String(this.renderer.info.render.triangles);
+    // and where the images of the rope came from: computed in this visit, or kept from an earlier one
+    this.host.dataset['images'] = this.textures.source ?? 'none';
   };
 }

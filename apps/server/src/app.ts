@@ -1,6 +1,6 @@
 import { serveStatic } from '@hono/node-server/serve-static';
 import { checkStructure, embed, ropeEndsShareOneFace, type Diagram, type Issue } from '@idontknot/core';
-import { Hono } from 'hono';
+import { Hono, type MiddlewareHandler } from 'hono';
 import { bodyLimit } from 'hono/body-limit';
 import { secureHeaders } from 'hono/secure-headers';
 
@@ -40,6 +40,16 @@ function looksLikeDiagram(value: unknown): value is Diagram {
   return componentsOk && crossingsOk && strandsOk;
 }
 
+/** Says for how long a browser may keep a file of the interface without asking for it again. */
+const keeping: MiddlewareHandler = async (c, next) => {
+  await next();
+  if (!c.res.ok) return;
+  // the page names the files it needs, so it is asked for each time
+  if (c.res.headers.get('content-type')?.startsWith('text/html')) c.header('Cache-Control', 'no-cache');
+  // the build names each file in assets/ after its contents: it never changes, and may be kept for good
+  else if (c.req.path.startsWith('/assets/')) c.header('Cache-Control', 'public, max-age=31536000, immutable');
+};
+
 export function createApp(options: AppOptions): Hono {
   const app = new Hono();
   app.use(secureHeaders());
@@ -75,6 +85,7 @@ export function createApp(options: AppOptions): Hono {
   app.all('/api/*', (c) => c.json({ error: 'not found' }, 404));
 
   if (options.webDir !== undefined) {
+    app.use('*', keeping);
     app.use('*', serveStatic({ root: options.webDir }));
     // any other path belongs to the single-page interface
     app.get('*', serveStatic({ root: options.webDir, path: 'index.html' }));

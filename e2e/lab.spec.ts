@@ -36,7 +36,10 @@ test('draws plainly for an automated browser, and fully when asked', async ({ pa
   await page.goto('/lab?rope=full');
   const canvas = page.getByTestId('rope-canvas');
   await expect(canvas).toHaveAttribute('data-detail', 'full');
-  await expect.poll(async () => Number(await canvas.getAttribute('data-triangles'))).toBeGreaterThan(20000);
+  // without a graphics card the full drawing takes seconds, and longer while other tests draw too
+  await expect
+    .poll(async () => Number(await canvas.getAttribute('data-triangles')), { timeout: 30_000 })
+    .toBeGreaterThan(20000);
 });
 
 test('changes the rope it is drawn with', async ({ page }) => {
