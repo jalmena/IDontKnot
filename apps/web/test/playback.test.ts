@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { KNOTS } from '../src/knot/library.ts';
 import {
   begin,
+  done,
   next,
   PACE,
   pause,
@@ -15,7 +16,7 @@ import {
   timelineOf,
   type Playback,
   type Timeline,
-} from '../src/learn/playback.ts';
+} from '../src/knot/playback.ts';
 
 const timeline: Timeline = { start: 10, stops: [20, 30, 45] };
 /** Lets time pass in small steps, as the clock of a page does. */
@@ -31,6 +32,14 @@ it('reads the stops of a method of the library', () => {
   expect(read.start).toBe(method.start);
   expect(read.stops).toEqual(method.steps.map((step) => step.to));
   expect(read.stops.at(-1)).toBe(KNOTS['figure-eight']!.document.components[0]!.length);
+});
+
+it('begins with the knot tied, and plays it from the start', () => {
+  const tied = done(timeline);
+  expect(tied).toMatchObject({ position: 45, playing: false });
+  expect(play(tied, timeline)).toMatchObject({ position: 10, playing: true, target: 20 });
+  // a knot that the library does not say how to tie has nowhere to go
+  expect(done({ start: 0, stops: [] })).toMatchObject({ position: 0, playing: false });
 });
 
 it('says which step a position is in: the one whose stop has not been passed', () => {

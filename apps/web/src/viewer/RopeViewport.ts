@@ -288,6 +288,17 @@ export class RopeViewport {
     return { x: (seen.x + 1) / 2, y: (1 - seen.y) / 2, hidden };
   }
 
+  /** Whether the last drawing had the images of every rope: until then a rope is drawn without them. */
+  get settled(): boolean {
+    return !this.bare;
+  }
+
+  /** The picture as it is now, as the address of an image with nothing behind the ropes. */
+  picture(): string {
+    this.renderer.render(this.scene, this.camera);
+    return this.renderer.domElement.toDataURL('image/webp', 0.9);
+  }
+
   resetView(): void {
     if (this.fit) this.fitTo(this.fit);
     else this.controls.reset();

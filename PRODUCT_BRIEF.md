@@ -53,6 +53,9 @@ Its differentiator is that the system reasons about knots through a mathematical
 | 2026-11-24 | Words on controls | Controls carry words, not icons. Icons were tried and declined. |
 | 2026-11-24 | Margins of the picture | The knot keeps clear of the edges of the view by twice the margin of the writing, leaves the title its own line, and sits a little above the middle of the space left. |
 | 2026-11-24 | Checks | A check that passes says nothing. One that fails is shown at the bottom edge of the panel. |
+| 2026-11-25 | Tying a knot | A knot is tied on screen by leading the end of the rope along the finished knot, step by step, with the instruction of each step beside it. |
+| 2026-11-25 | Organisation | The application is organised by knot, not by activity: the same knot is not found in two sections. It opens on the list of knots. A knot that is chosen opens above the list, which stays under it as a row on the same screen. The menu has two entries, "Knots" and "Laboratory". This replaces the entry of 2026-11-24 on the home page. |
+| 2026-11-25 | Knot page | Exploring a knot and learning to tie it happen in one place. One tab, "The knot", holds the parts of the rope and how it is tied; a second tab, "Mathematics", holds what the core computes. The knot is shown tied until it is played. |
 
 ## Open decisions
 

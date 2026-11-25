@@ -1,17 +1,8 @@
 import type { Point3 } from '@idontknot/core';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
-import { RopeViewport, type Detail, type Fit, type RopeSpec, type Stretch } from './RopeViewport.ts';
-
-/**
- * Full detail for people. A browser driven by a test gets the plain drawing, because without a graphics card
- * the full one takes seconds per frame. Either can be asked for with ?rope=full or ?rope=plain.
- */
-function chosenDetail(): Detail {
-  const asked = new URLSearchParams(window.location.search).get('rope');
-  if (asked === 'full' || asked === 'plain') return asked;
-  return navigator.webdriver ? 'plain' : 'full';
-}
+import { chosenDetail } from './detail.ts';
+import { RopeViewport, type Fit, type RopeSpec, type Stretch } from './RopeViewport.ts';
 
 /** A name written over the view, at a point of the scene: it follows that point as the view turns. */
 export interface ViewName {

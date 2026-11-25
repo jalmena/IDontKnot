@@ -7,11 +7,14 @@
   },
   "nav": {
     "label": "Secciones",
-    "explore": "Explorar",
-    "experiment": "Experimentar",
+    "knots": "Nudos",
+    "lab": "Laboratorio",
     "missing": "No hay nada en esta dirección.",
-    "home": "Ir a la biblioteca",
-    "learn": "Aprender"
+    "home": "Ir a la biblioteca"
+  },
+  "library": {
+    "title": "Nudos",
+    "all": "Todos los nudos"
   },
   "lab": {
     "title": "Laboratorio de nudos tóricos",
@@ -73,21 +76,25 @@
       "endsOutside": "Los dos extremos quedan fuera del nudo",
       "closure": "Polinomio de Jones, uniendo los dos extremos",
       "unsound": "La forma en el espacio incumple una regla. Es un defecto: por favor, comunícalo."
+    },
+    "tabs": {
+      "label": "Sobre este nudo",
+      "knot": "El nudo",
+      "maths": "Matemáticas"
+    },
+    "tying": {
+      "view": "Vista 3D del {{name}} mientras se ata",
+      "how": "Cómo se ata",
+      "player": "Reproducción de los pasos",
+      "previous": "Anterior",
+      "play": "Reproducir",
+      "pause": "Pausa",
+      "next": "Siguiente",
+      "progress": "Hasta dónde ha llegado el chicote",
+      "speed": "Velocidad",
+      "end": "El chicote",
+      "unsound": "Los pasos de este método no se siguen unos de otros. Es un defecto: por favor, comunícalo."
     }
-  },
-  "learn": {
-    "view": "Vista 3D del {{name}} mientras se ata",
-    "how": "Cómo se ata",
-    "player": "Reproducción de los pasos",
-    "previous": "Anterior",
-    "play": "Reproducir",
-    "pause": "Pausa",
-    "next": "Siguiente",
-    "progress": "Hasta dónde ha llegado el chicote",
-    "speed": "Velocidad",
-    "end": "El chicote",
-    "none": "Este nudo todavía no tiene un método de atado.",
-    "unsound": "Los pasos de este método no se siguen unos de otros. Es un defecto: por favor, comunícalo."
   },
   "footer": {
     "status": "Prototipo. Nada de lo que aparece aquí prueba que un nudo sea seguro."

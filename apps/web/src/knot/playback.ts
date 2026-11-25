@@ -52,6 +52,11 @@ export function begin(timeline: Timeline): Playback {
   return { position: timeline.start, playing: false, target: timeline.start, through: false, rest: 0 };
 }
 
+/** At the end of the last step, with the knot tied. */
+export function done(timeline: Timeline): Playback {
+  return seek(timeline, finish(timeline));
+}
+
 /** Stopped at a position, wherever it is. */
 export function seek(timeline: Timeline, position: number): Playback {
   const within = Math.min(Math.max(position, timeline.start), finish(timeline));
