@@ -7,10 +7,14 @@
   },
   "nav": {
     "label": "Sections",
-    "explore": "Explore",
-    "experiment": "Experiment",
+    "knots": "Knots",
+    "lab": "Laboratory",
     "missing": "There is nothing at this address.",
     "home": "Go to the library"
+  },
+  "library": {
+    "title": "Knots",
+    "all": "All knots"
   },
   "lab": {
     "title": "Torus knot laboratory",
@@ -72,6 +76,24 @@
       "endsOutside": "Both ends lie outside the knot",
       "closure": "Jones polynomial, with the two ends joined",
       "unsound": "The shape in space breaks a rule. This is a defect: please report it."
+    },
+    "tabs": {
+      "label": "About this knot",
+      "knot": "The knot",
+      "maths": "Mathematics"
+    },
+    "tying": {
+      "view": "3D view of the {{name}} being tied",
+      "how": "How it is tied",
+      "player": "Playing the steps",
+      "previous": "Previous",
+      "play": "Play",
+      "pause": "Pause",
+      "next": "Next",
+      "progress": "How far the end has come",
+      "speed": "Speed",
+      "end": "The end",
+      "unsound": "The steps of this method do not follow from one another. This is a defect: please report it."
     }
   },
   "footer": {

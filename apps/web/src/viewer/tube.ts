@@ -310,7 +310,11 @@ export function buildLaid(
         uvs.set([u, column / sides], vertex * 2);
       }
     }
-    for (let row = 0; row < rows - 1; row++) {
+  }
+  // the triangles go row by row along the rope, all strands together: drawing the first so many of them
+  // draws the rope as far as a point
+  for (let row = 0; row < rows - 1; row++) {
+    for (let strand = 0; strand < strands; strand++) {
       for (let column = 0; column < sides; column++) {
         const a = strand * perStrand + row * columns + column;
         const b = a + 1;

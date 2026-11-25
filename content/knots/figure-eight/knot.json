@@ -125,5 +125,103 @@
         }
       }
     ]
+  },
+  "construction": {
+    "methods": [
+      {
+        "id": "with-the-end",
+        "frame": "dressed",
+        "start": 12,
+        "steps": [
+          {
+            "id": "make-loop",
+            "op": "cross",
+            "actor": ["rope", "end"],
+            "pass": "over",
+            "to": 37.795,
+            "result": {
+              "crossings": [
+                {
+                  "id": "c1",
+                  "sign": 1
+                }
+              ],
+              "strands": {
+                "rope": [
+                  ["c1", "u"],
+                  ["c1", "o"]
+                ]
+              }
+            }
+          },
+          {
+            "id": "round-standing-part",
+            "op": "cross",
+            "actor": ["rope", "end"],
+            "pass": "under",
+            "to": 47.786,
+            "result": {
+              "crossings": [
+                {
+                  "id": "c1",
+                  "sign": 1
+                },
+                {
+                  "id": "c2",
+                  "sign": 1
+                }
+              ],
+              "strands": {
+                "rope": [
+                  ["c1", "o"],
+                  ["c2", "u"],
+                  ["c2", "o"],
+                  ["c1", "u"]
+                ]
+              }
+            }
+          },
+          {
+            "id": "through-loop",
+            "op": "tuck",
+            "actor": ["rope", "end"],
+            "passes": ["over", "under"],
+            "to": 64.039,
+            "result": {
+              "crossings": [
+                {
+                  "id": "c1",
+                  "sign": 1
+                },
+                {
+                  "id": "c2",
+                  "sign": 1
+                },
+                {
+                  "id": "c3",
+                  "sign": -1
+                },
+                {
+                  "id": "c4",
+                  "sign": -1
+                }
+              ],
+              "strands": {
+                "rope": [
+                  ["c1", "o"],
+                  ["c2", "u"],
+                  ["c3", "o"],
+                  ["c4", "u"],
+                  ["c2", "o"],
+                  ["c1", "u"],
+                  ["c4", "o"],
+                  ["c3", "u"]
+                ]
+              }
+            }
+          }
+        ]
+      }
+    ]
   }
 }

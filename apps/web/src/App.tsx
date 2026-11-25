@@ -2,23 +2,26 @@ import { useTranslation } from 'react-i18next';
 import { Mark } from './brand/Mark.tsx';
 import { LANGUAGES } from './i18n.ts';
 import { byLabel } from './lab/format.ts';
+import { KnotList } from './knot/KnotList.tsx';
 import { KnotPage } from './knot/KnotPage.tsx';
 import { KNOTS } from './knot/library.ts';
 import { TorusLab } from './lab/TorusLab.tsx';
 import { Link, usePath } from './route.tsx';
 
-/** The knot the library opens on, while it has no index of its own. */
-const FIRST_KNOT = 'figure-eight';
 const LAB = '/lab';
+const KNOT = '/knots/';
 
+/**
+ * The application: the library of knots, which it opens on, and the laboratory. The library is its list of
+ * knots; a knot that is chosen opens above the list, which stays under it as a row.
+ */
 export function App() {
   const { t, i18n } = useTranslation();
   const path = usePath();
-  const inLibrary = path === '/' || path.startsWith('/knots/');
+  const atHome = path === '/';
   const inLab = path === LAB;
-  const knot = inLibrary
-    ? KNOTS[path === '/' ? FIRST_KNOT : path.slice('/knots/'.length).replace(/\/$/, '')]
-    : undefined;
+  const id = path.startsWith(KNOT) ? path.slice(KNOT.length).replace(/\/$/, '') : null;
+  const knot = id === null ? undefined : KNOTS[id];
   return (
     <div className="app">
       <header className="app__header">
@@ -28,11 +31,11 @@ export function App() {
         </a>
         <p className="app__tagline">{t('app.tagline')}</p>
         <nav className="app__nav" aria-label={t('nav.label')}>
-          <Link to="/" current={inLibrary}>
-            {t('nav.explore')}
+          <Link to="/" current={atHome || id !== null}>
+            {t('nav.knots')}
           </Link>
           <Link to={LAB} current={inLab}>
-            {t('nav.experiment')}
+            {t('nav.lab')}
           </Link>
         </nav>
         <label className="language">
@@ -53,13 +56,16 @@ export function App() {
         </label>
       </header>
       <main className="app__main">
-        {knot ? (
-          <KnotPage knot={knot} />
+        {atHome || knot ? (
+          <>
+            {knot ? <KnotPage knot={knot} /> : <h1 className="shelf__title">{t('library.title')}</h1>}
+            <KnotList open={knot && id !== null ? id : null} />
+          </>
         ) : inLab ? (
           <TorusLab />
         ) : (
           <section className="missing">
-            <h1>{inLibrary ? t('knot.missing') : t('nav.missing')}</h1>
+            <h1>{id !== null ? t('knot.missing') : t('nav.missing')}</h1>
             <p>
               <Link to="/">{t('nav.home')}</Link>
             </p>

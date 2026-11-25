@@ -27,6 +27,7 @@ import {
   type Material,
   Mesh,
   MeshBasicMaterial,
+  type Object3D,
   MeshPhysicalMaterial,
   MeshStandardMaterial,
   NeutralToneMapping,
@@ -40,7 +41,7 @@ import {
 } from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
-import { buildFuzz } from './fuzz.ts';
+import { buildFuzz, FUZZ_PIECES } from './fuzz.ts';
 import { ROPE_MATERIALS, ropeColour, type RopeMaterialId } from './materials.ts';
 import { rgbOf, toned } from './images.ts';
 import { RopeTextures } from './textures.ts';
@@ -101,6 +102,7 @@ const OPTICAL_LIFT = 0.03;
 const MAX_ROWS = 2400;
 const MAX_FIBRES = 12000;
 const KEY_DIRECTION = new Vector3(-5, 7, 4.5).normalize();
+const FORWARD = new Vector3(0, 0, 1);
 
 function geometryOf(tube: TubeData, withTexture: boolean): BufferGeometry {
   const geometry = new BufferGeometry();
@@ -109,6 +111,33 @@ function geometryOf(tube: TubeData, withTexture: boolean): BufferGeometry {
   if (withTexture) geometry.setAttribute('uv', new BufferAttribute(tube.uvs, 2));
   geometry.setIndex(new BufferAttribute(tube.indices, 1));
   return geometry;
+}
+
+/**
+ * How a drawn thing appears as its rope is laid. `steps` are the fractions of the rope, in rising order, at
+ * which each row of a surface or each loose fibre is there; `each` is how much of the drawing one of them is.
+ */
+interface Laying {
+  readonly steps: Float32Array;
+  readonly each: number;
+}
+
+/** The rows of a surface along an open rope, each there once the rope is laid as far as its far edge. */
+function rowsOf(tube: TubeData, along: Float32Array): Laying {
+  const steps = new Float32Array(tube.rows - 1);
+  for (let row = 0; row < tube.rows - 1; row++) steps[row] = along[(row + 1) * tube.columns]!;
+  return { steps, each: tube.indices.length / (tube.rows - 1) };
+}
+
+/** How many of the rising `steps` are not beyond `reach`. */
+function laid(steps: Float32Array, reach: number): number {
+  let [low, high] = [0, steps.length];
+  while (low < high) {
+    const middle = (low + high) >> 1;
+    if (steps[middle]! <= reach + 1e-6) low = middle + 1;
+    else high = middle;
+  }
+  return low;
 }
 
 /** How far along its rope each vertex of a surface is, from 0 to 1: its texture runs along the rope. */
@@ -134,6 +163,7 @@ export class RopeViewport {
   private environment: Texture | null = null;
   private specs: readonly RopeSpec[] = [];
   private stretches: readonly Stretch[] = [];
+  private reaches: readonly number[] = [];
   private fit: Fit | null = null;
   /** How far from the middle of the view its centre of attention is drawn, in CSS pixels. */
   private shift = { right: 0, down: 0 };
@@ -193,11 +223,23 @@ export class RopeViewport {
     });
     if (this.detail === 'full') this.aimShadows(specs);
     this.shade();
+    this.lay();
     this.render();
     if (!this.shown && specs.length > 0) {
       if (this.bare) this.wait ??= window.setTimeout(this.show, PATIENCE);
       else this.show();
     }
+  }
+
+  /**
+   * Draws each open rope only as far as a fraction of its length, from its start: the rope as it is being
+   * laid. Without a fraction, a rope is drawn whole.
+   */
+  setReach(reaches: readonly number[]): void {
+    this.reaches = reaches;
+    this.lay();
+    this.renderer.shadowMap.needsUpdate = true;
+    this.render();
   }
 
   /** Dims all the rope except these stretches of it. With none, every rope is drawn as it is. */
@@ -244,6 +286,17 @@ export class RopeViewport {
     const seen = new Vector3(...point).project(this.camera);
     const hidden = seen.z > 1 || Math.abs(seen.x) > 1 || Math.abs(seen.y) > 1;
     return { x: (seen.x + 1) / 2, y: (1 - seen.y) / 2, hidden };
+  }
+
+  /** Whether the last drawing had the images of every rope: until then a rope is drawn without them. */
+  get settled(): boolean {
+    return !this.bare;
+  }
+
+  /** The picture as it is now, as the address of an image with nothing behind the ropes. */
+  picture(): string {
+    this.renderer.render(this.scene, this.camera);
+    return this.renderer.domElement.toDataURL('image/webp', 0.9);
   }
 
   resetView(): void {
@@ -324,25 +377,38 @@ export class RopeViewport {
   }
 
   /** Adds a surface of the rope at this place in the list, ready to be dimmed stretch by stretch. */
-  private add(place: number, geometry: BufferGeometry, material: Material, along: Float32Array): Mesh {
+  private add(place: number, geometry: BufferGeometry, material: Material, along: Float32Array, laying?: Laying): Mesh {
     geometry.setAttribute('color', new BufferAttribute(new Float32Array(along.length * 3).fill(1), 3));
     const mesh = new Mesh(geometry, material);
-    mesh.userData = { rope: place, along };
+    mesh.userData = { rope: place, along, laying };
     this.ropes.add(mesh);
     return mesh;
   }
 
-  /** The two cut ends of an open rope. */
+  /**
+   * The two cut ends of an open rope. The far one is a disc that can be moved along the rope, to close
+   * it wherever it has been laid to.
+   */
   private addEnds(place: number, points: readonly Point3[], radius: number, material: () => Material): Mesh[] {
-    return (['start', 'end'] as const).map((end) => {
-      const cap = buildCap(points, radius, end);
-      return this.add(
-        place,
-        geometryOf(cap, false),
-        material(),
-        new Float32Array(cap.columns).fill(end === 'start' ? 0 : 1),
-      );
-    });
+    const start = buildCap(points, radius, 'start');
+    const near = this.add(place, geometryOf(start, false), material(), new Float32Array(start.columns));
+    const disc = buildCap(
+      [
+        [0, 0, -1],
+        [0, 0, 0],
+      ],
+      radius,
+      'end',
+    );
+    const far = this.add(place, geometryOf(disc, false), material(), new Float32Array(disc.columns).fill(1));
+    const lengths = [0];
+    for (let i = 1; i < points.length; i++) {
+      const [a, b] = [points[i - 1]!, points[i]!];
+      lengths.push(lengths[i - 1]! + Math.hypot(b[0] - a[0], b[1] - a[1], b[2] - a[2]));
+    }
+    const total = lengths[lengths.length - 1] || 1;
+    far.userData['tip'] = { spine: points, steps: Float32Array.from(lengths, (length) => length / total) };
+    return [near, far];
   }
 
   private drawPlain({ points, closed, radius, material, index }: RopeSpec, place: number): void {
@@ -355,9 +421,12 @@ export class RopeViewport {
         metalness: 0,
         vertexColors: true,
       });
-    this.add(place, geometryOf(rope, false), flat(), alongOf(rope));
+    const along = alongOf(rope);
+    this.add(place, geometryOf(rope, false), flat(), along, closed ? undefined : rowsOf(rope, along));
     if (!closed) this.addEnds(place, points, radius, flat);
-    this.ropes.add(new Mesh(geometryOf(hull, false), this.edge));
+    const edge = new Mesh(geometryOf(hull, false), this.edge);
+    if (!closed) edge.userData = { rope: place, laying: rowsOf(hull, alongOf(hull)) };
+    this.ropes.add(edge);
   }
 
   private drawFull({ points, closed, radius, material, index }: RopeSpec, place: number): void {
@@ -395,7 +464,9 @@ export class RopeViewport {
     });
     skin.normalScale.set(look.relief, look.relief);
     skin.color.multiplyScalar(look.brightness);
-    const rope = this.add(place, geometryOf(surface, maps !== null), skin, alongOf(surface));
+    const along = alongOf(surface);
+    const rows = closed ? undefined : rowsOf(surface, along);
+    const rope = this.add(place, geometryOf(surface, maps !== null), skin, along, rows);
     rope.castShadow = true;
     rope.receiveShadow = true;
     if (!closed) {
@@ -430,8 +501,39 @@ export class RopeViewport {
       geometry.setAttribute('position', new BufferAttribute(fuzz.positions, 3));
       geometry.setAttribute('color', new BufferAttribute(colours.slice(), 4));
       const fibres = new LineSegments(geometry, this.loose);
-      fibres.userData = { rope: place, along: fuzz.alongs, lit: colours };
+      const each = FUZZ_PIECES * 2;
+      const steps = Float32Array.from({ length: count / each }, (_, fibre) => fuzz.alongs[fibre * each]!);
+      fibres.userData = { rope: place, along: fuzz.alongs, lit: colours, laying: closed ? undefined : { steps, each } };
       this.ropes.add(fibres);
+    }
+  }
+
+  /** Draws each rope as far as it has been laid, and closes it there. */
+  private lay(): void {
+    for (const child of this.ropes.children as Object3D[]) {
+      const { rope, laying, tip } = child.userData as {
+        rope?: number;
+        laying?: Laying;
+        tip?: { spine: readonly Point3[]; steps: Float32Array };
+      };
+      if (rope === undefined) continue;
+      const reach = Math.min(Math.max(this.reaches[rope] ?? 1, 0), 1);
+      const drawn = child as Mesh<BufferGeometry>;
+      if (laying) drawn.geometry.setDrawRange(0, laid(laying.steps, reach) * laying.each);
+      if (tip) {
+        const last = tip.spine.length - 1;
+        const i = Math.min(Math.max(laid(tip.steps, reach) - 1, 0), last);
+        const [before, here, after] = [
+          tip.spine[Math.max(i - 1, 0)]!,
+          tip.spine[i]!,
+          tip.spine[Math.min(i + 1, last)]!,
+        ];
+        drawn.position.set(...here);
+        drawn.quaternion.setFromUnitVectors(
+          FORWARD,
+          new Vector3(after[0] - before[0], after[1] - before[1], after[2] - before[2]).normalize(),
+        );
+      }
     }
   }
 
@@ -439,7 +541,7 @@ export class RopeViewport {
   private shade(): void {
     for (const child of this.ropes.children) {
       const { rope, along, lit } = child.userData as { rope?: number; along?: Float32Array; lit?: Float32Array };
-      if (rope === undefined || !along) continue;
+      if (rope === undefined || !along) continue; // the dark hull of the plain drawing has no light to lose
       const mine = this.stretches.filter((stretch) => stretch.rope === rope);
       const colour = (child as Mesh<BufferGeometry>).geometry.getAttribute('color') as BufferAttribute;
       const values = colour.array as Float32Array;

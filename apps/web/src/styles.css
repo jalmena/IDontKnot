@@ -285,95 +285,6 @@ select:hover {
   max-width: none;
 }
 
-/* the line at the top of the view: the heading of the page, and opposite it the choice of material */
-.rope-view__head {
-  position: absolute;
-  top: var(--inset-y);
-  left: var(--inset-x);
-  right: var(--inset-x);
-  min-height: 2.75rem;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 0.25rem 1rem;
-  pointer-events: none;
-}
-
-.rope-view__head > * {
-  pointer-events: auto;
-}
-
-.rope-view__head h1 {
-  pointer-events: none;
-}
-
-/* a labelled choice on one line */
-.choice {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-size: 0.9rem;
-  color: var(--ivory-dim);
-}
-
-.choice select {
-  width: 10.5rem;
-}
-
-.rope-view__head h1 {
-  margin: 0;
-  font-size: clamp(1.3rem, 2.2vw, 1.7rem);
-  text-shadow: 0 1px 6px var(--green-edge);
-}
-
-.rope-view__help {
-  flex: 1 1 10rem;
-}
-
-/* Two buttons of which one is chosen */
-.switch {
-  display: inline-flex;
-}
-
-.switch button:first-child {
-  border-radius: 999px 0 0 999px;
-}
-
-.switch button:last-child {
-  border-radius: 0 999px 999px 0;
-  border-left: 0;
-}
-
-.switch button[aria-pressed='true'],
-.parts button[aria-pressed='true'] {
-  background: var(--gold);
-  border-color: var(--gold);
-  color: var(--green-edge);
-  font-weight: 600;
-}
-
-.rope-view__canvas canvas {
-  display: block;
-  width: 100%;
-  height: 100%;
-}
-
-.rope-view__caption,
-.rope-view__note {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  flex-wrap: wrap;
-  margin: 0;
-  padding: 0.6rem var(--inset-x);
-  border-top: 1px solid var(--green-line);
-  color: var(--ivory-dim);
-  font-size: 0.9rem;
-  max-width: none;
-}
-
 /* Labelled controls: the label in the left half of the panel, the control in the right half */
 .controls {
   display: grid;
@@ -399,55 +310,6 @@ select:hover {
   font-family: var(--font-code);
   color: var(--gold-bright);
   text-align: right;
-}
-
-input[type='range'] {
-  width: 100%;
-  min-height: 2.75rem;
-  accent-color: var(--gold);
-}
-
-dl {
-  margin: 0;
-}
-
-.facts {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0 var(--columns);
-}
-
-.facts__wide {
-  grid-column: 1 / -1;
-}
-
-@media (max-width: 30rem) {
-  .facts {
-    grid-template-columns: minmax(0, 1fr);
-  }
-}
-
-dt {
-  color: var(--ivory-dim);
-  font-size: 0.9rem;
-  margin-top: 0.4rem;
-}
-
-dt small {
-  display: block;
-  font-size: 0.8rem;
-}
-
-dd {
-  margin: 0;
-  font-size: 1.1rem;
-  overflow-wrap: anywhere;
-}
-
-.code {
-  font-family: var(--font-code);
-  font-size: 0.95rem;
-  color: var(--gold-bright);
 }
 
 .diagram {
@@ -624,14 +486,84 @@ a {
   color: var(--gold-bright);
 }
 
+/* A knot being tied: the buttons that play its steps, and the steps */
+.player,
+.player__row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.6rem;
+}
+
+.player__play {
+  flex: 1;
+  background: var(--gold);
+  border-color: var(--gold);
+  color: var(--green-edge);
+  font-weight: 600;
+}
+
+.player__row input {
+  flex: 1;
+}
+
+.player__row .choice select {
+  width: auto;
+}
+
+button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.steps {
+  margin: 0.4rem 0 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: step;
+  display: grid;
+  gap: 0.5rem;
+}
+
+.steps li {
+  counter-increment: step;
+}
+
+.steps button {
+  display: grid;
+  grid-template-columns: 1.6rem 1fr;
+  gap: 0.6rem;
+  width: 100%;
+  padding: 0.6rem 0.9rem;
+  border-radius: 10px;
+  text-align: left;
+  line-height: 1.35;
+}
+
+.steps button::before {
+  content: counter(step);
+  font-family: var(--font-code);
+  color: var(--gold);
+}
+
+.steps li[aria-current='step'] button {
+  border-color: var(--gold);
+  background: color-mix(in srgb, var(--gold) 16%, var(--green-glow));
+}
+
 /* A knot of the library */
 .parts {
   list-style: none;
-  margin: 0 0 1.2rem;
+  margin: 0 0 1rem;
   padding: 0;
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
+  gap: 0.4rem;
+}
+
+/* a little narrower than other buttons, so that the parts of a rope fit on one line of the panel */
+.parts button {
+  padding: 0.4rem 0.75rem;
 }
 
 .code__line {
@@ -676,6 +608,115 @@ a {
 
 .facts {
   margin-bottom: 0.8rem;
+}
+
+/* Tabs: the parts of a panel, of which one is shown */
+.tabs {
+  display: flex;
+  gap: 1.5rem;
+  margin: 0 0 1rem;
+  border-bottom: 1px solid var(--green-line);
+}
+
+.tabs button {
+  background: none;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
+  margin-bottom: -1px;
+  padding: 0;
+  color: var(--ivory-dim);
+  font-weight: 600;
+}
+
+.tabs button:hover {
+  color: var(--ivory);
+}
+
+.tabs button[aria-selected='true'] {
+  color: var(--gold-bright);
+  border-bottom-color: var(--gold);
+}
+
+/* The knots of the library: a page of cards, or a row of them under the knot that is open */
+.shelf__title {
+  margin: 0 0 0.9rem;
+}
+
+.cards {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(12.5rem, 1fr));
+  gap: 1.25rem;
+}
+
+.card {
+  display: block;
+  border: 1px solid var(--green-line);
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: color-mix(in srgb, var(--green-edge) 55%, transparent);
+  color: var(--ivory);
+  text-decoration: none;
+}
+
+.card:hover,
+.card[aria-current='page'] {
+  border-color: var(--gold);
+}
+
+.card[aria-current='page'] .card__name {
+  color: var(--gold-bright);
+}
+
+.card__picture {
+  display: block;
+  aspect-ratio: 4 / 3;
+  background: radial-gradient(90% 80% at 50% 45%, var(--green-glow), var(--green-edge));
+}
+
+.card__picture img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.card__name {
+  display: block;
+  padding: 0.55rem 0.9rem 0.7rem;
+  border-top: 1px solid var(--green-line);
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+.shelf--rail {
+  margin-top: 1.25rem;
+}
+
+/* the row scrolls sideways; the room round it is for the outline of the card that has the focus */
+.shelf--rail .cards {
+  grid-template-columns: none;
+  grid-auto-flow: column;
+  grid-auto-columns: 8.6rem;
+  gap: 0.75rem;
+  overflow-x: auto;
+  padding: 6px;
+  margin: -6px;
+}
+
+.shelf--rail .card__picture {
+  aspect-ratio: 16 / 9;
+}
+
+.shelf--rail .card__name {
+  padding: 0.3rem 0.6rem 0.4rem;
+  font-size: 0.8rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 @media (prefers-reduced-motion: reduce) {

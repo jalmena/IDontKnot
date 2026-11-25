@@ -22,6 +22,9 @@ All notable changes to this project are recorded here. The format follows [Keep 
 - Knot documents in the core: components, named parts of a rope, the diagram, and shapes in space with the rules they must keep.
 - The first knot of the library: a figure-eight knot, checked against the reference diagram.
 - A page for a knot of the library, which the application now opens on: the rope in 3D or its diagram, the parts of the rope named on both and brought out when chosen, and what the core computes for it.
+- The construction layer in the core: a method of tying as steps, each checked against the shape and against the operation it names.
+- A knot tied step by step on its page: the figure-eight knot, with play, pause, single steps, a slider and three speeds, in English and Spanish.
+- The list of the knots of the library, each with its picture in the rope that is chosen.
 
 ### Changed
 
@@ -30,4 +33,5 @@ All notable changes to this project are recorded here. The format follows [Keep 
 - The diagram is shown in place of the 3D view, by a switch on the view, instead of beside it.
 - The surface of each rope is computed once: the browser keeps it for the next visit, every view of the page shares it, and a rope seen before is drawn at once. The files of the build are served so that the browser keeps them too.
 - A check that passes is no longer announced; one that fails is shown at the bottom of the panel.
+- The application is organised by knot. It opens on the list of knots; a knot that is chosen opens above the list, which stays under it as a row. Its page has two tabs: the knot, with the parts of its rope and how it is tied, and what the core computes. The menu is now "Knots" and "Laboratory".
 - The choice of rope is called "Material", sits inside the view opposite the title, and is kept from one page to the next.

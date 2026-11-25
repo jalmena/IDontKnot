@@ -49,8 +49,10 @@ export function buildFuzz(points: readonly Point3[], closed: boolean, radius: nu
   const strengths = new Float32Array(count * FUZZ_PIECES * 2);
   const facings = new Float32Array(count * FUZZ_PIECES * 6);
   const alongs = new Float32Array(count * FUZZ_PIECES * 2);
+  // in order along the rope, so that the fibres of the first part of it are the first so many
+  const places = Array.from({ length: count }, () => random()).sort((a, b) => a - b);
   for (let fibre = 0; fibre < count; fibre++) {
-    const i = Math.min(Math.floor(random() * n), n - 1);
+    const i = Math.min(Math.floor(places[fibre]! * n), n - 1);
     const [tangent, normal, binormal] = [frames.tangents[i]!, frames.normals[i]!, frames.binormals[i]!];
     const angle = random() * 2 * Math.PI;
     const [ca, sa] = [Math.cos(angle), Math.sin(angle)];

@@ -1,26 +1,58 @@
 import AxeBuilder from '@axe-core/playwright';
-import { expect, test } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
+
+/** Where each step of tying the figure-eight knot leaves the end of the rope. */
+const STOPS = [37.795, 47.786, 64.039];
+const progress = (page: Page) => page.getByTestId('progress');
+const reached = async (page: Page) => Number(await progress(page).inputValue());
+const triangles = async (page: Page) => Number(await page.getByTestId('rope-canvas').getAttribute('data-triangles'));
+const steps = (page: Page) => page.getByTestId('steps');
 
 test.beforeEach(async ({ page }) => {
-  await page.goto('/');
+  await page.goto('/knots/figure-eight');
+  // the shape is the stored diagram, keeps the rules of geometry, and its steps follow from one another
+  await expect(page.getByTestId('panel')).toHaveAttribute('data-checked', 'ok');
 });
 
-test('opens on the figure-eight knot of the library, with what the core computes for it', async ({ page }) => {
+test('opens the figure-eight knot tied, with its parts and how it is tied on one tab', async ({ page }) => {
   await expect(page).toHaveTitle('IDontKnot');
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Figure-eight knot');
-  await expect(page.getByRole('link', { name: 'Explore' })).toHaveAttribute('aria-current', 'page');
+  await expect(page.getByRole('link', { name: 'Knots', exact: true })).toHaveAttribute('aria-current', 'page');
+  await expect(page.getByRole('tab', { name: 'The knot' })).toHaveAttribute('aria-selected', 'true');
 
-  await expect(page.getByTestId('crossings')).toHaveText('4');
-  await expect(page.getByTestId('jones-closure')).toHaveAttribute('aria-label', 't^(-2) − t^(-1) + 1 − t + t^2');
-  // the shape in space is the stored diagram and keeps the rules of geometry: nothing needs saying
-  await expect(page.getByTestId('facts')).toHaveAttribute('data-checked', 'ok');
+  await expect(page.getByTestId('parts').getByRole('button')).toHaveText([
+    'Standing part',
+    'First loop',
+    'Second loop',
+    'Tail',
+  ]);
+  await expect(steps(page).getByRole('button')).toHaveText([
+    'Lead the end round and over the standing part, to make a loop.',
+    'Take it round behind the standing part.',
+    'Pass it down through the loop: over its near side, and out under its far side.',
+  ]);
+  // nothing is being done: the knot is whole
+  await expect(steps(page).locator('[aria-current]')).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Next' })).toBeDisabled();
+  expect(await reached(page)).toBeCloseTo(STOPS[2]!, 1);
   await expect(page.getByTestId('verdict')).toHaveCount(0);
 });
 
+test('shows what the core computes on the tab for mathematics', async ({ page }) => {
+  await expect(page.getByTestId('facts')).toHaveCount(0);
+  await page.getByRole('tab', { name: 'Mathematics' }).click();
+  await expect(page.getByTestId('crossings')).toHaveText('4');
+  await expect(page.getByTestId('jones-closure')).toHaveAttribute('aria-label', 't^(-2) − t^(-1) + 1 − t + t^2');
+  await expect(page.getByTestId('parts')).toHaveCount(0);
+
+  // the arrow keys move between the tabs
+  await page.keyboard.press('ArrowLeft');
+  await expect(page.getByRole('tab', { name: 'The knot' })).toBeFocused();
+  await expect(page.getByTestId('parts')).toBeVisible();
+});
+
 test('draws the open rope with its parts named, and its diagram in its place when asked', async ({ page }) => {
-  await expect
-    .poll(async () => Number(await page.getByTestId('rope-canvas').getAttribute('data-triangles')))
-    .toBeGreaterThan(1000);
+  await expect.poll(() => triangles(page)).toBeGreaterThan(1000);
   await expect(page.locator('.rope-view__names .tag')).toHaveText([
     'Standing part',
     'First loop',
@@ -72,34 +104,89 @@ test('brings out the part of the rope that is chosen, on the rope and on its dia
   await expect(diagram.locator('.diagram__marked')).toHaveCount(0);
 });
 
-test('shows everything about the knot on one screen of a laptop', async ({ page, viewport }) => {
+test('plays the step that is chosen from where it begins, then one step at a time, and goes back', async ({ page }) => {
+  await steps(page).getByRole('button').first().click();
+  await expect.poll(() => reached(page), { timeout: 15_000 }).toBeCloseTo(STOPS[0]!, 1);
+  await expect(steps(page).locator('[aria-current="step"]')).toContainText('to make a loop');
+  // while the knot is being tied, what is named on the rope is its end
+  await expect(page.locator('.rope-view__names .tag')).toHaveText(['The end']);
+
+  await page.getByRole('button', { name: 'Next' }).click();
+  await expect.poll(() => reached(page), { timeout: 15_000 }).toBeCloseTo(STOPS[1]!, 1);
+  await expect(steps(page).locator('[aria-current="step"]')).toContainText('behind the standing part');
+
+  await page.getByRole('button', { name: 'Previous' }).click();
+  expect(await reached(page)).toBeCloseTo(STOPS[0]!, 1);
+});
+
+test('plays every step from the start to the finished knot, faster when asked', async ({ page }) => {
+  await page.getByLabel('Speed').selectOption('2');
+  await page.getByTestId('play').click();
+  await expect(page.getByTestId('play')).toHaveText('Pause');
+  // the knot was tied: playing begins again with the rope laid only as far as its standing part
+  await expect.poll(() => reached(page)).toBeLessThan(STOPS[0]!);
+  await expect.poll(() => reached(page), { timeout: 25_000 }).toBeCloseTo(STOPS[2]!, 1);
+  await expect(page.getByTestId('play')).toHaveText('Play');
+  await expect(page.getByRole('button', { name: 'Next' })).toBeDisabled();
+  // tied again, the rope has the names of its parts
+  await expect(page.locator('.rope-view__names .tag')).toHaveCount(4);
+});
+
+test('draws as much rope as has been laid, and its diagram with the strands passed so far', async ({ page }) => {
+  await expect.poll(() => triangles(page)).toBeGreaterThan(1000);
+  const whole = await triangles(page);
+  await progress(page).fill('12');
+  await expect.poll(() => triangles(page)).toBeLessThan(whole / 3);
+
+  await page.getByRole('button', { name: 'Diagram' }).click();
+  const numbers = page.getByTestId('diagram').locator('.diagram__label');
+  await expect(numbers).toHaveCount(0);
+  await progress(page).fill('40');
+  await expect(numbers).toHaveText(['1']);
+  await progress(page).fill('64.05');
+  await expect(numbers).toHaveText(['1', '2', '3', '4']);
+});
+
+test('shows a step done at once when the person has asked for less movement', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await steps(page).getByRole('button').first().click();
+  expect(await reached(page)).toBeCloseTo(STOPS[0]!, 1);
+  await expect(page.getByTestId('play')).toHaveText('Play');
+});
+
+test('shows the knot, its panel and the row of knots on one screen of a laptop', async ({ page, viewport }) => {
   test.skip((viewport?.width ?? 0) < 900, 'on a narrow screen the panel goes under the view');
-  await expect(page.getByTestId('facts')).toBeVisible();
   const edges = (selector: string) =>
     page.locator(selector).evaluate((element) => {
       const box = element.getBoundingClientRect();
       return { top: Math.round(box.top + window.scrollY), bottom: Math.round(box.bottom + window.scrollY) };
     });
-  const [view, panel] = [await edges('.rope-view'), await edges('.panel')];
-  expect(panel.bottom).toBeLessThanOrEqual(viewport?.height ?? 0);
-  // side by side, the view and the panel are one height
+  const [view, panel, row] = [await edges('.rope-view'), await edges('.panel'), await edges('.shelf')];
+  // side by side, the view and the panel are one height; the row of knots is under them, on the same screen
   expect(panel).toEqual(view);
+  expect(row.top).toBeGreaterThan(panel.bottom);
+  expect(row.bottom).toBeLessThanOrEqual(viewport?.height ?? 0);
 });
 
-test('names the knot and its parts in Spanish', async ({ page }) => {
+test('names the knot, its parts and its steps in Spanish', async ({ page }) => {
   await page.getByLabel('Language').selectOption('es');
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Nudo de ocho');
+  await expect(page.getByRole('tab')).toHaveText(['El nudo', 'Matemáticas']);
   await expect(page.getByTestId('parts').getByRole('button')).toHaveText([
     'Firme',
     'Primer bucle',
     'Segundo bucle',
     'Chicote',
   ]);
+  await expect(steps(page).getByRole('button').first()).toHaveText(
+    'Lleva el chicote alrededor y por encima del firme para formar un bucle.',
+  );
+  await expect(page.getByTestId('play')).toHaveText('Reproducir');
 });
 
 test('goes to the laboratory and back without loading the application again', async ({ page }) => {
   await page.evaluate(() => ((window as unknown as { marker: boolean }).marker = true));
-  await page.getByRole('link', { name: 'Experiment' }).click();
+  await page.getByRole('link', { name: 'Laboratory' }).click();
   await expect(page).toHaveURL(/\/lab$/);
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Torus knot laboratory');
   await page.goBack();
@@ -107,20 +194,22 @@ test('goes to the laboratory and back without loading the application again', as
   expect(await page.evaluate(() => (window as unknown as { marker?: boolean }).marker)).toBe(true);
 });
 
-test('opens a knot by its address, and says so when there is no such knot or page', async ({ page }) => {
-  await page.goto('/knots/figure-eight');
-  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Figure-eight knot');
+test('says so when there is no such knot or page, and leads back to the library', async ({ page }) => {
   await page.goto('/knots/no-such-knot');
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('There is no such knot in the library.');
   await page.goto('/some/deep/link');
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('There is nothing at this address.');
   await page.getByRole('link', { name: 'Go to the library' }).click();
-  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Figure-eight knot');
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Knots');
 });
 
-test('has no accessibility violations that axe can detect', async ({ page }) => {
-  await expect(page.getByTestId('facts')).toBeVisible();
+test('has no accessibility violations that axe can detect, on either tab', async ({ page }) => {
   await page.getByTestId('parts').getByRole('button', { name: 'Tail' }).click();
-  const results = await new AxeBuilder({ page }).analyze();
-  expect(results.violations.map((violation) => `${violation.id}: ${violation.help}`)).toEqual([]);
+  await steps(page).getByRole('button').nth(1).click();
+  const violations = async () =>
+    (await new AxeBuilder({ page }).analyze()).violations.map((violation) => `${violation.id}: ${violation.help}`);
+  expect(await violations()).toEqual([]);
+  await page.getByRole('tab', { name: 'Mathematics' }).click();
+  await expect(page.getByTestId('facts')).toBeVisible();
+  expect(await violations()).toEqual([]);
 });
