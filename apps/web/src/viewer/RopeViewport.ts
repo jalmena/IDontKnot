@@ -34,6 +34,7 @@ import {
   PMREMGenerator,
   Quaternion,
   Scene,
+  SRGBColorSpace,
   type Material,
   type Object3D,
   type Texture,
@@ -43,12 +44,13 @@ import {
 } from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
-import { buildFuzz, FUZZ_PIECES } from './fuzz.ts';
+import { buildFuzz, buildTuft, FUZZ_PIECES } from './fuzz.ts';
 import { ROPE_MATERIALS, ropeColour, type RopeMaterialId } from './materials.ts';
 import { rgbOf, toned } from './images.ts';
 import { RopeTextures } from './textures.ts';
 import {
   buildCap,
+  buildDome,
   buildLaid,
   buildLaidCap,
   buildTube,
@@ -116,6 +118,17 @@ const MAX_FIBRES = 12000;
 export const LIGHT_FROM_THE_SIDE: Point3 = [-5, 7, 4.5];
 export const LIGHT_FROM_ABOVE: Point3 = [-1.5, 8, 2.5];
 const FORWARD = new Vector3(0, 0, 1);
+
+/** How far along a centerline each of its points is, as a fraction of its length. */
+function stepsAlong(points: readonly Point3[]): Float32Array {
+  const lengths = [0];
+  for (let i = 1; i < points.length; i++) {
+    const [a, b] = [points[i - 1]!, points[i]!];
+    lengths.push(lengths[i - 1]! + Math.hypot(b[0] - a[0], b[1] - a[1], b[2] - a[2]));
+  }
+  const total = lengths[lengths.length - 1] || 1;
+  return Float32Array.from(lengths, (length) => length / total);
+}
 
 /** How the cut end of a laid rope is turned at a point of the rope: along the rope there, and round it as its strands are. */
 function turned(turns: ReturnType<typeof laidFrames>, i: number): Quaternion {
@@ -479,43 +492,101 @@ export class RopeViewport {
    * The two cut ends of an open rope. The far one is a disc that can be moved along the rope, to close
    * it wherever it has been laid to.
    */
-  /**
-   * Closes the two ends of an open rope: a round rope with a disc, a laid rope (one with a `layLength`)
-   * with the cut end of each of its strands. The far end follows the rope as it is laid.
-   */
-  private addEnds(
-    place: number,
-    points: readonly Point3[],
-    radius: number,
-    material: () => Material,
-    layLength?: number,
-  ): Mesh[] {
-    const turns = layLength === undefined ? undefined : laidFrames(points, layLength);
-    const start = turns ? buildLaidCap(radius, layLength as number, -1) : buildCap(points, radius, 'start');
-    const near = this.add(place, geometryOf(start, false), material(), new Float32Array(start.columns));
-    if (turns) {
-      near.position.set(...(points[0] as Point3));
-      near.quaternion.copy(turned(turns, 0));
-    }
-    const end = turns
-      ? buildLaidCap(radius, layLength as number, 1)
-      : buildCap(
-          [
-            [0, 0, -1],
-            [0, 0, 0],
-          ],
-          radius,
-          'end',
-        );
+  /** Closes the two ends of an open rope of the plain drawing, each with a disc. The far one follows the rope as it is laid. */
+  private addEnds(place: number, points: readonly Point3[], radius: number, material: () => Material): void {
+    const start = buildCap(points, radius, 'start');
+    this.add(place, geometryOf(start, false), material(), new Float32Array(start.columns));
+    const end = buildCap(
+      [
+        [0, 0, -1],
+        [0, 0, 0],
+      ],
+      radius,
+      'end',
+    );
     const far = this.add(place, geometryOf(end, false), material(), new Float32Array(end.columns).fill(1));
-    const lengths = [0];
-    for (let i = 1; i < points.length; i++) {
-      const [a, b] = [points[i - 1]!, points[i]!];
-      lengths.push(lengths[i - 1]! + Math.hypot(b[0] - a[0], b[1] - a[1], b[2] - a[2]));
+    far.userData['tip'] = { spine: points, steps: stepsAlong(points) };
+  }
+
+  /**
+   * Finishes the two ends of an open rope as rope of its kind ends where it is cut: natural fibre frayed,
+   * synthetic laid rope melted into one round end, and rope with a core cut across, the core showing in
+   * the melted rim of its sheath. The far end follows the rope as it is laid.
+   */
+  private dressEnds(place: number, points: readonly Point3[], radius: number, id: RopeMaterialId, index: number): void {
+    const look = ROPE_MATERIALS[id];
+    const colour = ropeColour(id, index);
+    const lay = look.construction === 'laid' ? look.lay * radius : Infinity;
+    const turns = laidFrames(points, lay);
+    const steps = stepsAlong(points);
+    // the colour of the rope, darker; its values are those of a colour as it is written, not of light
+    const tone = (amount: number): Color => {
+      const [r, g, b] = toned(rgbOf(colour), amount).map((c) => c / 255) as [number, number, number];
+      return new Color().setRGB(r, g, b, SRGBColorSpace).multiplyScalar(look.brightness);
+    };
+    const solid = (color: Color, roughness: number, clearcoat = 0): Material =>
+      new MeshPhysicalMaterial({ color, roughness, metalness: 0, clearcoat, vertexColors: true });
+
+    for (const facing of [-1, 1] as const) {
+      const along = facing === 1 ? 1 : 0;
+      const set = (thing: Object3D): void => {
+        if (facing === 1) thing.userData['tip'] = { spine: points, steps, turns };
+        else {
+          thing.position.set(...(points[0] as Point3));
+          thing.quaternion.copy(turned(turns, 0));
+        }
+      };
+      const close = (data: TubeData, material: Material, forward = 0): void => {
+        const geometry = geometryOf(data, false);
+        if (forward !== 0) geometry.translate(0, 0, facing * forward);
+        const mesh = this.add(place, geometry, material, new Float32Array(data.columns).fill(along));
+        mesh.castShadow = true;
+        set(mesh);
+      };
+
+      if (look.end.kind === 'sealed') {
+        // melted: one smooth end, a little darker than the rope, that shines
+        close(buildDome(0.94 * radius, 0.36 * radius, facing), solid(tone(-0.1), 0.3, 0.6));
+      } else if (look.end.kind === 'cored') {
+        // cut with a hot blade: the sheath melts into a dark rim, and the core shows inside it
+        const [rim, inside] = [0.99 * radius, 0.62 * radius];
+        const stands = 0.28 * radius;
+        close(buildDome(rim, stands, facing, inside), solid(tone(-0.5), 0.45, 0.3));
+        close(
+          buildDome(inside, 0.08 * radius, facing),
+          solid(new Color(look.end.core), 0.95),
+          stands * (1 - (inside / rim) ** 2),
+        );
+      } else if (look.construction === 'laid') {
+        // each strand is cut across: its end is as dark as the shade between the strands
+        close(buildLaidCap(radius, lay, facing), solid(tone(-0.5), 1));
+      } else {
+        close(
+          buildDome(0.97 * radius, 0.05 * radius, facing),
+          solid(tone(look.end.kind === 'frayed' ? -0.22 : -0.35), 1),
+        );
+      }
+
+      if (look.end.kind === 'frayed') {
+        // and its fibres stand out of the end, lit like the loose fibres along the rope
+        const tuft = buildTuft(radius, { ...look.end, seed: 31 + index + (facing === 1 ? 7 : 0) });
+        if (facing === -1) for (let k = 2; k < tuft.positions.length; k += 3) tuft.positions[k] = -tuft.positions[k]!;
+        const fibre = new Color(colour).lerp(new Color(0xffffff), 0.3).multiplyScalar(look.brightness);
+        const count = tuft.strengths.length;
+        const colours = new Float32Array(count * 4);
+        for (let k = 0; k < count; k++) {
+          const light = 0.7 + (0.3 * ((k * 7919) % 13)) / 12;
+          colours.set([fibre.r * light, fibre.g * light, fibre.b * light, 0.9 * tuft.strengths[k]!], 4 * k);
+        }
+        const geometry = new BufferGeometry();
+        geometry.setAttribute('position', new BufferAttribute(tuft.positions, 3));
+        geometry.setAttribute('color', new BufferAttribute(colours.slice(), 4));
+        const fibres = new LineSegments(geometry, this.loose);
+        fibres.userData = { rope: place, along: new Float32Array(count).fill(along), lit: colours };
+        set(fibres);
+        this.ropes.add(fibres);
+      }
     }
-    const total = lengths[lengths.length - 1] || 1;
-    far.userData['tip'] = { spine: points, steps: Float32Array.from(lengths, (length) => length / total), turns };
-    return [near, far];
   }
 
   private drawPlain({ points, closed, radius, material, index }: RopeSpec, place: number): void {
@@ -576,23 +647,7 @@ export class RopeViewport {
     const rope = this.add(place, geometryOf(surface, maps !== null), skin, along, rows);
     rope.castShadow = true;
     rope.receiveShadow = true;
-    if (!closed) {
-      // where the rope was cut, the ends of its fibres show: darker, and dull. On a laid rope, whose strands
-      // end round, darker still, like the shade between them: an end that is not what the eye goes to
-      const lay = look.construction === 'laid' ? look.lay * radius : undefined;
-      const cut = (): Material =>
-        new MeshPhysicalMaterial({
-          color: new Color(
-            ...toned(rgbOf(colour), lay === undefined ? -0.4 : -0.72).map((c) => c / 255),
-          ).multiplyScalar(look.brightness),
-          roughness: 1,
-          metalness: 0,
-          vertexColors: true,
-        });
-      for (const end of this.addEnds(place, fine, lay === undefined ? radius * 0.97 : radius, cut, lay)) {
-        end.castShadow = true;
-      }
-    }
+    if (!closed) this.dressEnds(place, fine, radius, material, index);
 
     if (look.fuzz) {
       // a long rope has thinner fuzz rather than ever more fibres

@@ -410,6 +410,58 @@ export function buildLaidCap(radius: number, layLength: number, facing: 1 | -1, 
   return { positions, normals, uvs: new Float32Array(count * 2), indices, rows: 1, columns: count, length: 0 };
 }
 
+/**
+ * A round end: a low dome across the rope, or, with `inner`, only the ring of it outside that radius. Built
+ * about the origin, for a rope that runs along +z: `facing` is 1 for the end the rope runs to, and -1 for
+ * the end it comes from. `height` is how far its middle stands out.
+ */
+export function buildDome(radius: number, height: number, facing: 1 | -1, inner = 0, sides = 24): TubeData {
+  const RINGS = 4;
+  const whole = inner <= 0;
+  const rings = whole ? RINGS : RINGS + 1;
+  const count = (whole ? 1 : 0) + rings * sides;
+  const positions = new Float32Array(count * 3);
+  const normals = new Float32Array(count * 3);
+  const first = whole ? 1 : 0;
+  if (whole) {
+    positions.set([0, 0, facing * height], 0);
+    normals.set([0, 0, facing], 0);
+  }
+  for (let ring = 0; ring < rings; ring++) {
+    const reach = whole ? (radius * (ring + 1)) / RINGS : inner + ((radius - inner) * ring) / RINGS;
+    const rise = facing * height * (1 - (reach / radius) ** 2);
+    const lean = (2 * height * reach) / radius ** 2;
+    for (let j = 0; j < sides; j++) {
+      const angle = (2 * Math.PI * j) / sides;
+      const [ca, sa] = [Math.cos(angle), Math.sin(angle)];
+      const vertex = first + ring * sides + j;
+      positions.set([reach * ca, reach * sa, rise], vertex * 3);
+      normals.set(unit([lean * ca, lean * sa, facing]), vertex * 3);
+    }
+  }
+  const indices: number[] = [];
+  // seen from the side it faces, the triangles go round anticlockwise: that side is the front
+  const triangle = (a: number, b: number, c: number): void =>
+    void indices.push(...(facing === 1 ? [a, b, c] : [a, c, b]));
+  if (whole) for (let j = 0; j < sides; j++) triangle(0, 1 + j, 1 + ((j + 1) % sides));
+  for (let ring = 0; ring + 1 < rings; ring++) {
+    for (let j = 0; j < sides; j++) {
+      const [a, b] = [first + ring * sides + j, first + ring * sides + ((j + 1) % sides)];
+      triangle(a, a + sides, b);
+      triangle(b, a + sides, b + sides);
+    }
+  }
+  return {
+    positions,
+    normals,
+    uvs: new Float32Array(count * 2),
+    indices: Uint32Array.from(indices),
+    rows: 1,
+    columns: count,
+    length: 0,
+  };
+}
+
 export function buildCap(points: readonly Point3[], radius: number, end: 'start' | 'end', sides = 24): TubeData {
   const frames = rotationMinimisingFrames(points, false);
   const i = end === 'start' ? 0 : points.length - 1;

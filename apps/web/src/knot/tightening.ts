@@ -3,14 +3,21 @@
  * places along the rope so that one can be turned into the next point for point, and what the view takes
  * in at each. Pure: it knows nothing about the views or the clock.
  */
-import { framePolylines, type FrameCurve, type KnotDocument, type Point3 } from '@idontknot/core';
+import { diagramFromGeometry, framePolylines, type FrameCurve, type KnotDocument, type Point3 } from '@idontknot/core';
 import { pointAt } from './parts.ts';
 
 export interface Tightening {
   /** The component that is tightened. */
   readonly rope: string;
-  /** The shapes of the rope, from the one it is tied in to the tightest, each at the same places along it. */
+  /**
+   * The shapes of the rope, from the one it is tied in to the tightest, each given at the same places of
+   * the knot: as many points between one crossing the rope meets and the next, in every shape. A point of
+   * one shape and the same point of the next are then the same place of the knot, and not the same rope:
+   * as a knot tightens its rope slides through it, and a point of the rope goes a long way round.
+   */
   readonly shapes: readonly (readonly Point3[])[];
+  /** How many stretches of equal length a shape is drawn in. */
+  readonly count: number;
   /** What the view takes in at each shape: the knot, and a little of the rope at each side of it. */
   readonly windows: readonly Window[];
 }
@@ -35,16 +42,70 @@ export function tighteningOf(document: KnotDocument): Tightening | null {
   if (frames.length < 2 || frames.length !== ids.length || document.components.length !== 1 || !component?.length) {
     return null;
   }
+  const length = component.length;
   const d = 2 * (component.radius ?? 0.5);
-  const count = Math.round(component.length / (STEP * d));
+  const count = Math.round(length / (STEP * d));
   const curves = frames.flatMap((frame) => framePolylines(document, frame).slice(0, 1));
   if (curves.length !== frames.length) return null;
-  const shapes = curves.map((curve: FrameCurve) =>
-    Array.from({ length: count + 1 }, (_, k) => pointAt(curve, (k * (component.length as number)) / count)),
+
+  // where along the rope each shape meets its crossings: the places of the knot that every shape has
+  const met = curves.map((curve: FrameCurve): number[] | null => {
+    const { visits, issues } = diagramFromGeometry([curve]);
+    if (issues.length > 0) return null;
+    const along = (visits[curve.id] ?? []).map(({ at }) => {
+      const i = Math.min(Math.floor(at), curve.s.length - 2);
+      return (curve.s[i] as number) + (at - i) * ((curve.s[i + 1] as number) - (curve.s[i] as number));
+    });
+    return [0, ...along, length];
+  });
+  // shapes that do not all meet the same crossings can only be matched by the rope itself
+  const alike = met.every((marks) => marks !== null && marks.length === met[0]?.length);
+  const marks = met.map((each) => (alike && each ? each : [0, length]));
+  const stretches = (marks[0] as number[]).length - 1;
+  const points = Array.from({ length: stretches }, (_, j) =>
+    Math.max(
+      2,
+      Math.ceil(Math.max(...marks.map((each) => (each[j + 1] as number) - (each[j] as number))) / (STEP * d)),
+    ),
   );
+  const shapes = curves.map((curve: FrameCurve, which) => {
+    const each = marks[which] as number[];
+    const shape: Point3[] = [];
+    for (let j = 0; j < stretches; j++) {
+      const [from, to] = [each[j] as number, each[j + 1] as number];
+      for (let i = 0; i < (points[j] as number); i++)
+        shape.push(pointAt(curve, from + ((to - from) * i) / (points[j] as number)));
+    }
+    shape.push(pointAt(curve, length));
+    return shape;
+  });
   const beside = Math.round(BESIDE / STEP);
-  const windows = shapes.map((shape, which) => windowOf(which === 0 ? shape : knotOf(shape, beside), d / 2));
-  return { rope: component.id, shapes, windows };
+  const windows = shapes.map((shape, which) => {
+    const even = evenly(shape, count);
+    return windowOf(which === 0 ? even : knotOf(even, beside), d / 2);
+  });
+  return { rope: component.id, shapes, count, windows };
+}
+
+/** The same curve as so many stretches of equal length. */
+function evenly(points: readonly Point3[], count: number): Point3[] {
+  const along = [0];
+  for (let i = 1; i < points.length; i++) {
+    const [a, b] = [points[i - 1] as Point3, points[i] as Point3];
+    along.push((along[i - 1] as number) + Math.hypot(b[0] - a[0], b[1] - a[1], b[2] - a[2]));
+  }
+  const total = along[along.length - 1] as number;
+  const even: Point3[] = [];
+  let i = 0;
+  for (let k = 0; k <= count; k++) {
+    const want = (total * k) / count;
+    while (i < points.length - 2 && (along[i + 1] as number) < want) i++;
+    const [from, to] = [along[i] as number, along[i + 1] as number];
+    const t = to > from ? Math.min(Math.max((want - from) / (to - from), 0), 1) : 0;
+    const [a, b] = [points[i] as Point3, points[i + 1] as Point3];
+    even.push([a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t]);
+  }
+  return even;
 }
 
 /** How far a point may lie from a straight line and still be on it, in the units of the shape. */
@@ -107,14 +168,32 @@ function place(tightening: Tightening, amount: number): [from: number, to: numbe
   return [from, from + 1, at - from];
 }
 
-/** The shape of the rope when the knot is tightened by `amount`, from 0 (as it was tied) to 1 (tight). */
+/**
+ * The shape of the rope when the knot is tightened by `amount`, from 0 (as it was tied) to 1 (tight), as
+ * points at equal distances along the rope. It passes through every shape of the tightening, and between
+ * two of them goes smoothly: without a start or a stop at each.
+ */
 export function shapeAt(tightening: Tightening, amount: number): Point3[] {
   const [from, to, t] = place(tightening, amount);
-  const [a, b] = [tightening.shapes[from] as readonly Point3[], tightening.shapes[to] as readonly Point3[]];
-  return a.map((point, i) => {
-    const other = b[i] as Point3;
-    return [mix(point[0], other[0], t), mix(point[1], other[1], t), mix(point[2], other[2], t)];
+  const { shapes } = tightening;
+  const [before, a, b, after] = [
+    shapes[Math.max(from - 1, 0)] as readonly Point3[],
+    shapes[from] as readonly Point3[],
+    shapes[to] as readonly Point3[],
+    shapes[Math.min(to + 1, shapes.length - 1)] as readonly Point3[],
+  ];
+  // the curve through four values that are equally far apart in time, between the second and the third
+  const through = (p0: number, p1: number, p2: number, p3: number): number =>
+    0.5 * (2 * p1 + (p2 - p0) * t + (2 * p0 - 5 * p1 + 4 * p2 - p3) * t * t + (3 * p1 - p0 - 3 * p2 + p3) * t * t * t);
+  const points = a.map((point, i): Point3 => {
+    const [p0, p2, p3] = [before[i] as Point3, b[i] as Point3, after[i] as Point3];
+    return [
+      through(p0[0], point[0], p2[0], p3[0]),
+      through(p0[1], point[1], p2[1], p3[1]),
+      through(p0[2], point[2], p2[2], p3[2]),
+    ];
   });
+  return evenly(points, tightening.count);
 }
 
 /** What the view takes in when the knot is tightened by `amount`. */

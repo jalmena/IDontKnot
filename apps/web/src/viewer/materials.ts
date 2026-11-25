@@ -8,6 +8,17 @@ import type { BraidedSurface, LaidSurface } from './surface.ts';
 
 export type RopeMaterialId = 'jute' | 'kernmantle' | 'polyester' | 'sisal' | 'cotton' | 'line';
 
+/**
+ * How a rope ends where it is cut. Natural fibre frays: so many fibres stand out of the end, as far as
+ * `reach` rope radii, straight or curled. Synthetic rope is sealed with heat: laid rope into one rounded
+ * end, and rope with a core and a sheath across, with the core showing inside the melted rim of the sheath.
+ */
+export type RopeEnd =
+  | { readonly kind: 'frayed'; readonly fibres: number; readonly reach: number; readonly stiffness: number }
+  | { readonly kind: 'sealed' }
+  | { readonly kind: 'cored'; readonly core: string }
+  | { readonly kind: 'plain' };
+
 interface Look {
   /** A colour for each loop of rope, so that the loops of a link can be told apart. */
   readonly colours: readonly string[];
@@ -21,6 +32,8 @@ interface Look {
   readonly gloss: number;
   /** How light the rope is drawn: 1 leaves its colours as they are. */
   readonly brightness: number;
+  /** How the rope ends where it is cut. */
+  readonly end: RopeEnd;
 }
 
 /** Three strands twisted together. */
@@ -62,6 +75,7 @@ export const ROPE_MATERIALS: Readonly<Record<RopeMaterialId, RopeMaterial>> = {
     relief: 1,
     gloss: 0.15,
     brightness: 0.7,
+    end: { kind: 'frayed', fibres: 44, reach: 0.55, stiffness: 0.55 },
     lay: 5,
     repeat: 4,
     contrast: 0.55,
@@ -86,6 +100,7 @@ export const ROPE_MATERIALS: Readonly<Record<RopeMaterialId, RopeMaterial>> = {
     relief: 1,
     gloss: 0.3,
     brightness: 0.7,
+    end: { kind: 'frayed', fibres: 30, reach: 0.75, stiffness: 0.9 },
     lay: 6.4,
     repeat: 4,
     contrast: 0.32,
@@ -110,6 +125,7 @@ export const ROPE_MATERIALS: Readonly<Record<RopeMaterialId, RopeMaterial>> = {
     relief: 1,
     gloss: 1,
     brightness: 1,
+    end: { kind: 'sealed' },
     lay: 6.8,
     repeat: 4,
     contrast: 0.2,
@@ -134,6 +150,7 @@ export const ROPE_MATERIALS: Readonly<Record<RopeMaterialId, RopeMaterial>> = {
     relief: 1,
     gloss: 0.8,
     brightness: 1,
+    end: { kind: 'cored', core: '#efe9da' },
     repeat: 5,
     tracers: ['#23232a', '#f3ecd9'],
     surface: {
@@ -161,6 +178,7 @@ export const ROPE_MATERIALS: Readonly<Record<RopeMaterialId, RopeMaterial>> = {
     relief: 1,
     gloss: 0.1,
     brightness: 1,
+    end: { kind: 'frayed', fibres: 60, reach: 0.35, stiffness: 0.3 },
     repeat: 3.75,
     tracers: [],
     surface: {
@@ -188,6 +206,7 @@ export const ROPE_MATERIALS: Readonly<Record<RopeMaterialId, RopeMaterial>> = {
     relief: 0,
     gloss: 1,
     brightness: 0.7,
+    end: { kind: 'plain' },
     roughness: 0.38,
   },
 };

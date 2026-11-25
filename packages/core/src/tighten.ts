@@ -22,6 +22,18 @@ export interface TightenOptions {
   readonly stiffness?: number;
   /** How many shapes on the way to the tightest are kept, at equal steps. */
   readonly keep?: number;
+  /**
+   * How near two strands may come, in rope diameters: 1 is rope that keeps its thickness, and less is rope
+   * that is pressed thinner where it bears on itself, as rope is in a knot drawn hard.
+   */
+  readonly nearest?: number;
+  /** The radius of the tightest bend a shape may have, in rope diameters. */
+  readonly sharpest?: number;
+  /**
+   * How many times, at most, the two ends are drawn apart after the knot has been made as small as it
+   * goes as a whole: each time by a twentieth of a diameter or less.
+   */
+  readonly draw?: number;
 }
 
 export interface Tightening {
@@ -59,12 +71,27 @@ const SHRINK = 0.006;
 const LEAST_SHRINK = 0.0004;
 /** The most steps: a rope that is not knotted never comes tight. */
 const MOST_STEPS = 3000;
-/** The tightest bend the rope is allowed, in diameters, and the spans over which it is held to it, in particles. */
-const TIGHTEST_BEND = 0.66;
+/**
+ * The tightest bend the rope is held to as it is moved, as so many times the tightest a shape may have;
+ * and the spans over which it is held to it, in particles.
+ */
+const BEND_HELD = 0.66 / 0.53;
 const SPANS = [1, 2, 4];
-/** What a shape must keep to be taken: how near two strands may come and how tight a bend may be, in diameters. */
-const NEAREST = 0.985;
-const SHARPEST = 0.53;
+/**
+ * What a shape must keep to be taken: how near two strands may come and how tight a bend may be, in
+ * diameters. By default the rope is pressed a tenth thinner where it bears on itself, as rope is in a knot
+ * drawn hard: a rope that kept all its thickness would leave the knot looser than a real one.
+ */
+const NEAREST = 0.9;
+const SHARPEST = 0.48;
+/** How stiff the rope is, and how many times its ends are drawn at most, unless it is said otherwise. */
+const STIFFNESS = 0.02;
+const DRAWS = 400;
+/** How far each end is drawn at a time, in diameters, to begin with; and below what the knot is taken to give no more. */
+const PULL = 0.05;
+const LEAST_PULL = 0.004;
+/** How much further apart than they may come two strands are moved, in diameters: what a shape has to spare. */
+const SPARE = 0.015;
 
 /**
  * The shapes an open rope passes through as it is tightened. `points` is its centerline and `s` the
@@ -80,11 +107,14 @@ export function tighten(
   const length = s[s.length - 1] ?? 0;
   const n = Math.max(Math.round(length / ((options.spacing ?? 0.25) * d)), 8);
   const h = length / n;
-  const stiffness = options.stiffness ?? 0.05;
+  const stiffness = options.stiffness ?? STIFFNESS;
+  const nearest = options.nearest ?? NEAREST;
+  const sharpest = options.sharpest ?? SHARPEST;
+  const held = BEND_HELD * sharpest;
 
   // nearer than this along the rope, two particles are neighbours and may be as close as they like
   const neighbours = Math.round((0.95 * Math.PI * d) / h);
-  const least = SPANS.map((m) => 2 * TIGHTEST_BEND * d * Math.sin((m * h) / (TIGHTEST_BEND * d)));
+  const least = SPANS.map((m) => 2 * held * d * Math.sin((m * h) / (held * d)));
 
   const at = (coordinate: number): Particle => {
     let i = 0;
@@ -94,16 +124,23 @@ export function tighten(
   };
   let p: Particle[] = Array.from({ length: n + 1 }, (_, k) => at(k * h));
 
+  // while the ends are drawn, the particles of the two ends are held: from the first to `gripped[0]`,
+  // and from `gripped[1]` to the last. Otherwise none is.
+  let gripped: [number, number] = [-1, n + 1];
+  const free = (i: number): boolean => i > gripped[0] && i < gripped[1];
+
   /** Moves two particles along the line between them until they are a distance apart, or at least that. */
   const apart = (q: Particle[], i: number, j: number, distance: number, exactly: boolean): void => {
     const [a, b] = [q[i] as Particle, q[j] as Particle];
     const delta = sub(b, a);
     const now = size(delta) || 1e-9;
     if (!exactly && now >= distance) return;
-    const move = (distance - now) / now / 2;
+    const [wa, wb] = [free(i) ? 1 : 0, free(j) ? 1 : 0];
+    if (wa + wb === 0) return;
+    const move = (distance - now) / now / (wa + wb);
     for (let c = 0; c < 3; c++) {
-      a[c] = (a[c] as number) - (delta[c] as number) * move;
-      b[c] = (b[c] as number) + (delta[c] as number) * move;
+      a[c] = (a[c] as number) - (delta[c] as number) * move * wa;
+      b[c] = (b[c] as number) + (delta[c] as number) * move * wb;
     }
   };
 
@@ -121,6 +158,7 @@ export function tighten(
     for (let k = 0; k < sweeps; k++) {
       // it is a little stiff: each particle is drawn towards the middle of its neighbours
       for (let i = 1; i < n; i++) {
+        if (!free(i)) continue;
         const [before, here, after] = [q[i - 1] as Particle, q[i] as Particle, q[i + 1] as Particle];
         for (let c = 0; c < 3; c++) {
           here[c] =
@@ -136,7 +174,7 @@ export function tighten(
         for (let i = m; i + m <= n; i++) apart(q, i - m, i + m, least[which] as number, false);
       });
       // and, last of all, it does not pass through itself
-      for (let again = 0; again < 3; again++) for (const [i, j] of pairs) apart(q, i, j, d, false);
+      for (let again = 0; again < 3; again++) for (const [i, j] of pairs) apart(q, i, j, (nearest + SPARE) * d, false);
     }
   };
 
@@ -179,7 +217,7 @@ export function tighten(
   const sound = (q: Particle[]): boolean => {
     for (let i = 0; i <= n; i++) {
       for (let j = i + neighbours; j <= n; j++) {
-        if (size(sub(q[i] as Particle, q[j] as Particle)) < NEAREST * d) return false;
+        if (size(sub(q[i] as Particle, q[j] as Particle)) < nearest * d) return false;
       }
     }
     const fine = sampleCurve(
@@ -187,7 +225,7 @@ export function tighten(
       false,
     ).points;
     for (let i = 1; i < fine.length - 1; i++) {
-      if (bend(fine[i - 1] as Point3, fine[i] as Point3, fine[i + 1] as Point3) < SHARPEST * d) return false;
+      if (bend(fine[i - 1] as Point3, fine[i] as Point3, fine[i + 1] as Point3) < sharpest * d) return false;
     }
     return true;
   };
@@ -223,6 +261,41 @@ export function tighten(
     // the knot gives up no more rope
     if (inKnot.length > 80 && (inKnot[inKnot.length - 81] as number) - (inKnot[inKnot.length - 1] as number) < 0.02 * d)
       break;
+  }
+
+  // Then the two ends are drawn apart, a little at a time, with the knot between them free to follow: the
+  // loops that making it smaller as a whole left open are closed, until the knot gives no more rope.
+  const beside = Math.round((1.5 * d) / h);
+  let pull = PULL * d;
+  let drawn = 0;
+  const most = options.draw ?? DRAWS;
+  while (drawn < most && pull > LEAST_PULL * d) {
+    const [first, last] = knot(p);
+    const [a, b] = [Math.max(first - beside, 1), Math.min(last + beside, n - 1)];
+    if (b - a < 4) break;
+    const middle = Math.round((first + last) / 2);
+    const [start, end] = [from(p[0] as Particle, p[3] as Particle), from(p[n] as Particle, p[n - 3] as Particle)];
+    let q = p.map((point, i): Particle => {
+      const way = i <= a ? start : i >= b ? end : null;
+      return way ? [point[0] + way[0] * pull, point[1] + way[1] * pull, point[2] + way[2] * pull] : [...point];
+    });
+    gripped = [a, b];
+    relax(q, 40);
+    gripped = [-1, n + 1];
+    let tries = 0;
+    let kept: boolean;
+    do {
+      relax(q, 6);
+      q = spaced(q, middle);
+      kept = sound(q);
+    } while (!kept && ++tries < 6);
+    if (!kept) {
+      pull /= 2;
+      continue;
+    }
+    p = q;
+    taken.push(p);
+    drawn++;
   }
 
   const keep = Math.min(options.keep ?? 6, Math.max(taken.length - 1, 0));
@@ -264,11 +337,14 @@ export function tighteningFrames(document: KnotDocument, start: Frame, options: 
   const [curve] = framePolylines(document, start);
   if (!curve) return [];
   const { spacing, shapes } = tighten(curve.points, curve.s, rope.radius ?? 0.5, options);
+  // a rope that may come nearer to itself than its thickness is pressed thinner by the difference
+  const pressed = Math.round((1 - (options.nearest ?? NEAREST)) * 1000) / 1000;
   return shapes.map((shape, k) => {
     const tightest = k === shapes.length - 1;
     return {
       id: tightest ? TIGHT_FRAME : `tightening-${k + 1}`,
       ...(tightest && start.realises ? { realises: start.realises } : {}),
+      ...(pressed > 0.05 ? { pressed } : {}),
       curves: { [rope.id]: { type: 'catmull-rom', points: controlPoints(shape, spacing, rope.length as number) } },
     };
   });

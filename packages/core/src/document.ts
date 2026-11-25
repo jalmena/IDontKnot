@@ -47,6 +47,11 @@ export interface Frame {
   readonly id: string;
   /** Says that seen from +z this frame is exactly the diagram of the topology layer. */
   readonly realises?: 'topology';
+  /**
+   * How much thinner the rope is pressed in this frame where it bears on itself, as a part of its
+   * thickness: 0.1 for a knot drawn tight enough to press the rope a tenth thinner. Without it, none.
+   */
+  readonly pressed?: number;
   readonly curves: Readonly<Record<string, Curve>>;
 }
 
@@ -169,6 +174,12 @@ export function checkDocument(document: KnotDocument): DocumentIssue[] {
     if (!SLUG.test(frame.id)) error(`"${frame.id}" is not a lowercase identifier`, inFrame);
     if (frames.has(frame.id)) error(`frame "${frame.id}" is declared twice`, inFrame);
     frames.add(frame.id);
+    if (frame.pressed !== undefined && !(frame.pressed >= 0 && frame.pressed < 0.5)) {
+      error(
+        `frame "${frame.id}" presses its rope by ${frame.pressed}: it can be from nothing to less than half`,
+        inFrame,
+      );
+    }
     if (frame.realises !== undefined && !document.topology) {
       error(`frame "${frame.id}" says it realises a topology the document does not have`, inFrame);
     }
@@ -366,7 +377,8 @@ export interface FrameTolerances {
  */
 export function checkFrame(document: KnotDocument, frame: Frame, tolerances: FrameTolerances = {}): DocumentIssue[] {
   const stretch = tolerances.stretch ?? 0.02;
-  const squeeze = tolerances.squeeze ?? 0.05;
+  // rope that is pressed thinner where it bears on itself comes that much nearer, and bends that much tighter
+  const squeeze = (tolerances.squeeze ?? 0.05) + (frame.pressed ?? 0);
   const issues: DocumentIssue[] = [];
   const report = (rule: DocumentIssue['rule'], message: string, component?: string): void => {
     issues.push({ rule, level: 'error', message, frame: frame.id, ...(component ? { component } : {}) });

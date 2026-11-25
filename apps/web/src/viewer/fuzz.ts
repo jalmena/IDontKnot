@@ -91,3 +91,44 @@ export function buildFuzz(points: readonly Point3[], closed: boolean, radius: nu
   }
   return { positions, strengths, facings, alongs };
 }
+
+export interface TuftOptions {
+  /** How many fibres stand out of the end. */
+  readonly fibres: number;
+  /** How far the longest of them reach, in rope radii. */
+  readonly reach: number;
+  /** 0: they curl. 1: they stand straight. */
+  readonly stiffness: number;
+  readonly seed?: number;
+}
+
+/**
+ * The fibres of a frayed end: they leave the cut face of the rope and splay as they go, those near its
+ * edge more than those at its middle. Built about the origin, for a rope that ends there running along +z.
+ */
+export function buildTuft(radius: number, options: TuftOptions): Pick<FuzzData, 'positions' | 'strengths'> {
+  const random = sequence(options.seed ?? 31);
+  const loose = 1 - options.stiffness;
+  const positions = new Float32Array(options.fibres * FUZZ_PIECES * 6);
+  const strengths = new Float32Array(options.fibres * FUZZ_PIECES * 2);
+  for (let fibre = 0; fibre < options.fibres; fibre++) {
+    const [out, angle] = [Math.sqrt(random()), random() * 2 * Math.PI];
+    const [ca, sa] = [Math.cos(angle), Math.sin(angle)];
+    // it leaves from a little inside the end, and leans away from the middle of the rope
+    let here = [0.9 * radius * out * ca, 0.9 * radius * out * sa, -0.25 * radius * random()];
+    let heading = [0.55 * out * ca + 0.5 * (random() - 0.5), 0.55 * out * sa + 0.5 * (random() - 0.5), 1];
+    const piece = (radius * options.reach * (0.3 + 0.7 * Math.pow(random(), 1.6))) / FUZZ_PIECES;
+    for (let k = 0; k < FUZZ_PIECES; k++) {
+      const size = Math.hypot(heading[0]!, heading[1]!, heading[2]!) || 1;
+      const tip = here.map((x, axis) => x + (piece * heading[axis]!) / size);
+      const at = (fibre * FUZZ_PIECES + k) * 2;
+      positions.set(here, at * 3);
+      positions.set(tip, at * 3 + 3);
+      strengths[at] = 1 - (0.8 * k) / FUZZ_PIECES;
+      strengths[at + 1] = 1 - (0.8 * (k + 1)) / FUZZ_PIECES;
+      here = tip;
+      heading = heading.map((x) => x / size + loose * 0.9 * (random() - 0.5));
+    }
+  }
+  return { positions, strengths };
+}

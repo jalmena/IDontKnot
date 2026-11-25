@@ -128,7 +128,9 @@ The knots of the library are not written as documents by hand. Each has a drawin
 
 `geometry.tightening` lists, by id, the frames a knot passes through as it is drawn tight: first the frame it is tied in, last the tightest. Every one of them is a frame like any other and keeps the rules below; the tightest declares `realises` when the first does, so that the tight knot is checked to be the same diagram. Between two of them a view moves each point of the rope, by its material coordinate, straight from its place in one to its place in the next.
 
-The frames are computed, not drawn by hand: `tools/knots/tighten.mjs` writes them into the document, and they are kept with it. The computation makes the knot a little smaller step by step, and lets the rope it gives up run out into the two ends, which lengthen; after each step the rope is moved until it neither passes through itself, nor bends tighter than it can, nor stretches. Nothing rubs: the result is the shape a knot takes when pulled by both ends, not a statement about how it holds. Only a knot of one open rope is tightened so far.
+The frames are computed, not drawn by hand: `tools/knots/tighten.mjs` writes them into the document, and they are kept with it. The computation makes the knot a little smaller step by step, and lets the rope it gives up run out into the two ends, which lengthen; after each step the rope is moved until it neither passes through itself, nor bends tighter than it can, nor stretches. Then the two ends are drawn apart, a little at a time, until the knot gives no more rope. Nothing rubs: the result is the shape a knot takes when pulled by both ends, not a statement about how it holds.
+
+A rope in a knot drawn hard does not keep its thickness: it is pressed thinner where it bears on itself. A frame may say so with `pressed`, a part of the thickness of its ropes (0.1 for a tenth): in that frame, centerlines may come nearer by that much, and bends be tighter by that much, than rules G2 and G3 otherwise allow. The frames of a tightening in the library are pressed by a tenth, which the Product Owner chose from rendered alternatives; a rope held to all its thickness leaves the knot visibly looser than a real one. Only a knot of one open rope is tightened so far.
 
 The named parts of a rope are stretches of its material in the frame the knot is tied in. In a tightened frame the same material lies elsewhere, so a view names the parts only on the frame the knot is tied in.
 
@@ -137,7 +139,7 @@ The named parts of a rope are stretches of its material in the frame the knot is
 | Rule | Statement |
 | --- | --- |
 | G1 | Material coordinates increase along each curve, an open curve runs from 0 to the length of its rope, and the sampled length of each span matches its difference in *s* within tolerance (rope does not stretch). |
-| G2 | No overlap: points of rope that are not neighbours along the rope stay at least the sum of their radii apart, within tolerance. The same holds between ropes and shapes. |
+| G2 | No overlap: points of rope that are not neighbours along the rope stay at least the sum of their radii apart, within tolerance and less what the frame says its rope is pressed by. The same holds between ropes and shapes. |
 | G3 | The radius of curvature is nowhere smaller than the rope radius, within tolerance. |
 | G4 | If the frame declares `realises`, projecting it along −z yields a diagram equal to the declared one up to renaming of crossings. |
 | G5 | The projection is generic: no two crossings coincide and no strand is seen end-on. |
