@@ -39,6 +39,7 @@ All notable changes to this project are recorded here. The format follows [Keep 
 - The surface of each rope is computed once: the browser keeps it for the next visit, every view of the page shares it, and a rope seen before is drawn at once. The files of the build are served so that the browser keeps them too.
 - A check that passes is no longer announced; one that fails is shown at the bottom of the panel.
 - While a knot is tied step by step, the names of the parts of its rope appear as the rope forms them.
+- While a knot is tied, its rope is fed from its standing part and slides along the way of the knot as its end is led. It used to stand still and appear at its end.
 - The end of a laid rope shows the cut end of each of its strands; it was closed by a disc across the whole rope, which showed when the end was seen from in front.
 - Shadows are aimed at what the view looks at, so that they stay fine however far the rope runs out of it.
 - The application is organised by knot. It opens on the list of knots; a knot that is chosen opens above the list, which stays under it as a row. Its page has two tabs: the knot, with the parts of its rope and how it is tied, and what the core computes. The menu is now "Knots" and "Laboratory".

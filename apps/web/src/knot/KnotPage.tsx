@@ -24,6 +24,7 @@ import { RopeView, VIEW_MARGINS } from '../viewer/RopeView.tsx';
 import { LIGHT_FROM_ABOVE, LIGHT_FROM_THE_SIDE, type Stretch } from '../viewer/RopeViewport.ts';
 import { KnotFacts } from './KnotFacts.tsx';
 import { inLanguage, type LibraryKnot } from './library.ts';
+import { fed } from './feeding.ts';
 import { boundsOf, partShape, pointAt } from './parts.ts';
 import { timelineOf, type Timeline } from './playback.ts';
 import { fitOf, ropesOf, shownFrame } from './shape.ts';
@@ -47,7 +48,6 @@ const NAME_RISE = 1.2;
 const NAME_ROOM = 1.4;
 /** A knot that the library does not say how to tie. */
 const NO_METHOD: Timeline = { start: 0, stops: [] };
-const WHOLE: readonly number[] = [];
 const NOTHING: readonly never[] = [];
 
 /**
@@ -77,18 +77,34 @@ export function KnotPage({ knot }: Props) {
 
   const frame = shownFrame(document) as Frame;
   const curves = useMemo(() => framePolylines(document, frame), [document, frame]);
-  // a knot that is being tightened, or is tight, is drawn in the shape it has come to
+  const method = document.construction?.methods[0];
+  const timeline = useMemo(() => (method ? timelineOf(method) : NO_METHOD), [method]);
+  const { state, setState, speed, setSpeed } = usePlayback(timeline);
+  const led = method?.steps[0]?.actor[0];
+  const rope = curves.findIndex((curve) => curve.id === led);
+  const length = document.components.find((component) => component.id === led)?.length ?? 1;
+  const tied = !method || rope < 0 || state.position >= length - 1e-9;
+
+  // a knot that is being tightened, or is tight, is drawn in the shape it has come to; one that is being
+  // tied, with its rope fed along the way of the knot from its standing part as its end is led
   const tightening = useMemo(() => tighteningOf(document), [document]);
   const pulled = tightening !== null && amount > 0;
   const ropes = useMemo(() => {
-    if (!tightening || amount <= 0) return ropesOf(document, curves, material);
-    const points = shapeAt(tightening, eased(amount));
+    if (tightening && amount > 0) {
+      const points = shapeAt(tightening, eased(amount));
+      return ropesOf(
+        document,
+        curves.map((curve) => (curve.id === tightening.rope ? { ...curve, points } : curve)),
+        material,
+      );
+    }
+    if (tied) return ropesOf(document, curves, material);
     return ropesOf(
       document,
-      curves.map((curve) => (curve.id === tightening.rope ? { ...curve, points } : curve)),
+      curves.map((curve, index) => (index === rope ? fed(curve, state.position, length) : curve)),
       material,
     );
-  }, [document, curves, material, tightening, amount]);
+  }, [document, curves, material, tightening, amount, tied, rope, state.position, length]);
   // the rope keeps the margins of the view, and leaves room above it for the names of its parts; as the
   // knot is tightened its ends run out of the view, which closes in on the knot
   const fit = useMemo(() => {
@@ -104,14 +120,6 @@ export function KnotPage({ knot }: Props) {
       number,
     ];
   }, [amount]);
-
-  const method = document.construction?.methods[0];
-  const timeline = useMemo(() => (method ? timelineOf(method) : NO_METHOD), [method]);
-  const { state, setState, speed, setSpeed } = usePlayback(timeline);
-  const led = method?.steps[0]?.actor[0];
-  const rope = curves.findIndex((curve) => curve.id === led);
-  const length = document.components.find((component) => component.id === led)?.length ?? 1;
-  const tied = !method || rope < 0 || state.position >= length - 1e-9;
 
   const parts = useMemo(
     () =>
@@ -144,10 +152,16 @@ export function KnotPage({ knot }: Props) {
     [document, method],
   );
 
-  const emphasis = useMemo<Stretch[]>(
-    () => parts.filter((part) => part.id === shown).map(({ rope: of, from, to }) => ({ rope: of, from, to })),
-    [parts, shown],
-  );
+  // a part is a stretch of the rope as it lies when the knot is tied; while the rope is still being fed in,
+  // the rope that lies there is further along it by what has not come in yet
+  const emphasis = useMemo<Stretch[]>(() => {
+    const behind = tied ? 0 : 1 - state.position / length;
+    return parts
+      .filter((part) => part.id === shown && (part.rope !== rope || part.from + behind < 1))
+      .map(({ rope: of, from, to }) =>
+        of === rope ? { rope: of, from: from + behind, to: Math.min(to + behind, 1) } : { rope: of, from, to },
+      );
+  }, [parts, shown, tied, rope, state.position, length]);
   const marked = useMemo(() => parts.filter((part) => part.id === shown).map((part) => part.points), [parts, shown]);
   const partNames = useMemo(
     () =>
@@ -165,10 +179,6 @@ export function KnotPage({ knot }: Props) {
       { id: 'end', text: t('knot.tying.end'), at: pointAt(curves[Math.max(rope, 0)]!, state.position), marked: true },
     ],
     [curves, rope, state.position, t],
-  );
-  const reach = useMemo(
-    () => (tied ? WHOLE : curves.map((_, index) => (index === rope ? state.position / length : 1))),
-    [tied, curves, rope, state.position, length],
   );
   // while the knot is tied, a part of the rope is named once the rope has been laid as far as its end
   const laidParts = useMemo(
@@ -224,7 +234,6 @@ export function KnotPage({ knot }: Props) {
           subject={document}
           light={light}
           emphasis={pulled ? NOTHING : emphasis}
-          reach={reach}
           names={pulled ? NOTHING : tied ? partNames : laidNames}
           diagram={
             <Diagram2D
