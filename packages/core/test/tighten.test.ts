@@ -51,7 +51,7 @@ describe('tightening a rope', () => {
     expect(spans.at(-1)).toBeGreaterThan((2 / 3) * length);
   });
 
-  it('leaves no two strands nearer than they can be, in any shape', () => {
+  it('presses the rope a tenth thinner where it bears on itself, and no more, in any shape', () => {
     const neighbours = Math.round((Math.PI * 2 * radius) / tightening.spacing);
     for (const shape of tightening.shapes) {
       let nearest = Infinity;
@@ -60,8 +60,24 @@ describe('tightening a rope', () => {
           nearest = Math.min(nearest, between(shape[i] as Point3, shape[j] as Point3));
         }
       }
-      expect(nearest).toBeGreaterThan(0.98 * 2 * radius);
+      expect(nearest).toBeGreaterThan(0.89 * 2 * radius);
     }
+    // the tightest shape does press it: a rope that kept all its thickness would leave the knot looser
+    const tightest = tightening.shapes.at(-1) as readonly Point3[];
+    let nearest = Infinity;
+    for (let i = 0; i < tightest.length; i++) {
+      for (let j = i + neighbours; j < tightest.length; j++) {
+        nearest = Math.min(nearest, between(tightest[i] as Point3, tightest[j] as Point3));
+      }
+    }
+    expect(nearest).toBeLessThan(0.95 * 2 * radius);
+  });
+
+  it('is looser when the rope is to keep all its thickness', () => {
+    const span = (shape: readonly Point3[] | undefined): number =>
+      shape ? between(shape[0] as Point3, shape.at(-1) as Point3) : 0;
+    const hard = tighten(curve.points, curve.s, radius, { nearest: 0.985, sharpest: 0.53, keep: 0 });
+    expect(span(hard.shapes.at(-1))).toBeLessThan(span(tightening.shapes.at(-1)));
   });
 });
 
@@ -78,6 +94,10 @@ describe('the frames of a tightening', () => {
     ]);
     const document = { ...knot, geometry: { frames: [dressed, ...made] } };
     for (const frame of made) expect(checkFrame(document, frame)).toEqual([]);
+    // each says that it presses the rope a tenth thinner; without saying so, the tightest would not pass
+    for (const frame of made) expect(frame.pressed).toBe(0.1);
+    const unsaid: Frame = { ...(made.at(-1) as Frame), pressed: 0 };
+    expect(checkFrame(document, unsaid).map((issue) => issue.rule)).toContain('G2');
     // seen from the front, the tight knot is the same diagram as the knot it was tied as
     expect(made.at(-1)?.realises).toBe('topology');
     expect(made.slice(0, -1).every((frame) => frame.realises === undefined)).toBe(true);
@@ -108,5 +128,13 @@ describe('the frames of a tightening', () => {
     expect(rules(knot)).toEqual([]);
     expect(rules({ ...knot, geometry: { frames, tightening: [dressed.id, 'missing'] } })).toEqual(['shape']);
     expect(rules({ ...knot, geometry: { frames, tightening: [dressed.id] } })).toEqual(['shape']);
+    // a rope cannot be pressed to half its thickness, or to more than it has
+    const pressed = (amount: number): KnotDocument => ({
+      ...knot,
+      geometry: { frames: frames.map((frame) => (frame.id === dressed.id ? { ...frame, pressed: amount } : frame)) },
+    });
+    expect(rules(pressed(0.2))).toEqual([]);
+    expect(rules(pressed(0.5))).toEqual(['shape']);
+    expect(rules(pressed(-0.1))).toEqual(['shape']);
   });
 });
