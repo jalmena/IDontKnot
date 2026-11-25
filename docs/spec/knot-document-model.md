@@ -120,6 +120,10 @@ Splices, eyes and nets need points where three or more rope ends meet. The forma
   - Along a span the material coordinate advances in proportion to the length of the polyline, from the coordinate of one control point to that of the next. A closed curve returns to its start at the length of its rope.
 - **Shapes** for rigid objects: `pole` (segment with radius), `ring` (centre, normal, ring radius, bar radius), `curve` (any centerline with a radius).
 
+### Drawings
+
+The knots of the library are not written as documents by hand. Each has a drawing, `layout.json`, beside its document: the path of its rope in the plane as a list of points; at each crossing, whether the rope passes over or under there; and its parts and the steps that tie it, placed by the crossings the rope meets along itself ("from one diameter after the third crossing"). `tools/knots/lay.mjs` makes the document from the drawing: it gives the points their height and their material coordinates, reads the diagram from the shape, places the parts and the steps, works out the diagram each step leaves, and computes the tightening. A test makes every knot again and compares it with its file. Only a knot of one open rope can be drawn so far.
+
 ### Tightening
 
 `geometry.tightening` lists, by id, the frames a knot passes through as it is drawn tight: first the frame it is tied in, last the tightest. Every one of them is a frame like any other and keeps the rules below; the tightest declares `realises` when the first does, so that the tight knot is checked to be the same diagram. Between two of them a view moves each point of the rope, by its material coordinate, straight from its place in one to its place in the next.

@@ -26,6 +26,9 @@ All notable changes to this project are recorded here. The format follows [Keep 
 - A knot tied step by step on its page: the figure-eight knot, with play, pause, single steps, a slider and three speeds, in English and Spanish.
 - The list of the knots of the library, each with its picture in the rope that is chosen.
 - Tightening in the core: the shapes an open rope passes through as its knot is drawn tight by both ends, without stretching or passing through itself; and a tool that writes them into a knot of the library as frames, which are checked like any other.
+- Laying out in the core: a knot's document made from a drawing of its rope in the plane, with its parts and the steps that tie it placed by the crossings the rope meets. A tool writes a knot of the library from its drawing, and a test makes every knot again and compares.
+- A second knot in the library: the overhand knot.
+- The licence of the content of the library: Creative Commons Attribution-ShareAlike 4.0.
 - A "Tighten" button on the page of a knot, beside "Next": the knot is seen to tighten, the view closes in on it and the light moves up over it. "Loosen" brings it back.
 
 ### Changed
