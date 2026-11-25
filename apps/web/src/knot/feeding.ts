@@ -15,12 +15,28 @@ export function fed(way: FrameCurve, position: number, length: number): FrameCur
   const [first, second] = [laid.points[0], laid.points[1]];
   if (behind < 1e-6 || !first || !second) return laid;
   const back = [first[0] - second[0], first[1] - second[1], first[2] - second[2]] as const;
-  const size = Math.hypot(...back) || 1;
-  const far: Point3 = [
-    first[0] + (back[0] / size) * behind,
-    first[1] + (back[1] / size) * behind,
-    first[2] + (back[2] / size) * behind,
+  const step = Math.hypot(...back) || 1;
+  const at = (distance: number): Point3 => [
+    first[0] + (back[0] / step) * distance,
+    first[1] + (back[1] / step) * distance,
+    first[2] + (back[2] / step) * distance,
   ];
+  // The rope behind is given point by point, as far apart as the points of the way are: a view that draws a
+  // smooth curve through the points of a rope goes astray where they are suddenly much further apart, or
+  // much nearer. So a last bit that is shorter than half a step is joined to the first step of the way.
+  const short = behind < step / 2;
+  const count = short ? 1 : Math.max(1, Math.round(behind / step));
+  const points: Point3[] = [];
+  const s: number[] = [];
+  for (let k = count; k >= 1; k--) {
+    points.push(at((behind * k) / count));
+    s.push(behind - (behind * k) / count);
+  }
+  const kept = short ? 1 : 0; // the start of the way itself is left out when the bit behind it is that short
   // the material that is at each point of the way is further along the rope by what is still behind
-  return { ...laid, points: [far, ...laid.points], s: [0, ...laid.s.map((s) => s + behind)] };
+  return {
+    ...laid,
+    points: [...points, ...laid.points.slice(kept)],
+    s: [...s, ...laid.s.slice(kept).map((coordinate) => coordinate + behind)],
+  };
 }
