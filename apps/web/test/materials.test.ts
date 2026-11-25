@@ -71,8 +71,11 @@ it('says how every rope ends where it is cut: natural fibre frayed, synthetic ro
   for (const id of ROPE_MATERIAL_IDS) {
     const { end } = ROPE_MATERIALS[id];
     if (end.kind !== 'frayed') continue;
+    // a few short fibres: an end that has frayed a little, not a brush
     expect(end.fibres).toBeGreaterThan(20);
-    expect(end.reach).toBeGreaterThan(0.5);
+    expect(end.fibres).toBeLessThan(80);
+    expect(end.reach).toBeGreaterThan(0.2);
+    expect(end.reach).toBeLessThan(1);
     expect(end.stiffness).toBeGreaterThanOrEqual(0);
     expect(end.stiffness).toBeLessThanOrEqual(1);
   }
