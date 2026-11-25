@@ -25,6 +25,8 @@ All notable changes to this project are recorded here. The format follows [Keep 
 - The construction layer in the core: a method of tying as steps, each checked against the shape and against the operation it names.
 - A knot tied step by step on its page: the figure-eight knot, with play, pause, single steps, a slider and three speeds, in English and Spanish.
 - The list of the knots of the library, each with its picture in the rope that is chosen.
+- Tightening in the core: the shapes an open rope passes through as its knot is drawn tight by both ends, without stretching or passing through itself; and a tool that writes them into a knot of the library as frames, which are checked like any other.
+- A "Tighten" button on the page of a knot, beside "Next": the knot is seen to tighten, the view closes in on it and the light moves up over it. "Loosen" brings it back.
 
 ### Changed
 
@@ -33,5 +35,8 @@ All notable changes to this project are recorded here. The format follows [Keep 
 - The diagram is shown in place of the 3D view, by a switch on the view, instead of beside it.
 - The surface of each rope is computed once: the browser keeps it for the next visit, every view of the page shares it, and a rope seen before is drawn at once. The files of the build are served so that the browser keeps them too.
 - A check that passes is no longer announced; one that fails is shown at the bottom of the panel.
+- While a knot is tied step by step, the names of the parts of its rope appear as the rope forms them.
+- The end of a laid rope shows the cut end of each of its strands; it was closed by a disc across the whole rope, which showed when the end was seen from in front.
+- Shadows are aimed at what the view looks at, so that they stay fine however far the rope runs out of it.
 - The application is organised by knot. It opens on the list of knots; a knot that is chosen opens above the list, which stays under it as a row. Its page has two tabs: the knot, with the parts of its rope and how it is tied, and what the core computes. The menu is now "Knots" and "Laboratory".
 - The choice of rope is called "Material", sits inside the view opposite the title, and is kept from one page to the next.

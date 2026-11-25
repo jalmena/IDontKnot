@@ -65,7 +65,11 @@ export interface KnotDocument {
   readonly components: readonly DocumentComponent[];
   readonly parts?: readonly Part[];
   readonly topology?: Topology;
-  readonly geometry?: { readonly frames: readonly Frame[] };
+  readonly geometry?: {
+    readonly frames: readonly Frame[];
+    /** The frames the knot passes through as it is tightened, by id: from the one it is tied in to the tightest. */
+    readonly tightening?: readonly string[];
+  };
   readonly construction?: { readonly methods: readonly Method[] };
 }
 
@@ -204,6 +208,14 @@ export function checkDocument(document: KnotDocument): DocumentIssue[] {
           stretched(`the curve of "${id}" does not run from one end of the rope to the other`);
         }
       }
+    }
+  }
+
+  const tightening = document.geometry?.tightening;
+  if (tightening) {
+    if (tightening.length < 2) error('a tightening needs the frame the knot is tied in and its tightest frame');
+    for (const id of tightening) {
+      if (!frames.has(id)) error(`the tightening names frame "${id}", which the document does not have`, { frame: id });
     }
   }
   return issues;

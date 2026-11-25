@@ -6,3 +6,4 @@ export * from './braid.ts';
 export * from './geometry.ts';
 export * from './document.ts';
 export * from './construction.ts';
+export * from './tighten.ts';

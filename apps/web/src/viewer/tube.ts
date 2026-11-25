@@ -331,6 +331,85 @@ export function buildLaid(
 /**
  * A flat disc that closes one end of an open rope, facing away from it: where the rope was cut.
  */
+/**
+ * For each point of the centerline of an open laid rope: the directions its strands turn in, and the angle
+ * they have turned by there. With them a cut end can be set on the rope wherever the rope is cut.
+ */
+export function laidFrames(
+  points: readonly Point3[],
+  layLength: number,
+): { tangents: Vec[]; normals: Vec[]; binormals: Vec[]; angles: Float64Array } {
+  const frames = rotationMinimisingFrames(points, false);
+  const angles = new Float64Array(points.length);
+  let along = 0;
+  for (let i = 1; i < points.length; i++) {
+    along += distance(points[i - 1]!, points[i]!);
+    angles[i] = (2 * Math.PI * along) / layLength;
+  }
+  return { ...frames, angles };
+}
+
+/**
+ * The cut end of laid rope: each strand closed across by a dome, so that the end has the
+ * shape of the rope and not of a disc laid over it. It is built about the origin, for a rope that runs along +z with
+ * its first strand towards +x: `facing` is 1 for the end the rope runs to, and -1 for the end it comes from.
+ */
+export function buildLaidCap(radius: number, layLength: number, facing: 1 | -1, strands = 3, sides = 16): TubeData {
+  const RINGS = 3;
+  const place = strandPlace(strands);
+  const [offset, size] = [radius * place.offset, radius * place.size * 1.04];
+  const height = 0.5 * size;
+  const slope = (2 * Math.PI * offset) / layLength; // of a strand to the rope
+  const perStrand = 1 + RINGS * sides;
+  const count = strands * perStrand;
+  const positions = new Float32Array(count * 3);
+  const normals = new Float32Array(count * 3);
+  const indices = new Uint32Array(strands * (sides + (RINGS - 1) * sides * 2) * 3);
+  let at = 0;
+  for (let strand = 0; strand < strands; strand++) {
+    const turned = (2 * Math.PI * strand) / strands;
+    const outward: Vec = [Math.cos(turned), Math.sin(turned), 0];
+    // the strand crosses the end of the rope aslant, and is cut square to itself
+    const tangent = unit([-slope * Math.sin(turned), slope * Math.cos(turned), 1]);
+    const side = cross(tangent, outward);
+    const centre: Vec = [offset * outward[0], offset * outward[1], 0];
+    const first = strand * perStrand;
+    positions.set(axpy(centre, facing * height, tangent), first * 3);
+    normals.set(tangent.map((x) => facing * x) as Vec, first * 3);
+    for (let ring = 1; ring <= RINGS; ring++) {
+      const reach = (size * ring) / RINGS;
+      const rise = facing * height * (1 - (reach / size) ** 2);
+      const lean = (2 * height * reach) / size ** 2;
+      for (let j = 0; j < sides; j++) {
+        const angle = (2 * Math.PI * j) / sides;
+        const [ca, sa] = [Math.cos(angle), Math.sin(angle)];
+        const across: Vec = [
+          ca * outward[0] + sa * side[0],
+          ca * outward[1] + sa * side[1],
+          ca * outward[2] + sa * side[2],
+        ];
+        const vertex = first + 1 + (ring - 1) * sides + j;
+        positions.set(axpy(axpy(centre, reach, across), rise, tangent), vertex * 3);
+        normals.set(unit(axpy(tangent.map((x) => facing * x) as Vec, lean, across)), vertex * 3);
+      }
+    }
+    // seen from the side it faces, the triangles go round anticlockwise: that side is the front
+    const triangle = (a: number, b: number, c: number): void => {
+      indices.set(facing === 1 ? [a, b, c] : [a, c, b], at);
+      at += 3;
+    };
+    for (let j = 0; j < sides; j++) triangle(first, first + 1 + j, first + 1 + ((j + 1) % sides));
+    for (let ring = 1; ring < RINGS; ring++) {
+      for (let j = 0; j < sides; j++) {
+        const [a, b] = [first + 1 + (ring - 1) * sides + j, first + 1 + (ring - 1) * sides + ((j + 1) % sides)];
+        triangle(a, a + sides, b);
+        triangle(b, a + sides, b + sides);
+      }
+    }
+  }
+  return { positions, normals, uvs: new Float32Array(count * 2), indices, rows: 1, columns: count, length: 0 };
+}
+
 export function buildCap(points: readonly Point3[], radius: number, end: 'start' | 'end', sides = 24): TubeData {
   const frames = rotationMinimisingFrames(points, false);
   const i = end === 'start' ? 0 : points.length - 1;

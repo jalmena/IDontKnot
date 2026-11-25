@@ -55,6 +55,9 @@ Its differentiator is that the system reasons about knots through a mathematical
 | 2026-11-24 | Checks | A check that passes says nothing. One that fails is shown at the bottom edge of the panel. |
 | 2026-11-25 | Tying a knot | A knot is tied on screen by leading the end of the rope along the finished knot, step by step, with the instruction of each step beside it. |
 | 2026-11-25 | Organisation | The application is organised by knot, not by activity: the same knot is not found in two sections. It opens on the list of knots. A knot that is chosen opens above the list, which stays under it as a row on the same screen. The menu has two entries, "Knots" and "Laboratory". This replaces the entry of 2026-11-24 on the home page. |
+| 2026-11-25 | Tightening | A knot can be tightened on screen: a "Tighten" button to the right of "Next", in the same style, which shows the knot being drawn tight at once, and then reads "Loosen". The knot is drawn very tight. While it tightens the key light moves from the side to above it, so that strands lying together are told apart; the loose knot keeps the light it had. |
+| 2026-11-25 | Names while tying | While a knot is tied step by step, the names of the parts of the rope appear as the rope forms them. |
+| 2026-11-25 | Cut ends | The end of a laid rope shows the cut end of each strand, not a disc across the rope. |
 | 2026-11-25 | Knot page | Exploring a knot and learning to tie it happen in one place. One tab, "The knot", holds the parts of the rope and how it is tied; a second tab, "Mathematics", holds what the core computes. The knot is shown tied until it is played. |
 
 ## Open decisions

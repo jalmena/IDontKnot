@@ -2,7 +2,7 @@ import type { Point3 } from '@idontknot/core';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { chosenDetail } from './detail.ts';
-import { RopeViewport, type Fit, type RopeSpec, type Stretch } from './RopeViewport.ts';
+import { LIGHT_FROM_THE_SIDE, RopeViewport, type Fit, type RopeSpec, type Stretch } from './RopeViewport.ts';
 
 /** A name written over the view, at a point of the scene: it follows that point as the view turns. */
 export interface ViewName {
@@ -32,6 +32,13 @@ interface Props {
   readonly title?: ReactNode;
   /** Something for the top right corner of the view, on the line of the title. */
   readonly corner?: ReactNode;
+  /** Where the key light stands, seen from the ropes. Without it, to one side and above. */
+  readonly light?: Point3;
+  /**
+   * What the view shows, whatever it is: while it stays the same, a new `fit` follows it from where the
+   * person is looking instead of framing it afresh. A knot that tightens is still the same knot.
+   */
+  readonly subject?: unknown;
 }
 
 const NONE: readonly Stretch[] = [];
@@ -45,7 +52,19 @@ const WHOLE: readonly number[] = [];
 export const VIEW_MARGINS = { top: 84, right: 45, bottom: 40, left: 45 } as const;
 
 /** The single React component around the imperative viewport. */
-export function RopeView({ ropes, label, fit, emphasis = NONE, reach = WHOLE, names, diagram, title, corner }: Props) {
+export function RopeView({
+  ropes,
+  label,
+  fit,
+  emphasis = NONE,
+  reach = WHOLE,
+  names,
+  diagram,
+  title,
+  corner,
+  light = LIGHT_FROM_THE_SIDE,
+  subject,
+}: Props) {
   const { t } = useTranslation();
   const host = useRef<HTMLDivElement>(null);
   const tags = useRef<HTMLDivElement>(null);
@@ -67,12 +86,27 @@ export function RopeView({ ropes, label, fit, emphasis = NONE, reach = WHOLE, na
     };
   }, []);
 
+  // when the ropes change with the framing or the light, as they do while a knot is tightened, the picture
+  // is drawn once, by the ropes, which come last
+  const drawn = useRef<readonly RopeSpec[] | null>(null);
+  // a new framing of the same subject follows it, from wherever the person is looking; of another, begins afresh
+  const framed = useRef<unknown>(undefined);
   useEffect(() => {
-    if (fit) viewport.current?.fitTo(fit);
+    if (!fit) return;
+    const same = subject !== undefined && framed.current === subject;
+    framed.current = subject;
+    if (same) viewport.current?.follow(fit, drawn.current === ropes);
+    else viewport.current?.fitTo(fit, drawn.current === ropes);
+    // only a new framing frames again: new ropes alone leave the view as the person has it
   }, [fit]);
 
   useEffect(() => {
+    viewport.current?.setLight(light, drawn.current === ropes);
+  }, [light]);
+
+  useEffect(() => {
     viewport.current?.setRopes(ropes);
+    drawn.current = ropes;
   }, [ropes]);
 
   useEffect(() => {

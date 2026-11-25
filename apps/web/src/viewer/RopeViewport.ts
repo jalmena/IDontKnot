@@ -24,16 +24,18 @@ import {
   HemisphereLight,
   LineBasicMaterial,
   LineSegments,
-  type Material,
+  Matrix4,
   Mesh,
   MeshBasicMaterial,
-  type Object3D,
   MeshPhysicalMaterial,
   MeshStandardMaterial,
   NeutralToneMapping,
   PerspectiveCamera,
   PMREMGenerator,
+  Quaternion,
   Scene,
+  type Material,
+  type Object3D,
   type Texture,
   Vector3,
   VSMShadowMap,
@@ -45,7 +47,16 @@ import { buildFuzz, FUZZ_PIECES } from './fuzz.ts';
 import { ROPE_MATERIALS, ropeColour, type RopeMaterialId } from './materials.ts';
 import { rgbOf, toned } from './images.ts';
 import { RopeTextures } from './textures.ts';
-import { buildCap, buildLaid, buildTube, curveLength, resample, type TubeData } from './tube.ts';
+import {
+  buildCap,
+  buildLaid,
+  buildLaidCap,
+  buildTube,
+  curveLength,
+  laidFrames,
+  resample,
+  type TubeData,
+} from './tube.ts';
 
 export type Detail = 'full' | 'plain';
 
@@ -101,8 +112,19 @@ const DIMMED = 0.26;
 const OPTICAL_LIFT = 0.03;
 const MAX_ROWS = 2400;
 const MAX_FIBRES = 12000;
-const KEY_DIRECTION = new Vector3(-5, 7, 4.5).normalize();
+/** Where the key light stands, seen from the ropes: to one side and above, or almost straight above. */
+export const LIGHT_FROM_THE_SIDE: Point3 = [-5, 7, 4.5];
+export const LIGHT_FROM_ABOVE: Point3 = [-1.5, 8, 2.5];
 const FORWARD = new Vector3(0, 0, 1);
+
+/** How the cut end of a laid rope is turned at a point of the rope: along the rope there, and round it as its strands are. */
+function turned(turns: ReturnType<typeof laidFrames>, i: number): Quaternion {
+  const [normal, binormal, tangent] = [turns.normals[i]!, turns.binormals[i]!, turns.tangents[i]!];
+  const [c, s] = [Math.cos(turns.angles[i]!), Math.sin(turns.angles[i]!)];
+  const x = new Vector3(...normal).multiplyScalar(c).addScaledVector(new Vector3(...binormal), s);
+  const y = new Vector3(...normal).multiplyScalar(-s).addScaledVector(new Vector3(...binormal), c);
+  return new Quaternion().setFromRotationMatrix(new Matrix4().makeBasis(x, y, new Vector3(...tangent)));
+}
 
 function geometryOf(tube: TubeData, withTexture: boolean): BufferGeometry {
   const geometry = new BufferGeometry();
@@ -165,8 +187,14 @@ export class RopeViewport {
   private stretches: readonly Stretch[] = [];
   private reaches: readonly number[] = [];
   private fit: Fit | null = null;
+  /** The direction the key light comes from. */
+  private readonly light = new Vector3(...LIGHT_FROM_THE_SIDE).normalize();
   /** How far from the middle of the view its centre of attention is drawn, in CSS pixels. */
   private shift = { right: 0, down: 0 };
+  /** The middle of the box that is framed, and the distance from which it fills the view. */
+  private framed: { centre: Vector3; distance: number } | null = null;
+  /** Whether the eye is being placed by the viewport itself. */
+  private placing = false;
   /** Whether the person has turned or zoomed the view since it was last framed. */
   private moved = false;
   /** Whether the last drawing left out the images of a rope, because they had not arrived. */
@@ -203,7 +231,7 @@ export class RopeViewport {
     this.controls.enablePan = false;
     this.controls.minDistance = 2.5;
     this.controls.maxDistance = 20;
-    this.controls.addEventListener('change', this.render);
+    this.controls.addEventListener('change', this.turned);
     this.controls.addEventListener('start', this.touched);
     this.controls.saveState();
 
@@ -253,9 +281,40 @@ export class RopeViewport {
    * Moves the camera to +z of a box in the x-y plane, far enough to take all of it in. The view keeps to
    * that as its size changes, until the person turns or zooms it.
    */
-  fitTo(fit: Fit): void {
-    this.fit = fit;
+  /**
+   * Frames a box of the scene. With `draw` false nothing is drawn yet: the ropes are about to be given, and
+   * giving them draws.
+   */
+  fitTo(fit: Fit, draw = true): void {
     this.moved = false;
+    const distance = this.frame(fit);
+    this.controls.target.set(...fit.centre);
+    this.camera.position.set(fit.centre[0], fit.centre[1], fit.centre[2] + distance);
+    this.settle(draw);
+  }
+
+  /**
+   * Frames another box as the last one is being looked at: from the same side, and as near to it in
+   * proportion. What changes shape under the eye is followed; it is not looked at afresh, from the front.
+   */
+  follow(fit: Fit, draw = true): void {
+    const before = this.framed;
+    if (!before || !this.moved) return this.fitTo(fit, draw);
+    const ratio = this.frame(fit) / before.distance;
+    // where the eye is from what it looks at, and how far that had been moved off the middle of the box
+    const eye = this.camera.position.clone().sub(this.controls.target).multiplyScalar(ratio);
+    const aside = this.controls.target.clone().sub(before.centre).multiplyScalar(ratio);
+    this.controls.target.set(...fit.centre).add(aside);
+    this.camera.position.copy(this.controls.target).add(eye);
+    this.settle(draw);
+  }
+
+  /**
+   * Takes a box as what the view frames, and sets all that follows from its size but where the eye is.
+   * It gives the distance from which the box, seen from the front, fills the free part of the view.
+   */
+  private frame(fit: Fit): number {
+    this.fit = fit;
     const width = Math.max(this.host.clientWidth, 1);
     const height = Math.max(this.host.clientHeight, 1);
     const clear = fit.clear ?? { top: 0, right: 0, bottom: 0, left: 0 };
@@ -271,14 +330,22 @@ export class RopeViewport {
       right: (clear.left - clear.right) / 2,
       down: (clear.top - clear.bottom) / 2 - OPTICAL_LIFT * free.height,
     };
-    this.controls.target.set(...fit.centre);
-    this.camera.position.set(fit.centre[0], fit.centre[1], fit.centre[2] + distance);
     [this.camera.near, this.camera.far] = [distance / 100, distance * 10];
     this.camera.setViewOffset(width, height, -this.shift.right, -this.shift.down, width, height);
     [this.controls.minDistance, this.controls.maxDistance] = [distance * 0.2, distance * 2.2];
+    this.framed = { centre: new Vector3(...fit.centre), distance };
+    return distance;
+  }
+
+  /** After the eye has been placed: the controls take it from there, and the shadows are aimed again. */
+  private settle(draw: boolean): void {
+    // placing the eye is not the person turning the view: nothing is drawn for it here
+    this.placing = true;
     this.controls.update();
-    this.controls.saveState();
-    this.render();
+    this.placing = false;
+    if (!this.moved) this.controls.saveState();
+    if (this.detail === 'full') this.aimShadows(this.specs);
+    if (draw) this.render();
   }
 
   /** Where a point of the scene is on the canvas now. */
@@ -286,6 +353,17 @@ export class RopeViewport {
     const seen = new Vector3(...point).project(this.camera);
     const hidden = seen.z > 1 || Math.abs(seen.x) > 1 || Math.abs(seen.y) > 1;
     return { x: (seen.x + 1) / 2, y: (1 - seen.y) / 2, hidden };
+  }
+
+  /**
+   * Moves the key light: the direction it comes from, seen from the ropes. The shadows follow at once; the
+   * loose fibres of a rope are lit from there the next time the ropes are given.
+   */
+  setLight(direction: Point3, draw = true): void {
+    this.light.set(...direction).normalize();
+    if (this.detail !== 'full') return;
+    this.aimShadows(this.specs);
+    if (draw) this.render();
   }
 
   /** Whether the last drawing had the images of every rope: until then a rope is drawn without them. */
@@ -309,7 +387,7 @@ export class RopeViewport {
   dispose(): void {
     if (this.wait !== null) window.clearTimeout(this.wait);
     this.observer.disconnect();
-    this.controls.removeEventListener('change', this.render);
+    this.controls.removeEventListener('change', this.turned);
     this.controls.removeEventListener('start', this.touched);
     this.controls.dispose();
     this.clear();
@@ -365,10 +443,22 @@ export class RopeViewport {
   /** Points the key light at the ropes, with its shadows covering all of them and no more. */
   private aimShadows(specs: readonly RopeSpec[]): void {
     let reach = 1;
-    for (const { points, radius } of specs) {
-      for (const point of points) reach = Math.max(reach, Math.hypot(point[0], point[1], point[2]) + 2 * radius);
+    if (this.fit) {
+      // the shadows are as fine as they can be where the view looks: a rope that runs far out of it would
+      // otherwise spread them thin, and strands that lie together would not be told apart
+      reach = Math.hypot(this.fit.width, this.fit.height) / 2 + 1;
+      this.key.target.position.set(...this.fit.centre);
+    } else {
+      for (const { points, radius } of specs) {
+        for (const point of points) reach = Math.max(reach, Math.hypot(point[0], point[1], point[2]) + 2 * radius);
+      }
+      this.key.target.position.set(0, 0, 0);
     }
-    this.key.position.copy(KEY_DIRECTION).multiplyScalar(3 * reach);
+    this.key.target.updateMatrixWorld();
+    this.key.position
+      .copy(this.light)
+      .multiplyScalar(3 * reach)
+      .add(this.key.target.position);
     const shadow = this.key.shadow.camera;
     [shadow.left, shadow.right, shadow.bottom, shadow.top] = [-reach, reach, -reach, reach];
     [shadow.near, shadow.far] = [reach, 5 * reach];
@@ -389,25 +479,42 @@ export class RopeViewport {
    * The two cut ends of an open rope. The far one is a disc that can be moved along the rope, to close
    * it wherever it has been laid to.
    */
-  private addEnds(place: number, points: readonly Point3[], radius: number, material: () => Material): Mesh[] {
-    const start = buildCap(points, radius, 'start');
+  /**
+   * Closes the two ends of an open rope: a round rope with a disc, a laid rope (one with a `layLength`)
+   * with the cut end of each of its strands. The far end follows the rope as it is laid.
+   */
+  private addEnds(
+    place: number,
+    points: readonly Point3[],
+    radius: number,
+    material: () => Material,
+    layLength?: number,
+  ): Mesh[] {
+    const turns = layLength === undefined ? undefined : laidFrames(points, layLength);
+    const start = turns ? buildLaidCap(radius, layLength as number, -1) : buildCap(points, radius, 'start');
     const near = this.add(place, geometryOf(start, false), material(), new Float32Array(start.columns));
-    const disc = buildCap(
-      [
-        [0, 0, -1],
-        [0, 0, 0],
-      ],
-      radius,
-      'end',
-    );
-    const far = this.add(place, geometryOf(disc, false), material(), new Float32Array(disc.columns).fill(1));
+    if (turns) {
+      near.position.set(...(points[0] as Point3));
+      near.quaternion.copy(turned(turns, 0));
+    }
+    const end = turns
+      ? buildLaidCap(radius, layLength as number, 1)
+      : buildCap(
+          [
+            [0, 0, -1],
+            [0, 0, 0],
+          ],
+          radius,
+          'end',
+        );
+    const far = this.add(place, geometryOf(end, false), material(), new Float32Array(end.columns).fill(1));
     const lengths = [0];
     for (let i = 1; i < points.length; i++) {
       const [a, b] = [points[i - 1]!, points[i]!];
       lengths.push(lengths[i - 1]! + Math.hypot(b[0] - a[0], b[1] - a[1], b[2] - a[2]));
     }
     const total = lengths[lengths.length - 1] || 1;
-    far.userData['tip'] = { spine: points, steps: Float32Array.from(lengths, (length) => length / total) };
+    far.userData['tip'] = { spine: points, steps: Float32Array.from(lengths, (length) => length / total), turns };
     return [near, far];
   }
 
@@ -470,15 +577,21 @@ export class RopeViewport {
     rope.castShadow = true;
     rope.receiveShadow = true;
     if (!closed) {
-      // where the rope was cut, the ends of its fibres show: darker, and dull
+      // where the rope was cut, the ends of its fibres show: darker, and dull. On a laid rope, whose strands
+      // end round, darker still, like the shade between them: an end that is not what the eye goes to
+      const lay = look.construction === 'laid' ? look.lay * radius : undefined;
       const cut = (): Material =>
         new MeshPhysicalMaterial({
-          color: new Color(...toned(rgbOf(colour), -0.4).map((c) => c / 255)).multiplyScalar(look.brightness),
+          color: new Color(
+            ...toned(rgbOf(colour), lay === undefined ? -0.4 : -0.72).map((c) => c / 255),
+          ).multiplyScalar(look.brightness),
           roughness: 1,
           metalness: 0,
           vertexColors: true,
         });
-      for (const end of this.addEnds(place, fine, radius * 0.97, cut)) end.castShadow = true;
+      for (const end of this.addEnds(place, fine, lay === undefined ? radius * 0.97 : radius, cut, lay)) {
+        end.castShadow = true;
+      }
     }
 
     if (look.fuzz) {
@@ -491,9 +604,9 @@ export class RopeViewport {
       for (let k = 0; k < count; k++) {
         // lit as the surface it leaves is, and fading towards its tip
         const facing =
-          fuzz.facings[3 * k]! * KEY_DIRECTION.x +
-          fuzz.facings[3 * k + 1]! * KEY_DIRECTION.y +
-          fuzz.facings[3 * k + 2]! * KEY_DIRECTION.z;
+          fuzz.facings[3 * k]! * this.light.x +
+          fuzz.facings[3 * k + 1]! * this.light.y +
+          fuzz.facings[3 * k + 2]! * this.light.z;
         const light = 0.6 + 0.4 * Math.max(facing, 0);
         colours.set([tone.r * light, tone.g * light, tone.b * light, 0.7 * fuzz.strengths[k]!], 4 * k);
       }
@@ -514,7 +627,7 @@ export class RopeViewport {
       const { rope, laying, tip } = child.userData as {
         rope?: number;
         laying?: Laying;
-        tip?: { spine: readonly Point3[]; steps: Float32Array };
+        tip?: { spine: readonly Point3[]; steps: Float32Array; turns?: ReturnType<typeof laidFrames> };
       };
       if (rope === undefined) continue;
       const reach = Math.min(Math.max(this.reaches[rope] ?? 1, 0), 1);
@@ -529,10 +642,13 @@ export class RopeViewport {
           tip.spine[Math.min(i + 1, last)]!,
         ];
         drawn.position.set(...here);
-        drawn.quaternion.setFromUnitVectors(
-          FORWARD,
-          new Vector3(after[0] - before[0], after[1] - before[1], after[2] - before[2]).normalize(),
-        );
+        if (tip.turns) drawn.quaternion.copy(turned(tip.turns, i));
+        else {
+          drawn.quaternion.setFromUnitVectors(
+            FORWARD,
+            new Vector3(after[0] - before[0], after[1] - before[1], after[2] - before[2]).normalize(),
+          );
+        }
       }
     }
   }
@@ -584,6 +700,11 @@ export class RopeViewport {
 
   private readonly touched = (): void => {
     this.moved = true;
+  };
+
+  /** The person has turned the view, or it is still coming to rest. */
+  private readonly turned = (): void => {
+    if (!this.placing) this.render();
   };
 
   private readonly render = (): void => {

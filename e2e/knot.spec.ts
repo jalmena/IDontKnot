@@ -108,8 +108,8 @@ test('plays the step that is chosen from where it begins, then one step at a tim
   await steps(page).getByRole('button').first().click();
   await expect.poll(() => reached(page), { timeout: 15_000 }).toBeCloseTo(STOPS[0]!, 1);
   await expect(steps(page).locator('[aria-current="step"]')).toContainText('to make a loop');
-  // while the knot is being tied, what is named on the rope is its end
-  await expect(page.locator('.rope-view__names .tag')).toHaveText(['The end']);
+  // while the knot is being tied, the rope has the names of the parts laid so far, and of its end
+  await expect(page.locator('.rope-view__names .tag')).toHaveText(['Standing part', 'First loop', 'The end']);
 
   await page.getByRole('button', { name: 'Next' }).click();
   await expect.poll(() => reached(page), { timeout: 15_000 }).toBeCloseTo(STOPS[1]!, 1);
@@ -145,6 +145,82 @@ test('draws as much rope as has been laid, and its diagram with the strands pass
   await expect(numbers).toHaveText(['1']);
   await progress(page).fill('64.05');
   await expect(numbers).toHaveText(['1', '2', '3', '4']);
+});
+
+test('tightens the knot when asked, and loosens it again', async ({ page }) => {
+  const button = page.getByTestId('tighten');
+  const names = page.locator('.rope-view__names .tag');
+  await expect(button).toHaveText('Tighten');
+  await expect(names).toHaveCount(4);
+  await expect.poll(() => triangles(page)).toBeGreaterThan(1000);
+
+  await button.click();
+  await expect(button).toHaveText('Loosen');
+  // tight, the rope is another shape: the names of its parts belong to the shape it was tied in
+  await expect(names).toHaveCount(0);
+  await expect(page.getByTestId('panel')).toHaveAttribute('data-tightened', '1', { timeout: 15_000 });
+
+  // going back a step loosens it, as the button does
+  await page.getByRole('button', { name: 'Previous' }).click();
+  await expect(button).toHaveText('Tighten');
+  await expect(names).toHaveCount(4, { timeout: 15_000 });
+  expect(await reached(page)).toBeCloseTo(STOPS[2]!, 1);
+
+  // a knot that is not tied yet cannot be tightened
+  await progress(page).fill('30');
+  await expect(button).toBeDisabled();
+  // the slider moved to its far end is the knot tied, though the end of the rope is not on one of its steps
+  await progress(page).fill('64');
+  await expect(button).toBeEnabled();
+  await expect(page.getByRole('button', { name: 'Next' })).toBeDisabled();
+  await expect(names).toHaveCount(4);
+});
+
+test('is loose at once when a tight knot is tied again', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.getByTestId('tighten').click();
+  await expect(page.getByTestId('panel')).toHaveAttribute('data-tightened', '1');
+  await steps(page).getByRole('button').first().click();
+  await expect(page.getByTestId('tighten')).toHaveText('Tighten');
+  await expect(page.getByTestId('panel')).toHaveAttribute('data-tightened', '0');
+  expect(await reached(page)).toBeCloseTo(STOPS[0]!, 1);
+});
+
+test('keeps the view as the person has turned it, through tightening, loosening and another rope', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await expect.poll(() => triangles(page)).toBeGreaterThan(1000);
+  // where the name of a part is written tells from where the knot is seen
+  const where = () =>
+    page
+      .locator('.rope-view__names .tag')
+      .nth(1)
+      .evaluate((tag: HTMLElement) => `${tag.style.left} ${tag.style.top}`);
+  const front = await where();
+
+  const box = await page.getByTestId('rope-canvas').boundingBox();
+  if (!box) throw new Error('the view is drawn');
+  const [x, y] = [box.x + box.width / 2, box.y + box.height / 2];
+  await page.mouse.move(x, y);
+  await page.mouse.down();
+  await page.mouse.move(x + 70, y - 45, { steps: 8 });
+  await page.mouse.up();
+  await expect.poll(where).not.toBe(front);
+  const turned = await where();
+
+  const panel = page.getByTestId('panel');
+  await page.getByTestId('tighten').click();
+  await expect(panel).toHaveAttribute('data-tightened', '1');
+  await page.getByTestId('tighten').click();
+  await expect(panel).toHaveAttribute('data-tightened', '0');
+  await expect.poll(where).toBe(turned);
+
+  await page.getByLabel('Material').selectOption('sisal');
+  await expect.poll(() => triangles(page)).toBeGreaterThan(1000);
+  expect(await where()).toBe(turned);
+
+  // only when asked is the knot seen from the front again
+  await page.getByRole('button', { name: 'Reset the view' }).click();
+  await expect.poll(where).toBe(front);
 });
 
 test('shows a step done at once when the person has asked for less movement', async ({ page }) => {
