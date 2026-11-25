@@ -350,15 +350,15 @@ export function laidFrames(
 }
 
 /**
- * The cut end of laid rope: each strand closed across by a low dome, so that the end has the shape of the
- * rope and not of a disc laid over it. It is built about the origin, for a rope that runs along +z with
+ * The cut end of laid rope: each strand closed across by a dome, so that the end has the
+ * shape of the rope and not of a disc laid over it. It is built about the origin, for a rope that runs along +z with
  * its first strand towards +x: `facing` is 1 for the end the rope runs to, and -1 for the end it comes from.
  */
 export function buildLaidCap(radius: number, layLength: number, facing: 1 | -1, strands = 3, sides = 16): TubeData {
   const RINGS = 3;
   const place = strandPlace(strands);
   const [offset, size] = [radius * place.offset, radius * place.size * 1.04];
-  const height = 0.3 * size;
+  const height = 0.5 * size;
   const slope = (2 * Math.PI * offset) / layLength; // of a strand to the rope
   const perStrand = 1 + RINGS * sides;
   const count = strands * perStrand;

@@ -539,15 +539,18 @@ export class RopeViewport {
     rope.castShadow = true;
     rope.receiveShadow = true;
     if (!closed) {
-      // where the rope was cut, the ends of its fibres show: darker, and dull
+      // where the rope was cut, the ends of its fibres show: darker, and dull. On a laid rope, whose strands
+      // end round, darker still, like the shade between them: an end that is not what the eye goes to
+      const lay = look.construction === 'laid' ? look.lay * radius : undefined;
       const cut = (): Material =>
         new MeshPhysicalMaterial({
-          color: new Color(...toned(rgbOf(colour), -0.4).map((c) => c / 255)).multiplyScalar(look.brightness),
+          color: new Color(
+            ...toned(rgbOf(colour), lay === undefined ? -0.4 : -0.72).map((c) => c / 255),
+          ).multiplyScalar(look.brightness),
           roughness: 1,
           metalness: 0,
           vertexColors: true,
         });
-      const lay = look.construction === 'laid' ? look.lay * radius : undefined;
       for (const end of this.addEnds(place, fine, lay === undefined ? radius * 0.97 : radius, cut, lay)) {
         end.castShadow = true;
       }
