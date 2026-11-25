@@ -1,43 +1,29 @@
 /**
- * Computes the images of a rope away from the page, which would otherwise stand still for half a second
- * the first time each rope is drawn. It keeps each material's surface, and paints it again for each colour.
+ * Hands the images of a rope to the page from away from it: computing them would otherwise hold the page
+ * still for half a second the first time each rope is drawn. What it computes it keeps in the browser, so
+ * that the next visit computes nothing: see imageSource.ts and imageStore.ts.
  */
 
-import { rampOf, surfaceOf } from './images.ts';
-import { ROPE_MATERIALS, type RopeMaterialId } from './materials.ts';
-import { colourOf, type Surface } from './surface.ts';
+import { ImageSource, type ImagesRequest } from './imageSource.ts';
+import { NO_STORE, openImageStore } from './imageStore.ts';
 
-export interface ImagesRequest {
-  readonly material: RopeMaterialId;
-  readonly colour: string;
-}
+// The address of this file changes whenever the code that computes the images does, because the build puts
+// a hash of its contents in its name: that makes it the name of the build. While developing it does not
+// change, and so nothing is kept.
+const store = import.meta.env.PROD ? openImageStore(self.location.pathname) : Promise.resolve(NO_STORE);
+const source = store.then((opened) => new ImageSource(opened));
 
-export interface ImagesReply extends ImagesRequest {
-  readonly width: number;
-  readonly height: number;
-  /** The surface in this colour, four values per texel. */
-  readonly pixels: Uint8Array;
-  /** The relief of the material, sent the first time it is asked for: see `Surface`. */
-  readonly normal?: Uint8Array;
-  readonly detail?: Uint8Array;
-}
-
-const surfaces = new Map<RopeMaterialId, Surface>();
+// one request at a time: the colours of one rope share a surface, which is then computed once
+let last: Promise<void> = Promise.resolve();
 
 addEventListener('message', (event: MessageEvent<ImagesRequest>) => {
-  const { material, colour } = event.data;
-  const look = ROPE_MATERIALS[material];
-  let surface = surfaces.get(material);
-  const first = !surface;
-  surface ??= surfaceOf(look) ?? undefined;
-  if (!surface) return;
-  surfaces.set(material, surface);
-
-  const pixels = colourOf(surface, rampOf(look, colour));
-  const { width, height } = surface;
-  const reply: ImagesReply = first
-    ? { material, colour, width, height, pixels, normal: surface.normal, detail: surface.detail }
-    : { material, colour, width, height, pixels };
-  // the relief is copied, not handed over: the surface here keeps it
-  postMessage(reply, { transfer: [pixels.buffer] });
+  last = last
+    .then(async () => {
+      const reply = await (await source).answer(event.data);
+      if (!reply) return;
+      // what was kept is handed over; a relief just computed is copied, for the surface here keeps it
+      const relief = reply.kept && reply.normal && reply.detail ? [reply.normal.buffer, reply.detail.buffer] : [];
+      postMessage(reply, { transfer: [reply.pixels.buffer, ...relief] });
+    })
+    .catch(reportError);
 });
