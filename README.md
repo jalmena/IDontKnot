@@ -2,7 +2,7 @@
 
 An interactive encyclopedia and laboratory for knots, rope systems and knot theory, built to be self-hosted.
 
-**Status: first prototype.** The mathematical core exists and reproduces the reference diagrams. The application, in English and Spanish, opens on its library of knots and has a torus knot laboratory beside it. The library holds one knot so far, a figure-eight knot: its page shows it in 3D and as a diagram, names the parts of its rope, ties it step by step and gives what the core computes for it. There is no search of the library, no exercise done by hand and no account yet; see the [roadmap](ROADMAP.md).
+**Status: first prototype.** The mathematical core exists and reproduces the reference diagrams. The application, in English and Spanish, opens on its library of knots and has a torus knot laboratory beside it. The library holds two knots so far, the figure-eight knot and the overhand knot: the page of a knot shows it in 3D and as a diagram, names the parts of its rope, ties it step by step, draws it tight and gives what the core computes for it. There is no search of the library, no exercise done by hand and no account yet; see the [roadmap](ROADMAP.md).
 
 ## Run it
 
@@ -54,4 +54,6 @@ Nothing in this repository is evidence that a knot is safe to use. A correct dia
 
 ## Licence
 
-IDontKnot is licensed under the GNU Affero General Public License, version 3.0 only. See [LICENSE](LICENSE).
+The code of IDontKnot is licensed under the GNU Affero General Public License, version 3.0 only. See [LICENSE](LICENSE).
+
+The content of the library, which is everything under [content/](content/) (the shapes of the knots, their names and instructions, and the texts and pictures written for them), is licensed under the Creative Commons Attribution-ShareAlike 4.0 International licence. See [content/LICENSE](content/LICENSE).

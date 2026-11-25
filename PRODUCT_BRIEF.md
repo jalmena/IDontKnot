@@ -58,12 +58,14 @@ Its differentiator is that the system reasons about knots through a mathematical
 | 2026-11-25 | Tightening | A knot can be tightened on screen: a "Tighten" button to the right of "Next", in the same style, which shows the knot being drawn tight at once, and then reads "Loosen". The knot is drawn very tight. While it tightens the key light moves from the side to above it, so that strands lying together are told apart; the loose knot keeps the light it had. |
 | 2026-11-25 | Names while tying | While a knot is tied step by step, the names of the parts of the rope appear as the rope forms them. |
 | 2026-11-25 | Cut ends | The end of a laid rope shows the cut end of each strand, not a disc across the rope. |
+| 2026-11-25 | First dozen knots | Figure-eight knot, overhand knot, bowline, figure-eight loop, trefoil knot, reef knot, sheet bend, carrick bend, clove hitch, lark's head, single column tie and square lashing. They are built in the order of what they ask of the application: first the knots of one rope, then those of two ropes, then those tied to an object. |
+| 2026-11-25 | Licence of the content | Creative Commons Attribution-ShareAlike 4.0 for everything under `content/`: shapes, names, instructions, texts and pictures. The code stays under AGPL-3.0-only. |
 | 2026-11-25 | Knot page | Exploring a knot and learning to tie it happen in one place. One tab, "The knot", holds the parts of the rope and how it is tied; a second tab, "Mathematics", holds what the core computes. The knot is shown tied until it is played. |
 
 ## Open decisions
 
-- Licence of the content: texts and illustrations.
 - Visual identity, remaining: a variant for light surfaces, themes by discipline, iconography and motion.
+- The typeface of the wordmark: the Product Owner would like the name to sit closer to the mark (asked on 2026-11-25; to be studied from rendered alternatives).
 - 3D interaction details, editor capabilities, content organisation and the first set of knots.
 - App store integration: name, identifier, port, category, store card.
 

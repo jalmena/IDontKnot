@@ -1,0 +1,84 @@
+{
+  "id": "overhand",
+  "rope": {
+    "radius": 0.5,
+    "start": "standing",
+    "end": "tail"
+  },
+  "height": 0.65,
+  "path": [
+    [-9.67, 0.0],
+    [-6.1, -0.45],
+    [-2.73, -0.87, "over"],
+    [-0.65, -1.18],
+    [1.44, -1.39, "under"],
+    [3.76, -1.33],
+    [5.28, 0.35, "over"],
+    [4.85, 2.52],
+    [2.51, 3.92],
+    [-0.52, 3.89],
+    [-2.65, 2.15],
+    [-2.73, -0.87, "under"],
+    [-2.42, -3.22],
+    [-0.74, -4.34],
+    [0.87, -3.53],
+    [1.44, -1.39, "over"],
+    [2.64, 0.17],
+    [5.28, 0.35, "under"],
+    [7.49, 0.27],
+    [9.67, 0.0]
+  ],
+  "parts": [
+    {
+      "id": "standing-part",
+      "type": "standing-part",
+      "from": "start",
+      "to": {
+        "visit": 1,
+        "by": -0.6
+      }
+    },
+    {
+      "id": "loop",
+      "type": "loop",
+      "from": {
+        "visit": 3,
+        "by": 1
+      },
+      "to": {
+        "visit": 4,
+        "by": -1
+      }
+    },
+    {
+      "id": "tail",
+      "type": "tail",
+      "from": {
+        "visit": 6,
+        "by": 0.6
+      },
+      "to": "end"
+    }
+  ],
+  "method": {
+    "id": "with-the-end",
+    "start": 12,
+    "steps": [
+      {
+        "id": "make-loop",
+        "op": "cross",
+        "pass": "under",
+        "to": {
+          "visit": 4,
+          "by": 4
+        }
+      },
+      {
+        "id": "through-loop",
+        "op": "tuck",
+        "passes": ["over", "under"],
+        "to": "end"
+      }
+    ]
+  }
+}
