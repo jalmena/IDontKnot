@@ -132,11 +132,21 @@ test('plays every step from the start to the finished knot, faster when asked', 
   await expect(page.locator('.rope-view__names .tag')).toHaveCount(4);
 });
 
-test('draws as much rope as has been laid, and its diagram with the strands passed so far', async ({ page }) => {
+test('feeds the rope along the way of the knot, and draws its diagram with the strands passed so far', async ({
+  page,
+}) => {
   await expect.poll(() => triangles(page)).toBeGreaterThan(1000);
-  const whole = await triangles(page);
+  // where the name of the end is written tells how far the end has been led
+  const end = () =>
+    page.locator('.rope-view__names .tag--marked').evaluate((tag: HTMLElement) => `${tag.style.left} ${tag.style.top}`);
   await progress(page).fill('12');
-  await expect.poll(() => triangles(page)).toBeLessThan(whole / 3);
+  await expect(page.locator('.rope-view__names .tag--marked')).toHaveText('The end');
+  const early = await end();
+  await expect.poll(() => triangles(page)).toBeGreaterThan(200);
+  // the end goes forward along the way of the knot, and the rope behind it is still drawn
+  await progress(page).fill('30');
+  await expect.poll(end).not.toBe(early);
+  await expect.poll(() => triangles(page)).toBeGreaterThan(200);
 
   await page.getByRole('button', { name: 'Diagram' }).click();
   const numbers = page.getByTestId('diagram').locator('.diagram__label');
