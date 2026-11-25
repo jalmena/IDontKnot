@@ -7,7 +7,10 @@ const tightening = tighteningOf(document);
 if (!tightening) throw new Error('the figure-eight knot of the library can be tightened');
 const { length = 0 } = document.components[0] ?? {};
 
-it('reads how a knot is tightened: its shapes, each at the same places along the rope', () => {
+const run = (points: readonly (readonly number[])[]): number =>
+  points.slice(1).reduce((sum, point, i) => sum + Math.hypot(...point.map((x, c) => x - points[i]![c]!)), 0);
+
+it('reads how a knot is tightened: its shapes, each given at the same places of the knot', () => {
   expect(tightening.rope).toBe('rope');
   expect(tightening.shapes).toHaveLength(document.geometry?.tightening?.length ?? 0);
   const count = tightening.shapes[0]?.length ?? 0;
@@ -15,11 +18,11 @@ it('reads how a knot is tightened: its shapes, each at the same places along the
   for (const shape of tightening.shapes) expect(shape).toHaveLength(count);
   // the rope does not stretch: every shape is as long as the rope
   for (const shape of tightening.shapes) {
-    let run = 0;
-    for (let i = 1; i < shape.length; i++) run += Math.hypot(...shape[i]!.map((x, c) => x - shape[i - 1]![c]!));
-    expect(run / length).toBeGreaterThan(0.99);
-    expect(run / length).toBeLessThan(1.01);
+    expect(run(shape) / length).toBeGreaterThan(0.99);
+    expect(run(shape) / length).toBeLessThan(1.01);
   }
+  // every shape begins and ends where its frame does
+  expect(tightening.shapes[0]?.[0]).toEqual([-9.6, 0, 0]);
 });
 
 it('has nothing to say of a knot whose document does not say how it is tightened', () => {
@@ -28,15 +31,40 @@ it('has nothing to say of a knot whose document does not say how it is tightened
   expect(tighteningOf({ ...document, geometry: { frames, tightening: ['dressed', 'missing'] } })).toBeNull();
 });
 
-it('goes from the shape the knot is tied in to the tightest, point for point', () => {
-  expect(shapeAt(tightening, 0)).toEqual(tightening.shapes[0]);
-  expect(shapeAt(tightening, 1)).toEqual(tightening.shapes.at(-1));
-  expect(shapeAt(tightening, 7)).toEqual(tightening.shapes.at(-1));
-  // half way between two shapes, every point is half way between its two places
-  const steps = tightening.shapes.length - 1;
-  const between = shapeAt(tightening, 0.5 / steps);
-  const [a, b] = [tightening.shapes[0]!, tightening.shapes[1]!];
-  between.forEach((point, i) => point.forEach((x, c) => expect(x).toBeCloseTo((a[i]![c]! + b[i]![c]!) / 2, 9)));
+it('goes from the shape the knot is tied in to the tightest, as points at equal distances along the rope', () => {
+  for (const amount of [0, 0.31, 1, 7]) {
+    const shape = shapeAt(tightening, amount);
+    expect(shape).toHaveLength(tightening.count + 1);
+    const gaps = shape.slice(1).map((point, i) => Math.hypot(...point.map((x, c) => x - shape[i]![c]!)));
+    expect(Math.max(...gaps) / Math.min(...gaps)).toBeLessThan(1.05);
+  }
+  // it begins as the shape the knot is tied in, and ends as the tightest
+  const [first, last] = [tightening.shapes[0]!, tightening.shapes.at(-1)!];
+  const near = (a: readonly number[] | undefined, b: readonly number[] | undefined): void =>
+    a?.forEach((x, c) => expect(x).toBeCloseTo(b?.[c] ?? NaN, 6));
+  near(shapeAt(tightening, 0)[0], first[0]);
+  near(shapeAt(tightening, 0).at(-1), first.at(-1));
+  near(shapeAt(tightening, 1).at(-1), last.at(-1));
+  expect(run(shapeAt(tightening, 0))).toBeCloseTo(run(first), 1);
+  expect(run(shapeAt(tightening, 1))).toBeCloseTo(run(last), 1);
+});
+
+it('tightens steadily: no part of the knot closes ahead of the rest and opens again', () => {
+  // how far the two loops of the figure-eight knot stand from the line of the rope, and how long the
+  // rope is, all the way through
+  const heights: number[] = [];
+  for (let amount = 0; amount <= 1.0001; amount += 0.0125) {
+    const shape = shapeAt(tightening, amount);
+    heights.push(Math.max(...shape.map((point) => Math.abs(point[1]))));
+    // a shape between two shapes of the tightening is not a shorter rope, as it is when each point of
+    // the rope is moved straight from its place in one to its place in the next
+    expect(run(shape) / length).toBeGreaterThan(0.985);
+    expect(run(shape) / length).toBeLessThan(1.01);
+  }
+  for (let k = 1; k < heights.length; k++) expect(heights[k]).toBeLessThanOrEqual(heights[k - 1]! + 1e-3);
+  // and it closes at an even pace: no step is many times the one before
+  const steps = heights.slice(1).map((height, k) => heights[k]! - height);
+  for (let k = 9; k < steps.length - 9; k++) expect(steps[k]).toBeLessThan(3 * steps[k - 1]! + 0.01);
 });
 
 it('takes in the whole rope to begin with, and closes in on the knot as it tightens', () => {
