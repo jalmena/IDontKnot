@@ -11,6 +11,7 @@ import {
   strandOf,
   writhe,
   type Frame,
+  type Point3,
 } from '@idontknot/core';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -20,14 +21,16 @@ import { ropeColour } from '../viewer/materials.ts';
 import { useRope } from '../viewer/RopeChoice.tsx';
 import { RopeSelect } from '../viewer/RopeSelect.tsx';
 import { RopeView, VIEW_MARGINS } from '../viewer/RopeView.tsx';
-import type { Stretch } from '../viewer/RopeViewport.ts';
+import { LIGHT_FROM_ABOVE, LIGHT_FROM_THE_SIDE, type Stretch } from '../viewer/RopeViewport.ts';
 import { KnotFacts } from './KnotFacts.tsx';
 import { inLanguage, type LibraryKnot } from './library.ts';
 import { boundsOf, partShape, pointAt } from './parts.ts';
 import { timelineOf, type Timeline } from './playback.ts';
 import { fitOf, ropesOf, shownFrame } from './shape.ts';
+import { eased, shapeAt, tighteningOf, windowAt } from './tightening.ts';
 import { Tying } from './Tying.tsx';
 import { usePlayback } from './usePlayback.ts';
+import { useTightness } from './useTightness.ts';
 
 interface Props {
   readonly knot: LibraryKnot;
@@ -62,19 +65,45 @@ export function KnotPage({ knot }: Props) {
   const [pinned, setPinned] = useState<string | null>(null);
   const [pointed, setPointed] = useState<string | null>(null);
   const shown = pointed ?? pinned;
-  // another knot has other parts: none of them is chosen yet
+  const { tight, amount, tighten, loosen, slacken } = useTightness();
+  // another knot has other parts, and is as it was tied: none of them is chosen yet
   const [opened, setOpened] = useState(knot);
   if (opened !== knot) {
     setOpened(knot);
     setPinned(null);
     setPointed(null);
+    slacken();
   }
 
   const frame = shownFrame(document) as Frame;
   const curves = useMemo(() => framePolylines(document, frame), [document, frame]);
-  const ropes = useMemo(() => ropesOf(document, curves, material), [document, curves, material]);
-  // the rope keeps the margins of the view, and leaves room above it for the names of its parts
-  const fit = useMemo(() => fitOf(curves, { ...VIEW_MARGINS, top: VIEW_MARGINS.top + NAME_HEIGHT }), [curves]);
+  // a knot that is being tightened, or is tight, is drawn in the shape it has come to
+  const tightening = useMemo(() => tighteningOf(document), [document]);
+  const pulled = tightening !== null && amount > 0;
+  const ropes = useMemo(() => {
+    if (!tightening || amount <= 0) return ropesOf(document, curves, material);
+    const points = shapeAt(tightening, eased(amount));
+    return ropesOf(
+      document,
+      curves.map((curve) => (curve.id === tightening.rope ? { ...curve, points } : curve)),
+      material,
+    );
+  }, [document, curves, material, tightening, amount]);
+  // the rope keeps the margins of the view, and leaves room above it for the names of its parts; as the
+  // knot is tightened its ends run out of the view, which closes in on the knot
+  const fit = useMemo(() => {
+    const clear = { ...VIEW_MARGINS, top: VIEW_MARGINS.top + NAME_HEIGHT };
+    return tightening && amount > 0 ? { ...windowAt(tightening, eased(amount)), clear } : fitOf(curves, clear);
+  }, [curves, tightening, amount]);
+  // and the light goes up over it, so that strands that lie together are told apart
+  const light = useMemo<Point3>(() => {
+    const t = eased(amount);
+    return [0, 1, 2].map((c) => LIGHT_FROM_THE_SIDE[c]! + (LIGHT_FROM_ABOVE[c]! - LIGHT_FROM_THE_SIDE[c]!) * t) as [
+      number,
+      number,
+      number,
+    ];
+  }, [amount]);
 
   const method = document.construction?.methods[0];
   const timeline = useMemo(() => (method ? timelineOf(method) : NO_METHOD), [method]);
@@ -141,6 +170,20 @@ export function KnotPage({ knot }: Props) {
     () => (tied ? WHOLE : curves.map((_, index) => (index === rope ? state.position / length : 1))),
     [tied, curves, rope, state.position, length],
   );
+  // while the knot is tied, a part of the rope is named once the rope has been laid as far as its end
+  const laidParts = useMemo(
+    () =>
+      new Set(
+        parts
+          .filter((part) => tied || part.rope !== rope || part.to * length <= state.position + 1e-6)
+          .map((part) => part.id),
+      ),
+    [parts, tied, rope, length, state.position],
+  );
+  const laidNames = useMemo(
+    () => [...partNames.filter((name) => laidParts.has(name.id)), ...end],
+    [partNames, laidParts, end],
+  );
   // on the diagram a name sits above its part; the name of an end of the rope is written outward from
   // where that end leaves the knot, so that it does not run over the knot, and the drawing makes room for it
   const drawing = useMemo(() => {
@@ -178,9 +221,10 @@ export function KnotPage({ knot }: Props) {
           title={<h1 id="knot-title">{title}</h1>}
           corner={<RopeSelect value={material} onChange={setMaterial} />}
           fit={fit}
-          emphasis={emphasis}
+          light={light}
+          emphasis={pulled ? NOTHING : emphasis}
           reach={reach}
-          names={tied ? partNames : end}
+          names={pulled ? NOTHING : tied ? partNames : laidNames}
           diagram={
             <Diagram2D
               curves={laid.curves}
@@ -191,13 +235,18 @@ export function KnotPage({ knot }: Props) {
               line={DIAGRAM_LINE}
               text={DIAGRAM_TEXT}
               marked={tied ? marked : NOTHING}
-              names={tied ? drawing.names : NOTHING}
+              names={drawing.names.filter((name) => laidParts.has(name.id))}
             />
           }
         />
       </div>
 
-      <div className="lab__facts panel" data-testid="panel" data-checked={shaped && told ? 'ok' : 'failed'}>
+      <div
+        className="lab__facts panel"
+        data-testid="panel"
+        data-checked={shaped && told ? 'ok' : 'failed'}
+        data-tightened={Math.round(amount * 100) / 100}
+      >
         <Tabs
           name="knot"
           label={t('knot.tabs.label')}
@@ -217,7 +266,10 @@ export function KnotPage({ knot }: Props) {
                   <button
                     type="button"
                     aria-pressed={pinned === part.id}
-                    onClick={() => setPinned(pinned === part.id ? null : part.id)}
+                    onClick={() => {
+                      slacken();
+                      setPinned(pinned === part.id ? null : part.id);
+                    }}
                     onPointerEnter={() => setPointed(part.id)}
                     onPointerLeave={() => setPointed(null)}
                     onFocus={() => setPointed(part.id)}
@@ -238,6 +290,7 @@ export function KnotPage({ knot }: Props) {
                 setState={setState}
                 speed={speed}
                 setSpeed={setSpeed}
+                {...(tightening ? { tightening: { tight, tighten, loosen, slacken } } : {})}
               />
             )}
           </div>

@@ -90,6 +90,8 @@
       "play": "Play",
       "pause": "Pause",
       "next": "Next",
+      "tighten": "Tighten",
+      "loosen": "Loosen",
       "progress": "How far the end has come",
       "speed": "Speed",
       "end": "The end",

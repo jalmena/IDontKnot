@@ -90,6 +90,8 @@
       "play": "Reproducir",
       "pause": "Pausa",
       "next": "Siguiente",
+      "tighten": "Apretar",
+      "loosen": "Aflojar",
       "progress": "Hasta dónde ha llegado el chicote",
       "speed": "Velocidad",
       "end": "El chicote",

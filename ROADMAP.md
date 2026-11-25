@@ -28,7 +28,7 @@ Each phase ends with something that can be run and tried. Later phases depend on
 | 8 | Accounts and user documents | Sign-in to edit, saved configurations, import and export | A configuration can be saved, exported, and imported into another instance |
 | 9 | Themes, offline use, release | Themes by discipline, installable offline application, app store entry, version 1.0 | Installed from the app store on the home lab |
 
-Later, in no fixed order: the editor opened to users; a rope-tightening solver; further invariants; junctions (splices, nets); more disciplines and more content.
+Later, in no fixed order: the editor opened to users; tightening of knots of several ropes and of knots tied to objects (a knot of one open rope is tightened already, by both its ends); further invariants; junctions (splices, nets); more disciplines and more content.
 
 ## Main risks
 

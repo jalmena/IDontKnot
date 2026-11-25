@@ -26,13 +26,23 @@ interface Props {
   readonly setState: Dispatch<SetStateAction<Playback>>;
   readonly speed: number;
   readonly setSpeed: (speed: number) => void;
+  /**
+   * For a knot that can be tightened: whether it is, and what tightens it and loosens it again, as seen;
+   * `slacken` loosens it at once, for the buttons that go back to the tying.
+   */
+  readonly tightening?: {
+    readonly tight: boolean;
+    readonly tighten: () => void;
+    readonly loosen: () => void;
+    readonly slacken: () => void;
+  };
 }
 
 /** Whether the person has asked their device for less movement: then steps are shown done, not played. */
 const still = (): boolean => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 /** How a knot is tied: the buttons that play its steps, and the steps, each of which plays itself. */
-export function Tying({ method, texts, timeline, length, state, setState, speed, setSpeed }: Props) {
+export function Tying({ method, texts, timeline, length, state, setState, speed, setSpeed, tightening }: Props) {
   const { t, i18n } = useTranslation();
   const language = i18n.resolvedLanguage ?? 'en';
   const begun = state.position > timeline.start + 1e-9;
@@ -40,25 +50,44 @@ export function Tying({ method, texts, timeline, length, state, setState, speed,
   const current = stepAt(timeline, state.position);
   // with less movement asked for, a step is shown done at once
   const moved = (playback: Playback): Playback => (still() ? seek(timeline, playback.target) : playback);
+  // going back to the tying, a knot that was tightened is loose again at once
+  const tie = (playback: Playback): void => {
+    tightening?.slacken();
+    setState(playback);
+  };
 
   return (
     <>
       <h2 id="knot-steps">{t('knot.tying.how')}</h2>
       <div className="player" role="group" aria-label={t('knot.tying.player')}>
-        <button type="button" disabled={!begun} onClick={() => setState(previous(state, timeline))}>
+        <button
+          type="button"
+          disabled={!begun}
+          onClick={() => (tightening?.tight ? tightening.loosen() : setState(previous(state, timeline)))}
+        >
           {t('knot.tying.previous')}
         </button>
         <button
           type="button"
           className="player__play"
-          onClick={() => setState(state.playing ? pause(state) : moved(play(state, timeline)))}
+          onClick={() => tie(state.playing ? pause(state) : moved(play(state, timeline)))}
           data-testid="play"
         >
           {state.playing ? t('knot.tying.pause') : t('knot.tying.play')}
         </button>
-        <button type="button" disabled={tied} onClick={() => setState(moved(next(state, timeline)))}>
+        <button type="button" disabled={tied} onClick={() => tie(moved(next(state, timeline)))}>
           {t('knot.tying.next')}
         </button>
+        {tightening && (
+          <button
+            type="button"
+            disabled={!tied}
+            onClick={tightening.tight ? tightening.loosen : tightening.tighten}
+            data-testid="tighten"
+          >
+            {tightening.tight ? t('knot.tying.loosen') : t('knot.tying.tighten')}
+          </button>
+        )}
       </div>
       <div className="player__row">
         <input
@@ -69,7 +98,7 @@ export function Tying({ method, texts, timeline, length, state, setState, speed,
           value={state.position}
           aria-label={t('knot.tying.progress')}
           data-testid="progress"
-          onChange={(event) => setState(seek(timeline, Number(event.target.value)))}
+          onChange={(event) => tie(seek(timeline, Number(event.target.value)))}
         />
         <label className="choice">
           <span>{t('knot.tying.speed')}</span>
@@ -85,7 +114,7 @@ export function Tying({ method, texts, timeline, length, state, setState, speed,
       <ol className="steps" aria-labelledby="knot-steps" data-testid="steps">
         {method.steps.map((step, index) => (
           <li key={step.id} aria-current={begun && !tied && index === current ? 'step' : undefined}>
-            <button type="button" onClick={() => setState(moved(playStep(timeline, index)))}>
+            <button type="button" onClick={() => tie(moved(playStep(timeline, index)))}>
               {inLanguage(texts?.steps[step.id], language) || step.id}
             </button>
           </li>

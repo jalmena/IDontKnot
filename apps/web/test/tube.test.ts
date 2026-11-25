@@ -3,9 +3,11 @@ import { describe, expect, it } from 'vitest';
 import {
   buildCap,
   buildLaid,
+  buildLaidCap,
   buildTube,
   curveLength,
   LAID_ARC,
+  laidFrames,
   resample,
   rotationMinimisingFrames,
   strandPlace,
@@ -252,5 +254,33 @@ describe('the cut end of an open rope', () => {
       ];
       expect(dot(face, facing)).toBeGreaterThan(0);
     }
+  });
+});
+
+describe('the cut end of laid rope', () => {
+  const [radius, lay] = [0.5, 2.5];
+
+  it('closes each strand with a dome that faces away from the rope', () => {
+    for (const facing of [1, -1] as const) {
+      const cap = buildLaidCap(radius, lay, facing);
+      expect(cap.positions).toHaveLength(cap.columns * 3);
+      expect(cap.indices.every((index) => index < cap.columns)).toBe(true);
+      for (let i = 0; i < cap.columns; i++) {
+        const normal = [cap.normals[3 * i]!, cap.normals[3 * i + 1]!, cap.normals[3 * i + 2]!];
+        expect(Math.hypot(...normal)).toBeCloseTo(1, 5);
+        expect(Math.sign(normal[2]!)).toBe(facing);
+        // nothing of it reaches beyond the rope
+        expect(Math.hypot(cap.positions[3 * i]!, cap.positions[3 * i + 1]!)).toBeLessThan(radius * 1.05);
+      }
+    }
+  });
+
+  it('turns its strands once round the rope in each lay', () => {
+    const straight = Array.from({ length: 11 }, (_, i): [number, number, number] => [0, 0, (i * lay) / 5]);
+    const turns = laidFrames(straight, lay);
+    expect(turns.angles[0]).toBe(0);
+    expect(turns.angles[5]).toBeCloseTo(2 * Math.PI, 9);
+    expect(turns.angles[10]).toBeCloseTo(4 * Math.PI, 9);
+    expect(turns.tangents[3]).toEqual([0, 0, 1]);
   });
 });
