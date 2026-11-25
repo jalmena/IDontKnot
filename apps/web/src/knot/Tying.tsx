@@ -38,6 +38,9 @@ interface Props {
   };
 }
 
+/** How far the slider moves the end of the rope at a time, in rope diameters. */
+const SLIDER_STEP = 0.05;
+
 /** Whether the person has asked their device for less movement: then steps are shown done, not played. */
 const still = (): boolean => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -94,11 +97,15 @@ export function Tying({ method, texts, timeline, length, state, setState, speed,
           type="range"
           min={timeline.start}
           max={length}
-          step={0.05}
+          step={SLIDER_STEP}
           value={state.position}
           aria-label={t('knot.tying.progress')}
           data-testid="progress"
-          onChange={(event) => tie(seek(timeline, Number(event.target.value)))}
+          onChange={(event) => {
+            // the slider moves in steps, and the end of the rope is seldom on one: its last step is the end
+            const value = Number(event.target.value);
+            tie(seek(timeline, value > length - SLIDER_STEP ? length : value));
+          }}
         />
         <label className="choice">
           <span>{t('knot.tying.speed')}</span>

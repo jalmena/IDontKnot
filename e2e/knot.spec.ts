@@ -169,6 +169,11 @@ test('tightens the knot when asked, and loosens it again', async ({ page }) => {
   // a knot that is not tied yet cannot be tightened
   await progress(page).fill('30');
   await expect(button).toBeDisabled();
+  // the slider moved to its far end is the knot tied, though the end of the rope is not on one of its steps
+  await progress(page).fill('64');
+  await expect(button).toBeEnabled();
+  await expect(page.getByRole('button', { name: 'Next' })).toBeDisabled();
+  await expect(names).toHaveCount(4);
 });
 
 test('is loose at once when a tight knot is tied again', async ({ page }) => {
