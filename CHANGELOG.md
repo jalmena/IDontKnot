@@ -40,7 +40,8 @@ All notable changes to this project are recorded here. The format follows [Keep 
 - A check that passes is no longer announced; one that fails is shown at the bottom of the panel.
 - While a knot is tied step by step, the names of the parts of its rope appear as the rope forms them.
 - While a knot is tied, its rope is fed from its standing part and slides along the way of the knot as its end is led. It used to stand still and appear at its end.
-- The end of a laid rope shows the cut end of each of its strands; it was closed by a disc across the whole rope, which showed when the end was seen from in front.
+- Each rope ends as rope of its kind does where it is cut: jute, sisal and cotton a little frayed, laid polyester melted into one rounded end, and rope with a core and a sheath cut across, its core showing inside the dark rim of the sheath. The end of a laid rope was closed by a disc across the whole rope, which showed when the end was seen from in front.
+- A knot tightens steadily: its loops no longer close ahead of the rest of it and open again on the way.
 - Shadows are aimed at what the view looks at, so that they stay fine however far the rope runs out of it.
 - The application is organised by knot. It opens on the list of knots; a knot that is chosen opens above the list, which stays under it as a row. Its page has two tabs: the knot, with the parts of its rope and how it is tied, and what the core computes. The menu is now "Knots" and "Laboratory".
 - The choice of rope is called "Material", sits inside the view opposite the title, and is kept from one page to the next.
