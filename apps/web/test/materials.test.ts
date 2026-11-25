@@ -57,3 +57,23 @@ it('leaves a smooth rope without texture or loose fibres', () => {
   expect(ROPE_MATERIALS.line.construction).toBe('smooth');
   expect(ROPE_MATERIALS.line.fuzz).toBeNull();
 });
+
+it('says how every rope ends where it is cut: natural fibre frayed, synthetic rope sealed', () => {
+  const kinds = Object.fromEntries(ROPE_MATERIAL_IDS.map((id) => [id, ROPE_MATERIALS[id].end.kind]));
+  expect(kinds).toEqual({
+    jute: 'frayed',
+    sisal: 'frayed',
+    cotton: 'frayed',
+    polyester: 'sealed',
+    kernmantle: 'cored',
+    line: 'plain',
+  });
+  for (const id of ROPE_MATERIAL_IDS) {
+    const { end } = ROPE_MATERIALS[id];
+    if (end.kind !== 'frayed') continue;
+    expect(end.fibres).toBeGreaterThan(20);
+    expect(end.reach).toBeGreaterThan(0.5);
+    expect(end.stiffness).toBeGreaterThanOrEqual(0);
+    expect(end.stiffness).toBeLessThanOrEqual(1);
+  }
+});

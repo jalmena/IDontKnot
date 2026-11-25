@@ -1,6 +1,6 @@
 import { torusKnot } from '@idontknot/core';
-import { expect, it } from 'vitest';
-import { buildFuzz, FUZZ_PIECES } from '../src/viewer/fuzz.ts';
+import { describe, expect, it } from 'vitest';
+import { buildFuzz, buildTuft, FUZZ_PIECES } from '../src/viewer/fuzz.ts';
 import { curveLength, resample } from '../src/viewer/tube.ts';
 
 const points = resample(torusKnot(2, 3, { samples: 90 }).points, true, 0.05);
@@ -55,4 +55,33 @@ it('says how far along the rope each fibre is', () => {
     expect(ends[0]).toBeGreaterThanOrEqual(0);
     expect(ends[0]).toBeLessThanOrEqual(1);
   }
+});
+
+describe('the fibres of a frayed end', () => {
+  const options = { fibres: 80, reach: 1.5, stiffness: 0.6 };
+
+  it('leave the cut face of the rope and go on from it, no further than they reach', () => {
+    const tuft = buildTuft(0.5, options);
+    expect(tuft.positions).toHaveLength(80 * FUZZ_PIECES * 6);
+    expect(tuft.strengths).toHaveLength(80 * FUZZ_PIECES * 2);
+    for (let fibre = 0; fibre < 80; fibre++) {
+      const first = fibre * FUZZ_PIECES * 6;
+      const last = first + FUZZ_PIECES * 6 - 3;
+      const [x, y, z] = [tuft.positions[first]!, tuft.positions[first + 1]!, tuft.positions[first + 2]!];
+      // it starts inside the end of the rope
+      expect(Math.hypot(x, y)).toBeLessThan(0.5);
+      expect(z).toBeLessThanOrEqual(0);
+      // and its tip is beyond where it started, within its reach
+      const tip = [tuft.positions[last]!, tuft.positions[last + 1]!, tuft.positions[last + 2]!];
+      expect(tip[2]!).toBeGreaterThan(z);
+      expect(Math.hypot(tip[0]! - x, tip[1]! - y, tip[2]! - z)).toBeLessThanOrEqual(0.5 * 1.5 + 1e-6);
+      // it is strongest where it leaves the rope
+      expect(tuft.strengths[fibre * FUZZ_PIECES * 2]).toBe(1);
+    }
+  });
+
+  it('are the same every time, and others for another seed', () => {
+    expect(buildTuft(0.5, options).positions).toEqual(buildTuft(0.5, options).positions);
+    expect(buildTuft(0.5, { ...options, seed: 5 }).positions).not.toEqual(buildTuft(0.5, options).positions);
+  });
 });

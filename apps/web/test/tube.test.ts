@@ -2,6 +2,7 @@ import { torusKnot, type Point3 } from '@idontknot/core';
 import { describe, expect, it } from 'vitest';
 import {
   buildCap,
+  buildDome,
   buildLaid,
   buildLaidCap,
   buildTube,
@@ -282,5 +283,27 @@ describe('the cut end of laid rope', () => {
     expect(turns.angles[5]).toBeCloseTo(2 * Math.PI, 9);
     expect(turns.angles[10]).toBeCloseTo(4 * Math.PI, 9);
     expect(turns.tangents[3]).toEqual([0, 0, 1]);
+  });
+});
+
+describe('a round end', () => {
+  it('is a dome across the rope that faces away from it, or only its rim', () => {
+    for (const facing of [1, -1] as const) {
+      for (const inner of [0, 0.3]) {
+        const dome = buildDome(0.5, 0.2, facing, inner);
+        expect(dome.positions).toHaveLength(dome.columns * 3);
+        expect(dome.indices.every((index) => index < dome.columns)).toBe(true);
+        expect(dome.indices.length % 3).toBe(0);
+        for (let i = 0; i < dome.columns; i++) {
+          const [x, y, z] = [dome.positions[3 * i]!, dome.positions[3 * i + 1]!, dome.positions[3 * i + 2]!];
+          const reach = Math.hypot(x, y);
+          expect(reach).toBeLessThanOrEqual(0.5 + 1e-6);
+          expect(reach).toBeGreaterThanOrEqual(inner - 1e-6);
+          // it stands out most at its middle, and not at all at its edge
+          expect(facing * z).toBeCloseTo(0.2 * (1 - (reach / 0.5) ** 2), 6);
+          expect(Math.sign(dome.normals[3 * i + 2]!)).toBe(facing);
+        }
+      }
+    }
   });
 });
