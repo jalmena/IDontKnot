@@ -1,6 +1,6 @@
 # Knot document model
 
-Draft 0.1. Implemented in `packages/core`: components, parts, the topology layer, geometry frames with curves and rules G1 to G5, and the construction layer for methods led with the end of a rope (operations `cross` and `tuck`, rules C1 to C3). Not yet implemented: shapes of rigid objects, the other operations, library entries, the JSON Schema. The reasoning behind it is in the [foundations report](../research/01-mathematical-foundations.md) and the [comparison of representations](../research/02-representation-comparison.md). The decisions it embodies are recorded in the [decision records](../adr/README.md).
+Draft 0.1. Implemented in `packages/core`: components, parts, the topology layer, geometry frames with curves and rules G1 to G5, the tightening of a knot of one open rope, and the construction layer for methods led with the end of a rope (operations `cross` and `tuck`, rules C1 to C3). Not yet implemented: shapes of rigid objects, the other operations, library entries, the JSON Schema. The reasoning behind it is in the [foundations report](../research/01-mathematical-foundations.md) and the [comparison of representations](../research/02-representation-comparison.md). The decisions it embodies are recorded in the [decision records](../adr/README.md).
 
 ## 1. Purpose and rules
 
@@ -119,6 +119,14 @@ Splices, eyes and nets need points where three or more rope ends meet. The forma
   - Each span of a `catmull-rom` curve, from one control point to the next, is cut into 12 pieces of equal parameter. The parameter is centripetal: the knots are spaced by the square root of the distance between control points. At an open end, the missing neighbour is the mirror image of the next point through the end point. A closed curve has one more span, from its last point back to its first.
   - Along a span the material coordinate advances in proportion to the length of the polyline, from the coordinate of one control point to that of the next. A closed curve returns to its start at the length of its rope.
 - **Shapes** for rigid objects: `pole` (segment with radius), `ring` (centre, normal, ring radius, bar radius), `curve` (any centerline with a radius).
+
+### Tightening
+
+`geometry.tightening` lists, by id, the frames a knot passes through as it is drawn tight: first the frame it is tied in, last the tightest. Every one of them is a frame like any other and keeps the rules below; the tightest declares `realises` when the first does, so that the tight knot is checked to be the same diagram. Between two of them a view moves each point of the rope, by its material coordinate, straight from its place in one to its place in the next.
+
+The frames are computed, not drawn by hand: `tools/knots/tighten.mjs` writes them into the document, and they are kept with it. The computation makes the knot a little smaller step by step, and lets the rope it gives up run out into the two ends, which lengthen; after each step the rope is moved until it neither passes through itself, nor bends tighter than it can, nor stretches. Nothing rubs: the result is the shape a knot takes when pulled by both ends, not a statement about how it holds. Only a knot of one open rope is tightened so far.
+
+The named parts of a rope are stretches of its material in the frame the knot is tied in. In a tightened frame the same material lies elsewhere, so a view names the parts only on the frame the knot is tied in.
 
 ### Validity
 
