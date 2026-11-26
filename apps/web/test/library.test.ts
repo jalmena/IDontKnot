@@ -1,6 +1,6 @@
 import { checkDocument, checkFrame, checkMethod } from '@idontknot/core';
 import { describe, expect, it } from 'vitest';
-import { CATEGORY_IDS, isDiscipline, OBJECT_KINDS } from '../src/disciplines.ts';
+import { CATEGORY_IDS, DISCIPLINE_IDS, isDiscipline, OBJECT_KINDS } from '../src/disciplines.ts';
 import { LANGUAGES } from '../src/languages.ts';
 import { inLanguage, KNOTS } from '../src/knot/library.ts';
 
@@ -73,4 +73,11 @@ it('falls back to English for a text that a language lacks', () => {
   expect(inLanguage({ en: 'Tail', es: 'Chicote' }, 'es')).toBe('Chicote');
   expect(inLanguage({ en: 'Tail' }, 'es')).toBe('Tail');
   expect(inLanguage(undefined, 'es')).toBe('');
+});
+
+it('has a knot for every discipline', () => {
+  for (const discipline of DISCIPLINE_IDS) {
+    const knots = Object.values(KNOTS).filter(({ entry }) => entry.uses?.[discipline] !== undefined);
+    expect(knots.length, discipline).toBeGreaterThan(0);
+  }
 });

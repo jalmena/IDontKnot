@@ -1,0 +1,77 @@
+{
+  "format": "idk-entry",
+  "formatVersion": "0.1.0",
+  "knot": "figure-eight-loop",
+  "names": {
+    "en": "Figure-eight loop",
+    "es": "Gaza de ocho"
+  },
+  "category": "loop",
+  "uses": {
+    "climbing": {
+      "text": {
+        "en": "The usual knot for tying in to the end of the rope: a figure-eight knot is tied in the rope, and the end is led through the tie-in points of the harness and followed back through it.",
+        "es": "El nudo habitual para encordarse al extremo de la cuerda: se hace un nudo de ocho en la cuerda, y el chicote se pasa por los puntos de encordamiento del arnés y se lleva de vuelta siguiendo el ocho."
+      }
+    },
+    "decorative": {
+      "object": "post",
+      "text": {
+        "en": "A fixed eye at the end of a rope, strong and easy to check by eye: to hang the rope from a hook, or to drop it over a post.",
+        "es": "Gaza fija en el extremo de una cuerda, fuerte y fácil de comprobar a simple vista: para colgar la cuerda de un gancho o echarla a un poste."
+      }
+    }
+  },
+  "afterLoad": {
+    "en": "After a heavy load it jams, and can be hard to untie.",
+    "es": "Tras soportar mucha carga se aprieta, y puede costar deshacerlo."
+  },
+  "parts": {
+    "standing-part": {
+      "en": "Standing part",
+      "es": "Firme"
+    },
+    "eye": {
+      "en": "Eye",
+      "es": "Gaza"
+    },
+    "tail": {
+      "en": "Tail",
+      "es": "Chicote"
+    }
+  },
+  "methods": {
+    "followed-through": {
+      "name": {
+        "en": "Followed through",
+        "es": "Por seguimiento"
+      },
+      "steps": {
+        "make-loop": {
+          "en": "Well back from the end, lead the rope round and over the standing part, to make a loop.",
+          "es": "Lejos del extremo, lleva la cuerda alrededor y por encima del firme para formar un bucle."
+        },
+        "round-standing-part": {
+          "en": "Take the end round behind the standing part.",
+          "es": "Rodea el firme pasando el chicote por detrás."
+        },
+        "through-loop": {
+          "en": "Pass it down through the loop, over its near side and out under its far side: a figure-eight knot, with a long end.",
+          "es": "Mete el chicote por el bucle, por encima del lado cercano, y sácalo por debajo del lejano: un nudo de ocho, con el chicote largo."
+        },
+        "back-into-knot": {
+          "en": "Lead the end round, to make the eye, and back into the knot beside the strand it came out by.",
+          "es": "Lleva el chicote alrededor, para formar la gaza, y vuelve a meterlo en el nudo junto al cabo por el que salió."
+        },
+        "follow-round": {
+          "en": "Follow that strand back through the knot, keeping beside it.",
+          "es": "Sigue ese cabo de vuelta por el nudo, siempre a su lado."
+        },
+        "follow-out": {
+          "en": "Follow it all the way, until the end comes out beside the standing part.",
+          "es": "Síguelo hasta el final, hasta que el chicote salga junto al firme."
+        }
+      }
+    }
+  }
+}
