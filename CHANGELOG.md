@@ -33,11 +33,13 @@ All notable changes to this project are recorded here. The format follows [Keep 
 - A "Tighten" button on the page of a knot, beside "Next": the knot is seen to tighten, the view closes in on it and the light moves up over it. "Loosen" brings it back.
 - Disciplines: the application opens on them, and one chosen leads to its knots, grouped by category, in its rope. It can be changed at the top right of every page, and the logo leads back to the choice.
 - A "Use" tab on the page of a knot: its category, what it is for in the discipline, and a button that shows it tied to a plate or round a post, in computed wood.
+- Two knots: the double overhand knot, a stopper for climbing and for every day, which closes into the cinquefoil knot, 5₁; and the figure-eight loop, tied by following a figure-eight knot back, as climbers tie in. The overhand knot is now also in Shibari, at the ends of the rope.
 
 ### Changed
 
 - The things a knot is tied to stay where they are while it is tightened and loosened: the rope moves instead, so that the knot rests against its plate and an eye stays round its post. A standing part runs on through the middle of its plate, tied and tight alike, and a post stands nearly upright through its eye, over one side and under the other. The wood is computed ahead and kept in the browser.
 - What a knot is for ends, for every knot, with whether it jams after it has taken a load or still unties easily.
+- Beside the view, the steps of a knot take the room the panel has and scroll when there are more, keeping the step being tied in sight. Two names that would run into each other, as those of the standing part and the tail of a knot tied in a bight do, are written one over the rope and one under it.
 - A knot with an end inside it, such as the bowline, shows its Jones polynomial with its ends joined over the whole knot and under it.
 - The three-strand polyester is satin and ivory: it looked too bright to be real.
 - Faster to load: the server compresses what it sends (the script of the interface goes from 1.1 MB to 324 kB), the pictures of knots are kept in the browser, the images of several ropes are computed side by side, and a knot's page no longer spends most of a second preparing its tightening.

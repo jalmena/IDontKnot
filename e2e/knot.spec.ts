@@ -249,8 +249,8 @@ test('shows each knot, its panel and the row of knots on one screen of a laptop'
       const box = element.getBoundingClientRect();
       return { top: Math.round(box.top + window.scrollY), bottom: Math.round(box.bottom + window.scrollY) };
     });
-  // the bowline has the most steps: four
-  for (const knot of ['figure-eight', 'overhand', 'bowline']) {
+  // the figure-eight loop has the most steps, six: they scroll beside the view
+  for (const knot of ['figure-eight', 'overhand', 'bowline', 'double-overhand', 'figure-eight-loop']) {
     for (const language of ['en', 'es']) {
       await page.goto(`/knots/${knot}`);
       await page.getByLabel(/Language|Idioma/).selectOption(language);
@@ -262,6 +262,17 @@ test('shows each knot, its panel and the row of knots on one screen of a laptop'
       expect(row.bottom, `${knot} in ${language}`).toBeLessThanOrEqual(viewport?.height ?? 0);
     }
   }
+  // the step being tied is kept in sight among them
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  const steps = page.getByTestId('steps');
+  await steps.getByRole('button').first().click();
+  for (let step = 0; step < 4; step++) await page.getByRole('button', { name: /^(Next|Siguiente)$/ }).click();
+  const current = steps.locator('[aria-current="step"]');
+  await expect(current).toHaveCount(1);
+  expect(await steps.evaluate((list) => list.scrollTop)).toBeGreaterThan(0);
+  const [list, item] = [await steps.boundingBox(), await current.boundingBox()];
+  expect(item!.y).toBeGreaterThanOrEqual(list!.y - 1);
+  expect(item!.y + item!.height).toBeLessThanOrEqual(list!.y + list!.height + 1);
 });
 
 test('says what the knot is for in the discipline, and shows what it is tied to', async ({ page }) => {
@@ -306,7 +317,10 @@ test('says what the knot is for in the discipline, and shows what it is tied to'
 
   // in knot theory nothing pulls on it
   await page.getByTestId('discipline').selectOption('theory');
-  await page.getByRole('navigation', { name: 'All knots' }).getByRole('link', { name: 'Overhand knot' }).click();
+  await page
+    .getByRole('navigation', { name: 'All knots' })
+    .getByRole('link', { name: 'Overhand knot', exact: true })
+    .click();
   await page.getByRole('tab', { name: 'Use' }).click();
   await expect(page.getByTestId('use')).toContainText('the trefoil knot');
   await expect(page.getByTestId('use')).not.toContainText('load');

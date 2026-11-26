@@ -1,0 +1,76 @@
+{
+  "format": "idk-entry",
+  "formatVersion": "0.1.0",
+  "knot": "double-overhand",
+  "names": {
+    "en": "Double overhand knot",
+    "es": "Nudo simple doble"
+  },
+  "category": "stopper",
+  "uses": {
+    "climbing": {
+      "object": "plate",
+      "text": {
+        "en": "A stopper at the end of the rope, so that the end cannot run through a belay or abseil device.",
+        "es": "Tope en el extremo de la cuerda, para que no se escape por el asegurador o el descensor."
+      }
+    },
+    "decorative": {
+      "object": "plate",
+      "text": {
+        "en": "A bulkier stopper than the overhand knot, at the end of a cord or a thread.",
+        "es": "Tope más grueso que el nudo simple, en el extremo de un cordón o de un hilo."
+      }
+    },
+    "theory": {
+      "text": {
+        "en": "With its ends joined it is the cinquefoil knot, 5₁: the torus knot of type (2, 5), as the overhand knot is the trefoil, of type (2, 3). Each further turn round the standing part adds two crossings.",
+        "es": "Con los extremos unidos es el nudo de cinco hojas, 5₁: el nudo tórico de tipo (2, 5), como el nudo simple es el trébol, de tipo (2, 3). Cada vuelta más alrededor del firme añade dos cruces."
+      }
+    }
+  },
+  "afterLoad": {
+    "en": "After it has taken a load it jams harder than the overhand knot, and is hard to untie.",
+    "es": "Después de soportar carga se aprieta más que el nudo simple, y cuesta deshacerlo."
+  },
+  "parts": {
+    "standing-part": {
+      "en": "Standing part",
+      "es": "Firme"
+    },
+    "loop": {
+      "en": "Loop",
+      "es": "Bucle"
+    },
+    "turns": {
+      "en": "Turns",
+      "es": "Vueltas"
+    },
+    "tail": {
+      "en": "Tail",
+      "es": "Chicote"
+    }
+  },
+  "methods": {
+    "with-the-end": {
+      "name": {
+        "en": "With the end",
+        "es": "Con el chicote"
+      },
+      "steps": {
+        "make-loop": {
+          "en": "Lead the end round and under the standing part, to make a loop.",
+          "es": "Lleva el chicote alrededor y por debajo del firme para formar un bucle."
+        },
+        "first-turn": {
+          "en": "Pass it up through the loop, over the standing part, and back down under it.",
+          "es": "Sube el chicote por el bucle, por encima del firme, y vuelve a bajarlo por debajo."
+        },
+        "second-turn": {
+          "en": "Pass it through the loop a second time, and out under the far side.",
+          "es": "Mételo por el bucle una segunda vez y sácalo por debajo del lado lejano."
+        }
+      }
+    }
+  }
+}

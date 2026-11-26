@@ -1,5 +1,5 @@
 import type { Method } from '@idontknot/core';
-import type { Dispatch, SetStateAction } from 'react';
+import { useEffect, useRef, type Dispatch, type SetStateAction } from 'react';
 import { useTranslation } from 'react-i18next';
 import { inLanguage, type LibraryEntry } from './library.ts';
 import {
@@ -51,6 +51,18 @@ export function Tying({ method, texts, timeline, length, state, setState, speed,
   const begun = state.position > timeline.start + 1e-9;
   const tied = state.position >= length - 1e-9;
   const current = stepAt(timeline, state.position);
+  // where the steps scroll beside the view, the step being tied is kept in sight; the page itself does not move
+  const list = useRef<HTMLOListElement>(null);
+  const shown = begun && !tied ? current : -1;
+  useEffect(() => {
+    const steps = list.current;
+    const item = steps?.children[shown] as HTMLElement | undefined;
+    if (!steps || !item || steps.scrollHeight <= steps.clientHeight) return;
+    if (item.offsetTop < steps.scrollTop) steps.scrollTop = item.offsetTop;
+    else if (item.offsetTop + item.offsetHeight > steps.scrollTop + steps.clientHeight) {
+      steps.scrollTop = item.offsetTop + item.offsetHeight - steps.clientHeight;
+    }
+  }, [shown]);
   // with less movement asked for, a step is shown done at once
   const moved = (playback: Playback): Playback => (still() ? seek(timeline, playback.target) : playback);
   // going back to the tying, a knot that was tightened is loose again at once
@@ -118,9 +130,9 @@ export function Tying({ method, texts, timeline, length, state, setState, speed,
           </select>
         </label>
       </div>
-      <ol className="steps" aria-labelledby="knot-steps" data-testid="steps">
+      <ol ref={list} className="steps" aria-labelledby="knot-steps" data-testid="steps">
         {method.steps.map((step, index) => (
-          <li key={step.id} aria-current={begun && !tied && index === current ? 'step' : undefined}>
+          <li key={step.id} aria-current={index === shown ? 'step' : undefined}>
             <button type="button" onClick={() => tie(moved(playStep(timeline, index)))}>
               {inLanguage(texts?.steps[step.id], language) || step.id}
             </button>

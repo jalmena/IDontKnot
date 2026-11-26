@@ -76,8 +76,12 @@ test('changes the discipline at the top right: back to the knots, in the rope of
   await page.getByTestId('discipline').selectOption('theory');
   await expect(page).toHaveURL(/\/$/);
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Mathematics');
-  await expect(knots(page).getByRole('link')).toHaveText(['Figure-eight knot', 'Overhand knot']);
-  await knots(page).getByRole('link', { name: 'Overhand knot' }).click();
+  await expect(knots(page).getByRole('link')).toHaveText([
+    'Double overhand knot',
+    'Figure-eight knot',
+    'Overhand knot',
+  ]);
+  await knots(page).getByRole('link', { name: 'Overhand knot', exact: true }).click();
   await expect(page.getByLabel('Material')).toHaveValue('line');
 });
 
@@ -91,13 +95,6 @@ test('leads back to the choice of discipline from the name of the application', 
   await expect(page.getByTestId('discipline')).toHaveValue('nautical');
   await page.locator('[data-discipline="pioneering"]').click();
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Pioneering');
-});
-
-test('says so when a discipline has no knots yet', async ({ page }) => {
-  await page.addInitScript(() => localStorage.setItem('idk.discipline', 'climbing'));
-  await page.goto('/');
-  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Climbing and mountaineering');
-  await expect(knots(page)).toContainText('This discipline has no knots in the library yet.');
 });
 
 test('opens the knot that is chosen above the list, without loading the application again', async ({ page }) => {
@@ -128,7 +125,7 @@ test('goes from one knot to another by the row under it, in the same view', asyn
   await page.getByTestId('tighten').click();
   await expect(page.getByTestId('panel')).toHaveAttribute('data-tightened', '1');
 
-  await knots(page).getByRole('link', { name: 'Overhand knot' }).click();
+  await knots(page).getByRole('link', { name: 'Overhand knot', exact: true }).click();
   await expect(page).toHaveURL(/\/knots\/overhand$/);
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Overhand knot');
   await expect(page.getByTestId('parts').getByRole('button')).toHaveText(['Standing part', 'Loop', 'Tail']);
@@ -162,7 +159,9 @@ test('names the disciplines, the knots and their categories in Spanish', async (
   await expect(page.getByRole('navigation', { name: 'Todos los nudos' }).getByRole('link')).toHaveText([
     'Nudo de ocho',
     'Nudo simple',
+    'Nudo simple doble',
     'As de guía',
+    'Gaza de ocho',
   ]);
   await expect(page.getByTestId('discipline')).toHaveValue('decorative');
 });
@@ -174,6 +173,6 @@ test('has no accessibility violations that axe can detect, on the disciplines an
     (await new AxeBuilder({ page }).analyze()).violations.map((violation) => `${violation.id}: ${violation.help}`);
   expect(await violations()).toEqual([]);
   await page.locator('[data-discipline="decorative"]').click();
-  await expect(knots(page).locator('img')).toHaveCount(3);
+  await expect(knots(page).locator('img')).toHaveCount(5);
   expect(await violations()).toEqual([]);
 });
