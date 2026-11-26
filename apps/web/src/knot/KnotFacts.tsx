@@ -8,8 +8,11 @@ export interface Facts {
   readonly alternating: boolean;
   readonly writhe: number;
   readonly endsOutside: boolean;
-  /** The Jones polynomial of the knot with its ends joined, as the core returns it. */
-  readonly closure: Readonly<Record<string, number>> | null;
+  /**
+   * The Jones polynomial of the knot with its ends joined, as the core returns it: outside the knot when
+   * its ends lie there; or else over the whole knot, and under it.
+   */
+  readonly closures: readonly { side: 'outside' | 'over' | 'under'; value: Readonly<Record<string, number>> }[];
 }
 
 interface Props {
@@ -55,14 +58,14 @@ export function KnotFacts({ facts, material }: Props) {
           ))}
         </dd>
       </div>
-      {facts.closure && (
-        <div className="facts__wide">
-          <dt>{t('knot.facts.closure')}</dt>
+      {facts.closures.map(({ side, value }) => (
+        <div key={side} className="facts__wide">
+          <dt>{t(side === 'outside' ? 'knot.facts.closure' : `knot.facts.joined.${side}`)}</dt>
           <dd>
-            <Polynomial value={facts.closure} testId="jones-closure" />
+            <Polynomial value={value} testId={side === 'outside' ? 'jones-closure' : `jones-${side}`} />
           </dd>
         </div>
-      )}
+      ))}
     </dl>
   );
 }

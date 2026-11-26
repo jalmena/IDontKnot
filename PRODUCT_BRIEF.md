@@ -69,7 +69,8 @@ Its differentiator is that the system reasons about knots through a mathematical
 | 2026-11-26 | Use | A third tab on the page of a knot, "Use", between "The knot" and "Mathematics": the category of the knot, what it is for in the discipline, and a button that shows in the view what it is tied to, named by what it shows ("Show the post"). |
 | 2026-11-26 | Categories | Stopper knot, loop, bend, hitch, binding knot, lashing, tie, mathematical knot. Each knot has one; a discipline's knots are listed under them, in that order. |
 | 2026-11-26 | Polyester | The three-strand polyester of Nautical is satin and ivory, not bright white: chosen from four rendered degrees. |
-| 2026-11-26 | Things a knot is tied to | An eye is shown round a post. Things are drawn in realistic wood, and in realistic metal when a thing of metal comes. |
+| 2026-11-26 | Things a knot is tied to | An eye is shown round a post, which stands nearly upright and passes over the upper side of the eye and under the lower. A stopper is shown against a plate that its standing part runs through and stands out beyond. The things stay where they are: as the knot is tightened, it is the rope that moves, so that the knot rests against the plate and the eye stays round the post. This holds for most knots, unless one needs otherwise. Things are drawn in realistic wood, and in realistic metal when a thing of metal comes. |
+| 2026-11-26 | Joined ends | A knot whose rope has an end inside it, such as the bowline, shows its Jones polynomial with its ends joined over the whole knot and under it, the two closures that do not depend on the way the join takes. |
 
 ## Open decisions
 

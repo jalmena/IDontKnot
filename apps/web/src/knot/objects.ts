@@ -60,21 +60,76 @@ export function plateFor(rope: RopeShape): SceneObject {
 }
 
 /**
- * A post standing through an eye, at its end furthest from the knot, against the inside of the rope. It
- * stands across the plane the knot is drawn in.
+ * A post standing up through an eye, a little short of its far end: nearly upright in the drawing, it leans
+ * so as to pass over the upper side of the eye and under the lower, as a post the eye is dropped over does.
  */
 export function postFor(rope: RopeShape, eye: readonly [from: number, to: number]): SceneObject {
   const d = 2 * rope.radius;
   const inside = rope.points.filter((_, i) => (rope.s[i] as number) > eye[0] && (rope.s[i] as number) < eye[1]);
-  if (inside.length < 3)
-    return { kind: 'post', at: along(rope, (eye[0] + eye[1]) / 2).point, axis: [0, 0, 1], scale: d };
   const mouth = along(rope, eye[0]).point;
+  if (inside.length < 3) return { kind: 'post', at: mouth, axis: [0, 1, 0], scale: d };
   const far = inside.reduce((best, point) => (size(sub(point, mouth)) > size(sub(best, mouth)) ? point : best));
-  const middle: Point3 = [0, 1, 2].map(
-    (c) => inside.reduce((sum, point) => sum + point[c]!, 0) / inside.length,
-  ) as unknown as Point3;
-  // into the eye from its far end, in the plane of the drawing
-  const inward = unit([middle[0] - far[0], middle[1] - far[1], 0]);
-  const reach = (POST_RADIUS + 0.65) * d;
-  return { kind: 'post', at: [far[0] + inward[0] * reach, far[1] + inward[1] * reach, 0], axis: [0, 0, 1], scale: d };
+  // across the eye, at most of the way from its mouth to its far end
+  const x = mouth[0] + (far[0] - mouth[0]) * POST_ALONG;
+  const near = inside.filter((point) => Math.abs(point[0] - x) < 1.2 * d);
+  const ys = (near.length > 1 ? near : inside).map((point) => point[1]);
+  const [low, high] = [Math.min(...ys), Math.max(...ys)];
+  // it passes clear of the rope at both sides, in front of the one and behind the other
+  const clear = (POST_RADIUS + 0.5 + 0.15) * d;
+  const axis = unit([0, high - low, 2 * clear]);
+  const length = (Math.hypot(high - low, 2 * clear) + 6 * d) / d;
+  return { kind: 'post', at: [x, (low + high) / 2, 0], axis, scale: d, length };
+}
+
+/** How far across an eye, from its mouth to its far end, a post stands. */
+const POST_ALONG = 0.72;
+
+/**
+ * How far to move a tightened knot so that it rests against the plate it is pulled to: its side towards the
+ * plate is where the knot was, tied, against it. `entry` is where the standing part comes into the knot.
+ */
+export function towardsPlate(
+  plate: SceneObject,
+  tied: RopeShape,
+  tiedEntry: number,
+  now: RopeShape,
+  entry: number,
+): Point3 {
+  const front = (rope: RopeShape, from: number): number => {
+    let least = Infinity;
+    rope.points.forEach((point, i) => {
+      if ((rope.s[i] as number) < from) return;
+      least = Math.min(
+        least,
+        (point[0] - plate.at[0]) * plate.axis[0] +
+          (point[1] - plate.at[1]) * plate.axis[1] +
+          (point[2] - plate.at[2]) * plate.axis[2],
+      );
+    });
+    return least;
+  };
+  const by = front(tied, tiedEntry) - front(now, entry);
+  return [plate.axis[0] * by, plate.axis[1] * by, plate.axis[2] * by];
+}
+
+/** How far to move a tightened knot so that its eye stays round the post: its middle where it was, tied. */
+export function aroundPost(tied: RopeShape, now: RopeShape, eye: readonly [from: number, to: number]): Point3 {
+  const middle = (eye[0] + eye[1]) / 2;
+  return sub(along(tied, middle).point, along(now, middle).point);
+}
+
+/** A rope with more of it before its start, straight: as a standing part runs on beyond what is drawn. */
+export function lengthened(rope: RopeShape, by: number): RopeShape {
+  const [first, second] = [rope.points[0] as Point3, rope.points[1] as Point3];
+  const back = unit(sub(first, second));
+  const step = size(sub(second, first)) || rope.radius;
+  const count = Math.max(Math.round(by / step), 1);
+  const before: Point3[] = [];
+  const s: number[] = [];
+  for (let k = count; k >= 1; k--) {
+    const at = (by * k) / count;
+    before.push([first[0] + back[0] * at, first[1] + back[1] * at, first[2] + back[2] * at]);
+    s.push((rope.s[0] as number) - at);
+  }
+  return { ...rope, points: [...before, ...rope.points], s: [...s, ...rope.s] };
 }

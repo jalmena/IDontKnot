@@ -391,6 +391,8 @@ export class RopeViewport {
       this.things.add(mesh);
     }
     this.host.dataset['objects'] = objects.map((thing) => thing.kind).join(' ');
+    // and whether they are in their wood yet, so that a test can tell
+    this.host.dataset['wood'] = objects.length === 0 ? '' : woodIsReady() ? 'ready' : 'waiting';
     if (this.detail === 'full') this.renderer.shadowMap.needsUpdate = true;
     if (draw) this.render();
   }

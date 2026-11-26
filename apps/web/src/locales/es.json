@@ -76,7 +76,11 @@
       "alternating": "La cuerda pasa por encima y por debajo alternativamente",
       "endsOutside": "Los dos extremos quedan fuera del nudo",
       "closure": "Polinomio de Jones, uniendo los dos extremos",
-      "unsound": "La forma en el espacio incumple una regla. Es un defecto: por favor, comunícalo."
+      "unsound": "La forma en el espacio incumple una regla. Es un defecto: por favor, comunícalo.",
+      "joined": {
+        "over": "Polinomio de Jones, uniendo los extremos por encima de todo el nudo",
+        "under": "Polinomio de Jones, uniendo los extremos por debajo de todo el nudo"
+      }
     },
     "tabs": {
       "label": "Sobre este nudo",

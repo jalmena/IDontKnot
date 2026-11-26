@@ -312,9 +312,13 @@ test('makes no claim about what knot a rope would be whose end lies inside it, a
   await expect(page.getByTestId('steps').getByRole('button')).toHaveCount(4);
   await page.getByRole('tab', { name: 'Mathematics' }).click();
   await expect(page.getByTestId('crossings')).toHaveText('7');
-  // its tail is inside its eye: joining the two ends would be a choice, and none is made
+  // its tail is inside its eye: joined outside the knot it cannot be, but over the whole knot or under it
   await expect(page.getByTestId('facts')).toContainText('Both ends lie outside the knotno');
   await expect(page.getByTestId('jones-closure')).toHaveCount(0);
+  const [over, under] = [page.getByTestId('jones-over'), page.getByTestId('jones-under')];
+  await expect(over).toHaveAttribute('aria-label', /t/);
+  await expect(under).toHaveAttribute('aria-label', /t/);
+  expect(await over.getAttribute('aria-label')).not.toBe(await under.getAttribute('aria-label'));
 });
 
 test('names the knot, its parts and its steps in Spanish', async ({ page }) => {
