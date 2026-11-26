@@ -6,6 +6,30 @@
     "en": "Bowline",
     "es": "As de guía"
   },
+  "category": "loop",
+  "uses": {
+    "nautical": {
+      "object": "post",
+      "text": {
+        "en": "A fixed eye at the end of a line, which does not close up when it is pulled: to make fast to a bollard, a post or a ring. It is easy to untie even after it has taken a load.",
+        "es": "Gaza fija en el extremo de un cabo, que no se cierra al tirar: para amarrar a un noray, un poste o una argolla. Se deshace con facilidad aun después de haber soportado carga."
+      }
+    },
+    "pioneering": {
+      "object": "post",
+      "text": {
+        "en": "A fixed eye to drop over a post or put round a tree, and to pull from.",
+        "es": "Gaza fija para echar a un poste o pasar alrededor de un árbol, y tirar desde ella."
+      }
+    },
+    "decorative": {
+      "object": "post",
+      "text": {
+        "en": "A fixed eye at the end of a rope, which does not close up when it is pulled.",
+        "es": "Gaza fija en el extremo de una cuerda, que no se cierra al tirar."
+      }
+    }
+  },
   "parts": {
     "standing-part": {
       "en": "Standing part",

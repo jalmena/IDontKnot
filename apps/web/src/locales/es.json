@@ -14,7 +14,8 @@
   },
   "library": {
     "title": "Nudos",
-    "all": "Todos los nudos"
+    "all": "Todos los nudos",
+    "empty": "Esta disciplina todavía no tiene nudos en la biblioteca."
   },
   "lab": {
     "title": "Laboratorio de nudos tóricos",
@@ -80,6 +81,7 @@
     "tabs": {
       "label": "Sobre este nudo",
       "knot": "El nudo",
+      "use": "Utilidad",
       "maths": "Matemáticas"
     },
     "tying": {
@@ -96,9 +98,72 @@
       "speed": "Velocidad",
       "end": "El chicote",
       "unsound": "Los pasos de este método no se siguen unos de otros. Es un defecto: por favor, comunícalo."
+    },
+    "use": {
+      "category": "Categoría",
+      "what": "Para qué sirve",
+      "inUse": "En uso",
+      "none": "La biblioteca no recoge ningún uso de este nudo en {{discipline}}.",
+      "show": {
+        "plate": "Mostrar la placa",
+        "post": "Mostrar el poste"
+      }
     }
   },
   "footer": {
     "status": "Prototipo. Nada de lo que aparece aquí prueba que un nudo sea seguro."
+  },
+  "discipline": {
+    "label": "Disciplina"
+  },
+  "disciplines": {
+    "title": "Disciplinas",
+    "lead": "Elige para qué usas la cuerda: verás sus nudos, en su cuerda, y para qué sirven. Puedes cambiarla cuando quieras, arriba a la derecha.",
+    "names": {
+      "climbing": "Escalada y montaña",
+      "nautical": "Náutica",
+      "shibari": "Shibari",
+      "pioneering": "Pionerismo",
+      "decorative": "General y decorativo",
+      "theory": "Matemáticas"
+    },
+    "about": {
+      "climbing": "Encordarse, asegurar, rapelar y trabajar en altura, también en árboles.",
+      "nautical": "Amarrar, izar y unir cabos a bordo.",
+      "shibari": "Ataduras sobre el cuerpo, con consentimiento y cuidado.",
+      "pioneering": "Trincas y estructuras de palos y cuerda.",
+      "decorative": "Nudos de todos los días, y de adorno.",
+      "theory": "Nudos como objetos matemáticos: diagramas e invariantes."
+    },
+    "short": {
+      "climbing": "Escalada",
+      "nautical": "Náutica",
+      "shibari": "Shibari",
+      "pioneering": "Pionerismo",
+      "decorative": "General",
+      "theory": "Matemáticas"
+    }
+  },
+  "categories": {
+    "one": {
+      "stopper": "Nudo de tope",
+      "loop": "Gaza",
+      "bend": "Unión",
+      "hitch": "Amarre",
+      "binding": "Ligada",
+      "lashing": "Trinca",
+      "tie": "Atadura",
+      "mathematical": "Nudo matemático"
+    },
+    "many": {
+      "stopper": "Nudos de tope",
+      "loop": "Gazas",
+      "bend": "Uniones",
+      "hitch": "Amarres",
+      "binding": "Ligadas",
+      "lashing": "Trincas",
+      "tie": "Ataduras",
+      "mathematical": "Nudos matemáticos"
+    }
   }
 }

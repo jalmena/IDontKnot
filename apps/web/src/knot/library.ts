@@ -10,11 +10,24 @@ import figureEight from '../../../../content/knots/figure-eight/knot.json';
 import overhandEntry from '../../../../content/knots/overhand/entry.json';
 import overhand from '../../../../content/knots/overhand/knot.json';
 
-/** What the library says about a knot that is not its shape: for now, what it and its parts are called. */
+/** What a knot is for in one discipline, by language code; and what it is shown tied to there, if anything. */
+export interface KnotUse {
+  readonly text: Readonly<Record<string, string>>;
+  readonly object?: string;
+}
+
+/**
+ * What the library says about a knot that is not its shape: what it and its parts are called, what kind of
+ * knot it is, and what it is for in each discipline that uses it.
+ */
 export interface LibraryEntry {
   readonly knot: string;
   /** The name of the knot in each language, by language code. */
   readonly names: Readonly<Record<string, string>>;
+  /** What it is for, as a kind: one of the categories of the library. */
+  readonly category?: string;
+  /** What it is for in each discipline that uses it, by discipline. A discipline that is not here does not show it. */
+  readonly uses?: Readonly<Record<string, KnotUse>>;
   /** The name of each named part of its ropes, by part and by language code. */
   readonly parts: Readonly<Record<string, Readonly<Record<string, string>>>>;
   /** For each method of tying: its name, and what each of its steps tells the person to do, by language code. */

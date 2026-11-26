@@ -31,9 +31,12 @@ All notable changes to this project are recorded here. The format follows [Keep 
 - A third knot, the bowline: its eye keeps its shape while the knot is drawn tight round it, as an eye round a post does.
 - The licence of the content of the library: Creative Commons Attribution-ShareAlike 4.0.
 - A "Tighten" button on the page of a knot, beside "Next": the knot is seen to tighten, the view closes in on it and the light moves up over it. "Loosen" brings it back.
+- Disciplines: the application opens on them, and one chosen leads to its knots, grouped by category, in its rope. It can be changed at the top right of every page.
+- A "Use" tab on the page of a knot: its category, what it is for in the discipline, and a button that shows it tied to a plate or round a post, in computed wood.
 
 ### Changed
 
+- Faster to load: the server compresses what it sends (the script of the interface goes from 1.1 MB to 324 kB), the pictures of knots are kept in the browser, the images of several ropes are computed side by side, and a knot's page no longer spends most of a second preparing its tightening.
 - A knot whose rope has an end inside it, as the tail of a bowline is inside its eye, no longer claims what knot it would be with its ends joined: the core refuses that claim for such a document (rule T5), and its page leaves it out.
 - The torus knot laboratory moved to `/lab`.
 - Both pages share one layout that fits one screen of a laptop: the view with the title of the page inside it, and a panel of the same height beside it.

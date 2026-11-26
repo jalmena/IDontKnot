@@ -14,7 +14,8 @@
   },
   "library": {
     "title": "Knots",
-    "all": "All knots"
+    "all": "All knots",
+    "empty": "This discipline has no knots in the library yet."
   },
   "lab": {
     "title": "Torus knot laboratory",
@@ -80,6 +81,7 @@
     "tabs": {
       "label": "About this knot",
       "knot": "The knot",
+      "use": "Use",
       "maths": "Mathematics"
     },
     "tying": {
@@ -96,9 +98,72 @@
       "speed": "Speed",
       "end": "The end",
       "unsound": "The steps of this method do not follow from one another. This is a defect: please report it."
+    },
+    "use": {
+      "category": "Category",
+      "what": "What it is for",
+      "inUse": "In use",
+      "none": "The library records no use of this knot in {{discipline}}.",
+      "show": {
+        "plate": "Show the plate",
+        "post": "Show the post"
+      }
     }
   },
   "footer": {
     "status": "Prototype. Nothing here is evidence that a knot is safe to use."
+  },
+  "discipline": {
+    "label": "Discipline"
+  },
+  "disciplines": {
+    "title": "Disciplines",
+    "lead": "Choose what you use rope for: you will see its knots, in its rope, and what they are for. You can change it at any time, at the top right.",
+    "names": {
+      "climbing": "Climbing and mountaineering",
+      "nautical": "Nautical",
+      "shibari": "Shibari",
+      "pioneering": "Pioneering",
+      "decorative": "General and decorative",
+      "theory": "Mathematics"
+    },
+    "about": {
+      "climbing": "Tying in, belaying, abseiling and working at height, in trees too.",
+      "nautical": "Making fast, hoisting and joining lines on board.",
+      "shibari": "Ties on the body, with consent and care.",
+      "pioneering": "Lashings, and structures of poles and rope.",
+      "decorative": "Knots for every day, and for show.",
+      "theory": "Knots as mathematical objects: diagrams and invariants."
+    },
+    "short": {
+      "climbing": "Climbing",
+      "nautical": "Nautical",
+      "shibari": "Shibari",
+      "pioneering": "Pioneering",
+      "decorative": "General",
+      "theory": "Mathematics"
+    }
+  },
+  "categories": {
+    "one": {
+      "stopper": "Stopper knot",
+      "loop": "Loop",
+      "bend": "Bend",
+      "hitch": "Hitch",
+      "binding": "Binding knot",
+      "lashing": "Lashing",
+      "tie": "Tie",
+      "mathematical": "Mathematical knot"
+    },
+    "many": {
+      "stopper": "Stopper knots",
+      "loop": "Loops",
+      "bend": "Bends",
+      "hitch": "Hitches",
+      "binding": "Binding knots",
+      "lashing": "Lashings",
+      "tie": "Ties",
+      "mathematical": "Mathematical knots"
+    }
   }
 }

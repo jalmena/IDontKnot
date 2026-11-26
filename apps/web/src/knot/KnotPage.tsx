@@ -22,12 +22,16 @@ import { useRope } from '../viewer/RopeChoice.tsx';
 import { RopeSelect } from '../viewer/RopeSelect.tsx';
 import { RopeView, VIEW_MARGINS } from '../viewer/RopeView.tsx';
 import { LIGHT_FROM_ABOVE, LIGHT_FROM_THE_SIDE, type Stretch } from '../viewer/RopeViewport.ts';
+import { useDiscipline } from '../DisciplineChoice.tsx';
+import type { SceneObject } from '../viewer/things.ts';
 import { KnotFacts } from './KnotFacts.tsx';
+import { KnotUse } from './KnotUse.tsx';
+import { plateFor, postFor } from './objects.ts';
 import { inLanguage, type LibraryKnot } from './library.ts';
 import { fed } from './feeding.ts';
 import { boundsOf, partShape, pointAt } from './parts.ts';
 import { timelineOf, type Timeline } from './playback.ts';
-import { fitOf, ropesOf, shownFrame } from './shape.ts';
+import { fitOf, ropesOf, shownFrame, withThings } from './shape.ts';
 import { eased, shapeAt, tighteningOf, windowAt } from './tightening.ts';
 import { Tying } from './Tying.tsx';
 import { usePlayback } from './usePlayback.ts';
@@ -37,7 +41,7 @@ interface Props {
   readonly knot: LibraryKnot;
 }
 
-type Tab = 'knot' | 'maths';
+type Tab = 'knot' | 'use' | 'maths';
 
 /** The room a name takes above the rope it names, in CSS pixels. */
 const NAME_HEIGHT = 44;
@@ -49,6 +53,7 @@ const NAME_ROOM = 1.4;
 /** A knot that the library does not say how to tie. */
 const NO_METHOD: Timeline = { start: 0, stops: [] };
 const NOTHING: readonly never[] = [];
+const NO_THINGS: readonly SceneObject[] = [];
 
 /**
  * One knot of the library: in space and as a diagram, part by part, tied step by step, and as the core
@@ -66,12 +71,16 @@ export function KnotPage({ knot }: Props) {
   const [pointed, setPointed] = useState<string | null>(null);
   const shown = pointed ?? pinned;
   const { tight, amount, tighten, loosen, slacken } = useTightness();
+  const [discipline] = useDiscipline();
+  // whether the knot is shown tied to what it is tied to in the discipline
+  const [placed, setPlaced] = useState(false);
   // another knot has other parts, and is as it was tied: none of them is chosen yet
   const [opened, setOpened] = useState(knot);
   if (opened !== knot) {
     setOpened(knot);
     setPinned(null);
     setPointed(null);
+    setPlaced(false);
     slacken();
   }
 
@@ -105,12 +114,31 @@ export function KnotPage({ knot }: Props) {
       material,
     );
   }, [document, curves, material, tightening, amount, tied, rope, state.position, length]);
+  // what the knot is tied to, in the discipline, where the rope is as it is now: while the knot is being
+  // tied, where it will be when it is
+  const thing = (discipline ? entry.uses?.[discipline] : undefined)?.object;
+  const objects = useMemo<readonly SceneObject[]>(() => {
+    const [curve] = curves;
+    const [component] = document.components;
+    if (!placed || !curve || !component?.length || (thing !== 'plate' && thing !== 'post')) return NO_THINGS;
+    const radius = component.radius ?? 0.5;
+    let shape = { points: curve.points, s: curve.s, radius };
+    if (tightening && amount > 0) {
+      const points = shapeAt(tightening, eased(amount));
+      shape = { points, s: points.map((_, k) => (k * (component.length as number)) / (points.length - 1)), radius };
+    }
+    if (thing === 'plate') return [plateFor(shape)];
+    const eye = document.parts?.find((part) => part.type === 'eye');
+    return eye ? [postFor(shape, [eye.from, eye.to])] : NO_THINGS;
+  }, [placed, thing, curves, document, tightening, amount]);
   // the rope keeps the margins of the view, and leaves room above it for the names of its parts; as the
   // knot is tightened its ends run out of the view, which closes in on the knot
   const fit = useMemo(() => {
     const clear = { ...VIEW_MARGINS, top: VIEW_MARGINS.top + NAME_HEIGHT };
-    return tightening && amount > 0 ? { ...windowAt(tightening, eased(amount)), clear } : fitOf(curves, clear);
-  }, [curves, tightening, amount]);
+    return tightening && amount > 0
+      ? withThings({ ...windowAt(tightening, eased(amount)), clear }, objects)
+      : fitOf(curves, clear, objects);
+  }, [curves, tightening, amount, objects]);
   // and the light goes up over it, so that strands that lie together are told apart
   const light = useMemo<Point3>(() => {
     const t = eased(amount);
@@ -233,6 +261,7 @@ export function KnotPage({ knot }: Props) {
           corner={<RopeSelect value={material} onChange={setMaterial} />}
           fit={fit}
           subject={document}
+          objects={objects}
           light={light}
           emphasis={pulled ? NOTHING : emphasis}
           names={pulled ? NOTHING : tied ? partNames : laidNames}
@@ -263,6 +292,7 @@ export function KnotPage({ knot }: Props) {
           label={t('knot.tabs.label')}
           tabs={[
             { id: 'knot', label: t('knot.tabs.knot') },
+            { id: 'use', label: t('knot.tabs.use') },
             { id: 'maths', label: t('knot.tabs.maths') },
           ]}
           selected={tab}
@@ -304,6 +334,10 @@ export function KnotPage({ knot }: Props) {
                 {...(tightening ? { tightening: { tight, tighten, loosen, slacken } } : {})}
               />
             )}
+          </div>
+        ) : tab === 'use' ? (
+          <div className="panel__live" {...tabPanel('knot', 'use')}>
+            <KnotUse entry={entry} discipline={discipline} shown={placed} onShow={setPlaced} />
           </div>
         ) : (
           <div className="panel__live" {...tabPanel('knot', 'maths')}>

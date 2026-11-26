@@ -1,5 +1,6 @@
 import { checkDocument, checkFrame, checkMethod } from '@idontknot/core';
 import { describe, expect, it } from 'vitest';
+import { CATEGORY_IDS, isDiscipline, OBJECT_KINDS } from '../src/disciplines.ts';
 import { LANGUAGES } from '../src/languages.ts';
 import { inLanguage, KNOTS } from '../src/knot/library.ts';
 
@@ -17,6 +18,25 @@ describe.each(Object.entries(KNOTS))('the library knot %s', (id, { document, ent
     for (const { code } of LANGUAGES) {
       expect(entry.names[code]).toBeTruthy();
       for (const part of parts) expect(entry.parts[part]?.[code]).toBeTruthy();
+    }
+  });
+});
+
+describe.each(Object.entries(KNOTS))('what the library knot %s is for', (_id, { document, entry }) => {
+  it('is of one of the categories of the library', () => {
+    expect(CATEGORY_IDS).toContain(entry.category);
+  });
+
+  it('is said for each discipline that uses it, in every language, and tied to a thing it can be tied to', () => {
+    const uses = Object.entries(entry.uses ?? {});
+    expect(uses.length).toBeGreaterThan(0);
+    for (const [discipline, use] of uses) {
+      expect(isDiscipline(discipline)).toBe(true);
+      for (const { code } of LANGUAGES) expect(use.text[code]).toBeTruthy();
+      if (use.object === undefined) continue;
+      expect(OBJECT_KINDS).toContain(use.object);
+      // a post stands in an eye: a knot shown on one has an eye
+      if (use.object === 'post') expect(document.parts?.some((part) => part.type === 'eye')).toBe(true);
     }
   });
 });
