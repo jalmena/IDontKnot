@@ -147,7 +147,8 @@ export function KnotPage({ knot }: Props) {
   }, [placed, thing, tiedShape, eyePart]);
   // shown only when asked for, in the Use tab: a knot tied round a thing is shown round its own, as drawn
   const objects = useMemo(() => (placed && fixed.length > 0 ? fixed : shownWith), [placed, fixed, shownWith]);
-  const centre = placed ? fixed[0] : undefined;
+  // a knot tied round a thing is framed with the thing's place in the middle, whether it is shown or not
+  const centre = fixed[0];
   const pulledShape = useMemo<RopeShape | null>(() => {
     if (!tightening || amount <= 0) return null;
     const points = shapeAt(tightening, eased(amount));

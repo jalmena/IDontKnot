@@ -8,7 +8,7 @@ import { pictureOf } from '../viewer/pictures.ts';
 import { useRope } from '../viewer/RopeChoice.tsx';
 import { CATEGORY_IDS, type DisciplineId } from '../disciplines.ts';
 import { inLanguage, KNOTS, type LibraryKnot } from './library.ts';
-import { fitOf, ropesOf, shownFrame } from './shape.ts';
+import { centredOn, fitOf, ropesOf, shownFrame, thingsOf } from './shape.ts';
 
 interface Props {
   /** The knot that is open, if one is: the list is then a single row under it. */
@@ -99,7 +99,9 @@ function KnotPicture({
     if (!frame) return;
     let wanted = true;
     const curves = framePolylines(knot.document, frame);
-    pictureOf(`${id} ${material}`, ropesOf(knot.document, curves, material), fitOf(curves), wait).then(
+    // a knot tied round a thing is pictured without it, framed as it is on its page: round the thing's place
+    const fit = centredOn(fitOf(curves), thingsOf(knot.document, curves)[0]);
+    pictureOf(`${id} ${material}`, ropesOf(knot.document, curves, material), fit, wait).then(
       (made) => {
         if (wanted) setPicture(made);
       },
