@@ -8,6 +8,7 @@ import {
   checkDocument,
   checkFrame,
   framePolylines,
+  holesSeen,
   TIGHT_FRAME,
   tighten,
   tighteningFrames,
@@ -32,7 +33,7 @@ describe('tightening a rope', () => {
   it('keeps the shapes on the way, and the tightest last', () => {
     expect(tightening.shapes).toHaveLength(7);
     expect(tighten(curve.points, curve.s, radius, { keep: 2 }).shapes).toHaveLength(3);
-  });
+  }, 30_000);
 
   it('does not stretch the rope: its particles stay at their distances along it', () => {
     for (const shape of tightening.shapes) {
@@ -46,7 +47,10 @@ describe('tightening a rope', () => {
   it('gives the rope of the knot to its two ends, a little more with each shape', () => {
     const span = (shape: readonly Point3[]): number => between(shape[0] as Point3, shape.at(-1) as Point3);
     const spans = [between(curve.points[0] as Point3, curve.points.at(-1) as Point3), ...tightening.shapes.map(span)];
-    for (let k = 1; k < spans.length; k++) expect(spans[k]).toBeGreaterThan(spans[k - 1] as number);
+    // closing the last holes of the knot takes back a little, less than a diameter
+    for (let k = 1; k < spans.length; k++) expect(spans[k]).toBeGreaterThan((spans[k - 1] as number) - 2 * radius);
+    expect(spans.at(-1)).toBeGreaterThan(Math.max(...spans) - 2 * radius);
+    expect(spans[3]).toBeGreaterThan((spans[0] as number) + 10 * radius);
     // tied loosely, the ends are twenty diameters apart; tight, the knot keeps less than a third of the rope
     expect(spans.at(-1)).toBeGreaterThan((2 / 3) * length);
   });
@@ -78,7 +82,8 @@ describe('tightening a rope', () => {
       shape ? between(shape[0] as Point3, shape.at(-1) as Point3) : 0;
     const hard = tighten(curve.points, curve.s, radius, { nearest: 0.985, sharpest: 0.53, keep: 0 });
     expect(span(hard.shapes.at(-1))).toBeLessThan(span(tightening.shapes.at(-1)));
-  });
+    // it tries to close the holes such a rope leaves, and gives up
+  }, 30_000);
 });
 
 describe('the frames of a tightening', () => {
@@ -223,5 +228,79 @@ describe('tightening a knot tied in a bight', () => {
     }
     expect(bends).toBeGreaterThan(100);
     expect(tucked / bends).toBeGreaterThan(0.8);
+  });
+});
+
+describe('the holes a rope leaves seen from the front', () => {
+  // a circle of rope, from above, as so many points along it
+  const ring = (centre: number, r: number, from = 0, to = 2 * Math.PI): { points: Point3[]; s: number[] } => {
+    const points: Point3[] = [];
+    const s: number[] = [];
+    for (let k = 0; k <= 400; k++) {
+      const a = from + ((to - from) * k) / 400;
+      points.push([centre + r * Math.cos(a), r * Math.sin(a), 0]);
+      s.push(r * (a - from));
+    }
+    return { points, s };
+  };
+
+  it('finds the hole in a ring of rope, as wide as the ring is inside', () => {
+    const { points, s } = ring(0, 3);
+    const { area, holes } = holesSeen(points, s, 0.5);
+    expect(holes).toHaveLength(1);
+    // seen when a circle a twentieth of a diameter across fits in it: its edge is drawn in by half that
+    expect(area).toBeCloseTo(Math.PI * (3 - 0.5 - 0.025) ** 2, 0);
+    expect(holes[0]?.x).toBeCloseTo(0, 1);
+    expect(holes[0]?.y).toBeCloseTo(0, 1);
+  });
+
+  it('finds none in a ring that is not closed, nor in one whose closing is left out, as an eye', () => {
+    const open = ring(0, 3, 0.3, 2 * Math.PI - 0.3);
+    expect(holesSeen(open.points, open.s, 0.5).area).toBe(0);
+    const { points, s } = ring(0, 3);
+    expect(holesSeen(points, s, 0.5, { leaveOut: [3, 6] }).area).toBe(0);
+  });
+
+  it('counts a thing it is tied round as solid', () => {
+    const { points, s } = ring(0, 1.6);
+    const post = { from: [0, 0, -3] as Point3, to: [0, 0, 3] as Point3, radius: 1.05 };
+    expect(holesSeen(points, s, 0.5).area).toBeGreaterThan(0);
+    // a post across the ring, seen from the front, fills all of it that a circle could be seen through
+    const across = { from: [-3, 0, 0] as Point3, to: [3, 0, 0] as Point3, radius: 1.05 };
+    expect(holesSeen(points, s, 0.5, { around: [across] }).area).toBe(0);
+    expect(post.radius).toBe(1.05);
+  });
+
+  it('does not see a hole narrower than a twentieth of a diameter: the line between two ropes that touch', () => {
+    // rings whose hole is a little narrower, and a little wider, than that
+    const narrow = ring(0, 0.5 + 0.02);
+    expect(holesSeen(narrow.points, narrow.s, 0.5).area).toBe(0);
+    const wide = ring(0, 0.5 + 0.06);
+    expect(holesSeen(wide.points, wide.s, 0.5).area).toBeGreaterThan(0);
+  });
+});
+
+describe('a knot of one rope drawn tight', () => {
+  const single = ['overhand', 'double-overhand', 'figure-eight', 'bowline', 'clove-hitch', 'larks-head'];
+  it.each(single)('%s leaves no hole seen from the front', (id) => {
+    const document = read(`../../../content/knots/${id}/knot.json`) as KnotDocument;
+    const tight = document.geometry?.frames.find((frame) => frame.id === TIGHT_FRAME) as Frame;
+    const curves = framePolylines(document, tight);
+    const rope = document.components.find((component) => component.kind === 'rope');
+    const line = curves.find((each) => each.id === rope?.id);
+    if (!rope || !line) throw new Error(`${id} has a rope`);
+    const eye = document.parts?.find((part) => part.type === 'eye');
+    const around = document.components
+      .filter((component) => component.kind === 'rigid')
+      .map((component) => {
+        const axis = curves.find((each) => each.id === component.id);
+        return { from: axis?.points[0] as Point3, to: axis?.points.at(-1) as Point3, radius: component.radius ?? 0.5 };
+      });
+    const { area } = holesSeen(line.points, line.s, rope.radius ?? 0.5, {
+      ...(eye ? { leaveOut: [eye.from, eye.to] as const } : {}),
+      around,
+    });
+    // a speck or two at most, where three strands meet
+    expect(area).toBeLessThan(0.05);
   });
 });

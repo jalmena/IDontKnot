@@ -111,9 +111,18 @@ function work(document: KnotDocument): Tightening | null {
     return shape;
   });
   const beside = Math.round(BESIDE / STEP);
-  const windows = shapes.map((shape, which) => {
+  const windows: Window[] = [];
+  shapes.forEach((shape, which) => {
     const even = evenly(shape, count);
-    return windowOf(which === 0 ? even : knotOf(even, beside), d / 2);
+    const own = windowOf(which === 0 ? even : knotOf(even, beside), d / 2);
+    const before = windows[which - 1];
+    // the view only closes in as the knot is tightened: drawn by its ends, a knot may grow a little longer
+    // for a while before it closes further
+    windows.push(
+      which < 2 || !before
+        ? own
+        : { ...own, width: Math.min(own.width, before.width), height: Math.min(own.height, before.height) },
+    );
   });
   const entries = marks.map((each) => (each.length > 2 ? (each[1] as number) : 0));
   return { rope: component.id, shapes, count, windows, entries };
