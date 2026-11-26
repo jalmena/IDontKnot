@@ -263,12 +263,10 @@ describe('the holes a rope leaves seen from the front', () => {
 
   it('counts a thing it is tied round as solid', () => {
     const { points, s } = ring(0, 1.6);
-    const post = { from: [0, 0, -3] as Point3, to: [0, 0, 3] as Point3, radius: 1.05 };
     expect(holesSeen(points, s, 0.5).area).toBeGreaterThan(0);
     // a post across the ring, seen from the front, fills all of it that a circle could be seen through
     const across = { from: [-3, 0, 0] as Point3, to: [3, 0, 0] as Point3, radius: 1.05 };
     expect(holesSeen(points, s, 0.5, { around: [across] }).area).toBe(0);
-    expect(post.radius).toBe(1.05);
   });
 
   it('does not see a hole narrower than a twentieth of a diameter: the line between two ropes that touch', () => {
