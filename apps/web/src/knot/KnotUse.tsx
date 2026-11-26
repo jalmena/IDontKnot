@@ -13,7 +13,7 @@ interface Props {
 
 /**
  * What a knot is: its category; what it is for in the discipline, ending with whether it jams after a load;
- * and, where it says, what it is tied to.
+ * what to take care of with it; and, where it says, what it is tied to.
  */
 export function KnotUse({ entry, discipline, shown, onShow }: Props) {
   const { t, i18n } = useTranslation();
@@ -23,6 +23,7 @@ export function KnotUse({ entry, discipline, shown, onShow }: Props) {
     : (Object.entries(entry.uses ?? {})[0] ?? [null, undefined]);
   // in knot theory the ends are joined and nothing pulls on it
   const afterLoad = seenIn === 'theory' ? '' : inLanguage(entry.afterLoad, language);
+  const cautions = seenIn === 'theory' ? '' : inLanguage(entry.cautions, language);
   return (
     <>
       {entry.category && (
@@ -40,6 +41,14 @@ export function KnotUse({ entry, discipline, shown, onShow }: Props) {
           : t('knot.use.none', { discipline: t(`disciplines.names.${discipline ?? 'decorative'}`) })}
         {afterLoad && ` ${afterLoad}`}
       </p>
+      {cautions && (
+        <>
+          <h2>{t('knot.use.cautions')}</h2>
+          <p className="use" data-testid="cautions">
+            {cautions}
+          </p>
+        </>
+      )}
       {use?.object && (
         <>
           <h2>{t('knot.use.inUse')}</h2>

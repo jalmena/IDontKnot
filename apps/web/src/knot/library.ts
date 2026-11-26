@@ -38,6 +38,8 @@ export interface LibraryEntry {
   readonly uses?: Readonly<Record<string, KnotUse>>;
   /** Whether it jams after it has taken a load, or still unties easily, by language code. Every knot says it. */
   readonly afterLoad: Readonly<Record<string, string>>;
+  /** What to take care of when it is tied and used, by language code. Every knot says it. */
+  readonly cautions: Readonly<Record<string, string>>;
   /** The name of each named part of its ropes, by part and by language code. */
   readonly parts: Readonly<Record<string, Readonly<Record<string, string>>>>;
   /** For each method of tying: its name, and what each of its steps tells the person to do, by language code. */

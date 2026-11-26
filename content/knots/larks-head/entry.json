@@ -16,10 +16,10 @@
       }
     },
     "shibari": {
-      "object": "post",
+      "object": "rope",
       "text": {
-        "en": "To fix the bight of a rope round a limb or a post at the start of a tie, and go on with both strands.",
-        "es": "Para fijar el seno de la cuerda a un miembro o a un poste al empezar una atadura, y seguir con los dos cabos."
+        "en": "Mainly to join one rope to the next: the bight of the new rope is tied with a lark's head round the two strands of the last one, and the tie goes on with it.",
+        "es": "Sobre todo para unir una cuerda con la siguiente: el seno de la cuerda nueva se ata con un nudo de alondra a los dos cabos de la anterior, y la atadura sigue con ella."
       }
     },
     "decorative": {
@@ -31,8 +31,12 @@
     }
   },
   "afterLoad": {
-    "en": "After a load it unties easily; but pulled by one strand alone, it can slip.",
-    "es": "Después de soportar carga se deshace con facilidad; pero si se tira de un solo cabo, puede deslizarse."
+    "en": "After a load it unties easily.",
+    "es": "Después de soportar carga se deshace con facilidad."
+  },
+  "cautions": {
+    "en": "It holds while both strands take the load: pulled by one strand alone, it slips along what it is tied to.",
+    "es": "Aguanta mientras los dos cabos soportan la carga: si se tira de uno solo, se desliza por aquello a lo que está atado."
   },
   "parts": {
     "standing-part": {

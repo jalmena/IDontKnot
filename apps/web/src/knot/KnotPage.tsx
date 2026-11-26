@@ -30,7 +30,16 @@ import { useDiscipline } from '../DisciplineChoice.tsx';
 import { askForWood, type SceneObject } from '../viewer/things.ts';
 import { KnotFacts, type Facts } from './KnotFacts.tsx';
 import { KnotUse } from './KnotUse.tsx';
-import { aroundPost, lengthened, plateFor, postFor, towardsPlate, type RopeShape } from './objects.ts';
+import {
+  aroundPost,
+  lengthened,
+  plateFor,
+  postFor,
+  ringFor,
+  strandsFor,
+  towardsPlate,
+  type RopeShape,
+} from './objects.ts';
 import { inLanguage, type LibraryKnot } from './library.ts';
 import { fed } from './feeding.ts';
 import { boundsOf, hungBelow, partShape, pointAt } from './parts.ts';
@@ -143,11 +152,21 @@ export function KnotPage({ knot }: Props) {
     if (!placed || !tiedShape) return NO_THINGS;
     if (thing === 'plate') return [plateFor(tiedShape)];
     if (thing === 'post' && eyePart) return [postFor(tiedShape, [eyePart.from, eyePart.to])];
+    if (thing === 'ring' && eyePart) return [ringFor(tiedShape, [eyePart.from, eyePart.to])];
     return NO_THINGS;
   }, [placed, thing, tiedShape, eyePart]);
   // shown only when asked for, in the Use tab: a knot tied round a thing is shown round its own, as drawn
-  const objects = useMemo(() => (placed && fixed.length > 0 ? fixed : shownWith), [placed, fixed, shownWith]);
-  const centre = placed ? fixed[0] : undefined;
+  // or, for a knot that joins one rope to the next, the strands of the other rope where its post stands
+  const otherRope = useMemo(
+    () => (placed && thing === 'rope' && fixed[0] ? strandsFor(fixed[0], ropeRadius) : null),
+    [placed, thing, fixed, ropeRadius],
+  );
+  const objects = useMemo(
+    () => (placed && fixed.length > 0 && !otherRope ? fixed : shownWith),
+    [placed, fixed, otherRope, shownWith],
+  );
+  // a knot tied round a thing is framed with the thing's place in the middle, whether it is shown or not
+  const centre = fixed[0];
   const pulledShape = useMemo<RopeShape | null>(() => {
     if (!tightening || amount <= 0) return null;
     const points = shapeAt(tightening, eased(amount));
@@ -185,7 +204,12 @@ export function KnotPage({ knot }: Props) {
       if (lengthen > 0 && index === 0) shape = lengthened(shape, lengthen);
       return { ...curve, points: shape.points, s: shape.s };
     };
-    return ropesOf(document, curves.map(shaped), material);
+    const own = ropesOf(document, curves.map(shaped), material);
+    // the other rope is one rope, doubled: both its strands in one colour of the rope, the next after the knot's
+    const other = otherRope
+      ? ropesOf(document, otherRope, material).map((spec) => ({ ...spec, index: own.length }))
+      : [];
+    return [...own, ...other];
   }, [
     document,
     curves,
@@ -199,6 +223,7 @@ export function KnotPage({ knot }: Props) {
     length,
     lengthen,
     ropeRadius,
+    otherRope,
   ]);
   // the rope keeps the margins of the view, and leaves room above it for the names of its parts; as the
   // knot is tightened its ends run out of the view, which closes in on the knot, where it has been moved to
@@ -346,14 +371,15 @@ export function KnotPage({ knot }: Props) {
   // the diagram of the rope as far as it is laid: the crossings made so far
   // and the post a knot is tied round is drawn on it only when it is shown
   const laid = useMemo(() => {
-    const drawn = placed ? curves : curves.filter((curve) => curve.kind !== 'rigid');
+    const alone = curves.filter((curve) => curve.kind !== 'rigid');
+    const drawn = !placed ? alone : otherRope ? [...alone, ...otherRope] : curves;
     if (tied && drawn.length === curves.length) {
       return { curves, visits: facts.visits, crossings: facts.diagram.crossings.length };
     }
     const cut = drawn.map((curve, index) => (!tied && index === rope ? cutCurve(curve, state.position) : curve));
     const { diagram, visits } = diagramFromGeometry(cut);
     return { curves: cut, visits, crossings: diagram.crossings.length };
-  }, [placed, tied, curves, facts, rope, state.position]);
+  }, [placed, otherRope, tied, curves, facts, rope, state.position]);
 
   return (
     <section className="lab" aria-labelledby="knot-title">

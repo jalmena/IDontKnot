@@ -32,6 +32,10 @@
     "en": "After it has taken a load it can jam so tight that it is hard to untie.",
     "es": "Después de soportar carga puede apretarse tanto que cuesta deshacerlo."
   },
+  "cautions": {
+    "en": "It weakens the rope more than most knots, and it can be pulled through a hole a little wider than itself: a figure-eight or a double overhand knot is a surer stopper.",
+    "es": "Debilita la cuerda más que la mayoría de los nudos, y puede salirse por un agujero algo más ancho que él: el nudo de ocho o el nudo simple doble son topes más seguros."
+  },
   "parts": {
     "standing-part": {
       "en": "Standing part",

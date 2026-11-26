@@ -293,6 +293,8 @@ test('says what the knot is for in the discipline, and shows what it is tied to'
   await expect(page.getByTestId('use')).toHaveText(
     / It is bulkier than the overhand knot\. After a heavy load it tightens/,
   );
+  // and then what to take care of with it, in a section of its own
+  await expect(page.getByTestId('cautions')).toContainText('Leave a tail beyond it');
   const canvas = page.getByTestId('rope-canvas');
   await expect(canvas).toHaveAttribute('data-objects', '');
   const show = page.getByRole('button', { name: 'Show the plate' });
@@ -332,6 +334,7 @@ test('says what the knot is for in the discipline, and shows what it is tied to'
   await page.getByRole('tab', { name: 'Use' }).click();
   await expect(page.getByTestId('use')).toContainText('the trefoil knot');
   await expect(page.getByTestId('use')).not.toContainText('load');
+  await expect(page.getByTestId('cautions')).toHaveCount(0);
 });
 
 test('makes no claim about what knot a rope would be whose end lies inside it, as in a bowline', async ({ page }) => {
@@ -431,4 +434,45 @@ test('shows a knot tied round a post round its own post when asked, and says tha
   // by, so it is counted)
   await page.getByRole('button', { name: 'Diagram' }).click();
   await expect(posts).not.toHaveCount(0);
+});
+
+test('shows an eye through a ring of metal, and a lark’s head round the strands of the rope before', async ({
+  page,
+}) => {
+  await page.addInitScript(() => localStorage.setItem('idk.discipline', 'climbing'));
+  await page.goto('/knots/figure-eight-loop');
+  await page.getByRole('tab', { name: 'Use' }).click();
+  // the sections, in their order, and the last of them only where there is something to show
+  await expect(page.getByTestId('panel').getByRole('heading', { level: 2 })).toHaveText([
+    'Category',
+    'What it is for',
+    'Cautions',
+    'In use',
+  ]);
+  const canvas = page.getByTestId('rope-canvas');
+  await page.getByRole('button', { name: 'Show the ring' }).click();
+  await expect(canvas).toHaveAttribute('data-objects', 'ring');
+  // a ring is metal: it has no wood to wait for
+  await expect(canvas).toHaveAttribute('data-wood', '');
+
+  await page.getByTestId('discipline').selectOption('shibari');
+  await page.getByRole('navigation', { name: 'All knots' }).getByRole('link', { name: "Lark's head" }).click();
+  await page.getByRole('tab', { name: 'Use' }).click();
+  await expect(canvas).toHaveAttribute('data-ropes', '1');
+  await page.getByRole('button', { name: 'Show the other rope' }).click();
+  // its two strands, drawn as rope where the post would stand, and no post
+  await expect(canvas).toHaveAttribute('data-ropes', '3');
+  await expect(canvas).toHaveAttribute('data-objects', '');
+
+  // a knot with nothing to show has no such section
+  await page
+    .getByRole('navigation', { name: 'All knots' })
+    .getByRole('link', { name: 'Overhand knot', exact: true })
+    .click();
+  await page.getByRole('tab', { name: 'Use' }).click();
+  await expect(page.getByTestId('panel').getByRole('heading', { level: 2 })).toHaveText([
+    'Category',
+    'What it is for',
+    'Cautions',
+  ]);
 });

@@ -107,11 +107,14 @@
     "use": {
       "category": "Category",
       "what": "What it is for",
+      "cautions": "Cautions",
       "inUse": "In use",
       "none": "The library records no use of this knot in {{discipline}}.",
       "show": {
         "plate": "Show the plate",
-        "post": "Show the post"
+        "post": "Show the post",
+        "ring": "Show the ring",
+        "rope": "Show the other rope"
       }
     }
   },

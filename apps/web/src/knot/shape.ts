@@ -3,7 +3,7 @@
 import type { Frame, FrameCurve, KnotDocument } from '@idontknot/core';
 import type { RopeMaterialId } from '../viewer/materials.ts';
 import type { Fit, RopeSpec } from '../viewer/RopeViewport.ts';
-import { PLATE_HALF, PLATE_THICKNESS, POST_RADIUS, type SceneObject } from '../viewer/things.ts';
+import { PLATE_HALF, PLATE_THICKNESS, POST_RADIUS, RING_BAR, RING_RADIUS, type SceneObject } from '../viewer/things.ts';
 import { boundsOf } from './parts.ts';
 
 /** The shape a knot is shown in: the one its method of tying is told on, or else its first. */
@@ -91,11 +91,15 @@ export function withThings(fit: Fit, things: readonly SceneObject[]): Fit {
     // edge of it that stands towards the eye is seen a little further out, by perspective
     const [ax, ay] = [Math.abs(thing.axis[0]), Math.abs(thing.axis[1])];
     const near = 0.5 * PLATE_HALF;
+    const ring = RING_RADIUS + RING_BAR;
     const half =
       thing.kind === 'plate'
         ? [PLATE_HALF * ay + (PLATE_THICKNESS / 2) * ax + near, PLATE_HALF * ax + (PLATE_THICKNESS / 2) * ay + near]
-        : // a post stands on past the top and the bottom of the view: only its width is framed
-          [POST_RADIUS + 0.3, 0];
+        : thing.kind === 'ring'
+          ? // a ring is seen as far across as its plane is turned towards the eye
+            [ring * Math.sqrt(1 - ax * ax), ring * Math.sqrt(1 - ay * ay)]
+          : // a post stands on past the top and the bottom of the view: only its width is framed
+            [POST_RADIUS + 0.3, 0];
     minX = Math.min(minX, thing.at[0] - (half[0] as number) * thing.scale);
     maxX = Math.max(maxX, thing.at[0] + (half[0] as number) * thing.scale);
     minY = Math.min(minY, thing.at[1] - (half[1] as number) * thing.scale);
