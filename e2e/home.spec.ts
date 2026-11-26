@@ -28,8 +28,8 @@ test('leads from a discipline to its knots by category, in its rope, and keeps i
   await page.locator('[data-discipline="nautical"]').click();
   await expect(page).toHaveURL(/\/$/);
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Nautical');
-  await expect(knots(page).getByRole('heading', { level: 2 })).toHaveText(['Stopper knots', 'Loops']);
-  await expect(knots(page).getByRole('link')).toHaveText(['Figure-eight knot', 'Bowline']);
+  await expect(knots(page).getByRole('heading', { level: 2 })).toHaveText(['Stopper knots', 'Loops', 'Hitches']);
+  await expect(knots(page).getByRole('link')).toHaveText(['Figure-eight knot', 'Bowline', 'Clove hitch']);
   // the discipline is at the top right of the page, to change it
   const chosen = page.getByTestId('discipline');
   await expect(chosen).toHaveValue('nautical');
@@ -130,6 +130,7 @@ test('names the disciplines, the knots and their categories in Spanish', async (
   await expect(page.getByRole('navigation', { name: 'Todos los nudos' }).getByRole('heading')).toHaveText([
     'Nudos de tope',
     'Gazas',
+    'Amarres',
   ]);
   await expect(page.getByRole('navigation', { name: 'Todos los nudos' }).getByRole('link')).toHaveText([
     'Nudo de ocho',
@@ -137,6 +138,7 @@ test('names the disciplines, the knots and their categories in Spanish', async (
     'Nudo simple doble',
     'As de guía',
     'Gaza de ocho',
+    'Nudo de alondra',
   ]);
   await expect(page.getByTestId('discipline')).toHaveValue('decorative');
 });
@@ -148,6 +150,6 @@ test('has no accessibility violations that axe can detect, on the disciplines an
     (await new AxeBuilder({ page }).analyze()).violations.map((violation) => `${violation.id}: ${violation.help}`);
   expect(await violations()).toEqual([]);
   await page.locator('[data-discipline="decorative"]').click();
-  await expect(knots(page).locator('img')).toHaveCount(5);
+  await expect(knots(page).locator('img')).toHaveCount(6);
   expect(await violations()).toEqual([]);
 });

@@ -1,0 +1,81 @@
+{
+  "format": "idk-entry",
+  "formatVersion": "0.1.0",
+  "knot": "clove-hitch",
+  "names": {
+    "en": "Clove hitch",
+    "es": "Ballestrinque"
+  },
+  "category": "hitch",
+  "uses": {
+    "climbing": {
+      "object": "post",
+      "text": {
+        "en": "To make the rope fast to the carabiner of an anchor: it is tied with one hand, and the rope it holds can be let out or taken in without untying it.",
+        "es": "Para amarrar la cuerda al mosquetón de una reunión: se hace con una mano, y la cuerda que sujeta se puede soltar o recoger sin deshacerlo."
+      }
+    },
+    "nautical": {
+      "object": "post",
+      "text": {
+        "en": "To make a line fast to a post, a rail or a ring for a while, as fenders are hung from a rail.",
+        "es": "Para amarrar un cabo a un poste, una barandilla o una argolla por un tiempo, como se cuelgan las defensas de la barandilla."
+      }
+    },
+    "pioneering": {
+      "object": "post",
+      "text": {
+        "en": "To start and to finish a lashing, and to make a rope fast to a pole.",
+        "es": "Para empezar y terminar una trinca, y para amarrar una cuerda a un palo."
+      }
+    }
+  },
+  "afterLoad": {
+    "en": "After a load it unties easily, by pushing its turns apart; but it can work loose if the load comes and goes, or the post turns.",
+    "es": "Después de soportar carga se deshace con facilidad, separando las vueltas; pero puede aflojarse si la carga va y viene o el poste gira."
+  },
+  "parts": {
+    "standing-part": {
+      "en": "Standing part",
+      "es": "Firme"
+    },
+    "first-turn": {
+      "en": "First turn",
+      "es": "Primera vuelta"
+    },
+    "second-turn": {
+      "en": "Second turn",
+      "es": "Segunda vuelta"
+    },
+    "tail": {
+      "en": "Tail",
+      "es": "Chicote"
+    }
+  },
+  "methods": {
+    "with-the-end": {
+      "name": {
+        "en": "With the end",
+        "es": "Con el chicote"
+      },
+      "steps": {
+        "round-post": {
+          "en": "Lead the end over the post and round behind it.",
+          "es": "Pasa el chicote por delante del poste y rodéalo por detrás."
+        },
+        "across": {
+          "en": "Bring it up across the front, over the standing part.",
+          "es": "Súbelo cruzando por delante, por encima del firme."
+        },
+        "round-again": {
+          "en": "Take it round behind the post again.",
+          "es": "Rodea otra vez el poste por detrás."
+        },
+        "tuck-under": {
+          "en": "Bring it round in front, and tuck it under the crossing, beside the standing part and the other way.",
+          "es": "Tráelo por delante y mételo por debajo del cruce, junto al firme y en sentido contrario."
+        }
+      }
+    }
+  }
+}
