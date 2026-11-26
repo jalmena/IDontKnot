@@ -54,28 +54,28 @@
       },
       "steps": {
         "round-pole": {
-          "en": "Lead the end round behind the pole and back across its front.",
-          "es": "Pasa el chicote por detrás del palo y vuelve por delante."
+          "en": "Lead the end round behind the pole and across its front.",
+          "es": "Pasa el chicote por detrás del palo y crúzalo por delante."
         },
         "under-standing-part": {
-          "en": "Take it on to the standing part and under it.",
-          "es": "Llévalo hasta el firme y pásalo por debajo."
+          "en": "Take it on round the pole's left side, and down behind the standing part.",
+          "es": "Sigue rodeando el palo por la izquierda y pásalo por detrás del firme."
         },
-        "over-itself": {
-          "en": "Bring it back up in front, over itself and over the standing part: a half hitch round it.",
-          "es": "Súbelo de nuevo por delante, por encima de sí mismo y del firme: un cote alrededor del firme."
+        "over-standing-part": {
+          "en": "Bring it up in front of the standing part: a half hitch round it.",
+          "es": "Súbelo por delante del firme: un cote alrededor de él."
         },
         "first-twist": {
-          "en": "Twist it round the rope in front of the pole: over it and back under it.",
-          "es": "Enróllalo en el tramo de delante del palo: por encima y de vuelta por debajo."
+          "en": "Twist it round the turn, on the front of the pole: under it and over it.",
+          "es": "Enróllalo en la vuelta, por delante del palo: por debajo y por encima."
         },
         "second-twist": {
-          "en": "Twist it round again, nearer the pole.",
-          "es": "Enróllalo otra vez, más cerca del palo."
+          "en": "Twist it round again, a little further on.",
+          "es": "Enróllalo otra vez, un poco más allá."
         },
         "third-twist": {
-          "en": "And a third time: three twists at least, with the lay of the rope.",
-          "es": "Y una tercera: al menos tres vueltas, en el sentido del colchado."
+          "en": "And a third time, the way the rope is laid; leave the end lying on round the pole.",
+          "es": "Y una tercera, en el sentido del colchado; deja el chicote apoyado en el palo."
         }
       }
     }
