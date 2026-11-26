@@ -25,6 +25,8 @@ export interface Tightening {
   readonly shapes: readonly (readonly Point3[])[];
   /** How many stretches of equal length a shape is drawn in. */
   readonly count: number;
+  /** Where along the rope each shape meets its first crossing: where its standing part comes into the knot. */
+  readonly entries: readonly number[];
   /** What the view takes in at each shape: the knot, and a little of the rope at each side of it. */
   readonly windows: readonly Window[];
 }
@@ -111,7 +113,8 @@ function work(document: KnotDocument): Tightening | null {
     const even = evenly(shape, count);
     return windowOf(which === 0 ? even : knotOf(even, beside), d / 2);
   });
-  return { rope: component.id, shapes, count, windows };
+  const entries = marks.map((each) => (each.length > 2 ? (each[1] as number) : 0));
+  return { rope: component.id, shapes, count, windows, entries };
 }
 
 /** The same curve as so many stretches of equal length. */
@@ -238,4 +241,11 @@ export function windowAt(tightening: Tightening, amount: number): Window {
 export function eased(time: number): number {
   const t = Math.min(Math.max(time, 0), 1);
   return t * t * (3 - 2 * t);
+}
+
+/** Where the standing part comes into the knot when it is tightened by `amount`, along the rope. */
+export function entryAt(tightening: Tightening, amount: number): number {
+  const [from, to, t] = place(tightening, amount);
+  const [a, b] = [tightening.entries[from] as number, tightening.entries[to] as number];
+  return a + (b - a) * t;
 }

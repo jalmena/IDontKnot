@@ -11,8 +11,8 @@
     "decorative": {
       "object": "plate",
       "text": {
-        "en": "The simplest stopper, and the start of many other knots. After a load it can jam so tight that it is hard to untie.",
-        "es": "El tope más sencillo, y el comienzo de muchos otros nudos. Después de soportar carga puede apretarse tanto que cuesta deshacerlo."
+        "en": "The simplest stopper, and the start of many other knots.",
+        "es": "El tope más sencillo, y el comienzo de muchos otros nudos."
       }
     },
     "theory": {
@@ -21,6 +21,10 @@
         "es": "Con los extremos unidos es el nudo de trébol, 3₁: el nudo más sencillo que no se puede deshacer sin cortar la cuerda, y quiral, distinto de su imagen en un espejo."
       }
     }
+  },
+  "afterLoad": {
+    "en": "After it has taken a load it can jam so tight that it is hard to untie.",
+    "es": "Después de soportar carga puede apretarse tanto que cuesta deshacerlo."
   },
   "parts": {
     "standing-part": {

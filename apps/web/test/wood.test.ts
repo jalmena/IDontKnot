@@ -16,11 +16,11 @@ it('computes the same wood every time, and other wood for another seed', () => {
 it('gives each picture its colour, relief and roughness, with grain in them', () => {
   for (const wood of [sideGrain(128, 64), endGrain(64)]) {
     const texels = wood.width * wood.height * 4;
-    for (const image of [wood.colour, wood.relief, wood.rough]) expect(image).toHaveLength(texels);
-    // light earlywood and dark latewood, and relief and roughness that follow them
+    for (const image of [wood.colour, wood.detail]) expect(image).toHaveLength(texels);
+    // light earlywood and dark latewood, and relief (red) and roughness (green) that follow them
     expect(spread(wood.colour)).toBeGreaterThan(40);
-    expect(spread(wood.relief)).toBeGreaterThan(40);
-    expect(spread(wood.rough)).toBeGreaterThan(20);
+    expect(spread(wood.detail)).toBeGreaterThan(40);
+    expect(spread(wood.detail.subarray(1))).toBeGreaterThan(20);
   }
 });
 

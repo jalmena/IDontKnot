@@ -42,10 +42,12 @@ export interface WoodImages {
   readonly height: number;
   /** The colour, four values per texel. */
   readonly colour: Uint8Array;
-  /** How far the surface stands up, as grey: the open grain and the cracks are low. */
-  readonly relief: Uint8Array;
-  /** How rough the surface is, as grey: the pores and the cracks are rougher than the smooth latewood. */
-  readonly rough: Uint8Array;
+  /**
+   * Red: how far the surface stands up, the open grain and the cracks low. Green: how rough it is, the pores
+   * and the cracks rougher than the smooth latewood. One picture for both, as the renderer reads the relief
+   * from the red and the roughness from the green: half as much to compute, keep and send.
+   */
+  readonly detail: Uint8Array;
 }
 
 /** Earlywood, latewood and the darker wood near the heart, as red, green and blue: a warm, oiled oak. */
@@ -77,8 +79,7 @@ function images(
   at: (x: number, y: number) => { ring: number; tone: number; fibre: number; pore: number; crack: number; ray: number },
 ): WoodImages {
   const colour = new Uint8Array(width * height * 4);
-  const relief = new Uint8Array(width * height * 4);
-  const rough = new Uint8Array(width * height * 4);
+  const detail = new Uint8Array(width * height * 4);
   for (let y = 0; y < height; y++) {
     for (let x = 0; x < width; x++) {
       const { ring, tone, fibre, pore, crack, ray } = at(x / width, y / height);
@@ -88,14 +89,14 @@ function images(
         colour[k + c] = Math.round(clamp((rgb[c]! * (1 + ray * 0.12) * (1 - crack * 0.55)) / 255) * 255);
       colour[k + 3] = 255;
       const up = clamp(0.62 + 0.18 * late + 0.12 * fibre - 0.45 * pore - 0.7 * crack);
-      relief[k] = relief[k + 1] = relief[k + 2] = Math.round(255 * up);
-      relief[k + 3] = 255;
+      detail[k] = Math.round(255 * up);
+      detail[k + 2] = 0;
+      detail[k + 3] = 255;
       const r = clamp(0.62 - 0.18 * late + 0.25 * pore + 0.3 * crack);
-      rough[k] = rough[k + 1] = rough[k + 2] = Math.round(255 * r);
-      rough[k + 3] = 255;
+      detail[k + 1] = Math.round(255 * r);
     }
   }
-  return { width, height, colour, relief, rough };
+  return { width, height, colour, detail };
 }
 
 /**

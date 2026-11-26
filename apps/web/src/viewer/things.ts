@@ -32,6 +32,8 @@ export interface SceneObject {
   readonly axis: Point3;
   /** The diameter of the rope it is made for: its sizes are in those. */
   readonly scale: number;
+  /** How long a post is, in rope diameters. */
+  readonly length?: number;
 }
 
 /** The half side and the thickness of a plate, the radius of its hole, and the radius and height of a post. */
@@ -43,7 +45,9 @@ export const POST_HEIGHT = 5;
 
 function geometryOf(thing: SceneObject): BufferGeometry {
   const k = thing.scale;
-  if (thing.kind === 'post') return new CylinderGeometry(POST_RADIUS * k, POST_RADIUS * k, POST_HEIGHT * k, 48);
+  if (thing.kind === 'post') {
+    return new CylinderGeometry(POST_RADIUS * k, POST_RADIUS * k, (thing.length ?? POST_HEIGHT) * k, 48);
+  }
   const side = PLATE_HALF * k;
   const shape = new Shape();
   shape.moveTo(-side, -side);
@@ -90,8 +94,9 @@ function mapsOf(images: WoodImages): WoodMaps {
   };
   return {
     map: texture(images.colour, true),
-    bumpMap: texture(images.relief, false),
-    roughnessMap: texture(images.rough, false),
+    // one picture serves both: the relief is read from its red, the roughness from its green
+    bumpMap: texture(images.detail, false),
+    roughnessMap: texture(images.detail, false),
   };
 }
 
@@ -154,7 +159,7 @@ function woodFor(thing: SceneObject): MeshPhysicalMaterial[] {
   const along = (texture: DataTexture): void => {
     texture.rotation = Math.PI / 2;
     texture.center.set(0.5, 0.5);
-    texture.repeat.set(POST_HEIGHT / (2 * Math.PI * POST_RADIUS), 1);
+    texture.repeat.set((thing.length ?? POST_HEIGHT) / (2 * Math.PI * POST_RADIUS), 1);
   };
   return [woodWith(wood?.side, along), woodWith(wood?.end, () => undefined), woodWith(wood?.end, () => undefined)];
 }

@@ -270,6 +270,10 @@ test('says what the knot is for in the discipline, and shows what it is tied to'
   await page.getByRole('tab', { name: 'Use' }).click();
   await expect(page.getByTestId('category')).toHaveText('Stopper knot');
   await expect(page.getByTestId('use')).toContainText('A stopper at the end of a sheet');
+  // what it is for ends with whether it jams after a load
+  await expect(page.getByTestId('use')).toHaveText(
+    / It is bulkier than the overhand knot\. After a heavy load it tightens/,
+  );
   const canvas = page.getByTestId('rope-canvas');
   await expect(canvas).toHaveAttribute('data-objects', '');
   const show = page.getByRole('button', { name: 'Show the plate' });
@@ -295,8 +299,17 @@ test('says what the knot is for in the discipline, and shows what it is tied to'
   // a knot that a discipline does not use says so, and has nothing to show
   await page.goto('/knots/overhand');
   await page.getByRole('tab', { name: 'Use' }).click();
-  await expect(page.getByTestId('use')).toHaveText('The library records no use of this knot in Nautical.');
+  await expect(page.getByTestId('use')).toHaveText(
+    'The library records no use of this knot in Nautical. After it has taken a load it can jam so tight that it is hard to untie.',
+  );
   await expect(page.getByTestId('show-object')).toHaveCount(0);
+
+  // in knot theory nothing pulls on it
+  await page.getByTestId('discipline').selectOption('theory');
+  await page.getByRole('navigation', { name: 'All knots' }).getByRole('link', { name: 'Overhand knot' }).click();
+  await page.getByRole('tab', { name: 'Use' }).click();
+  await expect(page.getByTestId('use')).toContainText('the trefoil knot');
+  await expect(page.getByTestId('use')).not.toContainText('load');
 });
 
 test('makes no claim about what knot a rope would be whose end lies inside it, as in a bowline', async ({ page }) => {
@@ -312,9 +325,13 @@ test('makes no claim about what knot a rope would be whose end lies inside it, a
   await expect(page.getByTestId('steps').getByRole('button')).toHaveCount(4);
   await page.getByRole('tab', { name: 'Mathematics' }).click();
   await expect(page.getByTestId('crossings')).toHaveText('7');
-  // its tail is inside its eye: joining the two ends would be a choice, and none is made
+  // its tail is inside its eye: joined outside the knot it cannot be, but over the whole knot or under it
   await expect(page.getByTestId('facts')).toContainText('Both ends lie outside the knotno');
   await expect(page.getByTestId('jones-closure')).toHaveCount(0);
+  const [over, under] = [page.getByTestId('jones-over'), page.getByTestId('jones-under')];
+  await expect(over).toHaveAttribute('aria-label', /t/);
+  await expect(under).toHaveAttribute('aria-label', /t/);
+  expect(await over.getAttribute('aria-label')).not.toBe(await under.getAttribute('aria-label'));
 });
 
 test('names the knot, its parts and its steps in Spanish', async ({ page }) => {

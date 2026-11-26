@@ -89,7 +89,7 @@ An open rope has no knot type until a rule says what happens at its ends (see th
 - `exterior`: all rope ends lie in the outer face and are regarded as held there. This is the normal case for a finished practical knot. A single rope then has the knot type of its closure; several ropes form a tangle.
 - `none`: the components are closed, or no claim is made.
 
-Other rules (closing over, closing under, averaging over many closures) can be added. A document whose ends lie in inner faces and that declares no rule makes no claim about knot type.
+Other rules (closing over, closing under, averaging over many closures) can be added. The core already joins the ends of one open rope over the whole knot, or under it (`joinedAcross`): a join that passes over everything is the same knot whatever way it takes, and so is one that passes under; the views show both for a rope with an end inside its knot. A document whose ends lie in inner faces and that declares no rule makes no claim about knot type.
 
 ### Reserved: junctions
 
@@ -226,7 +226,7 @@ There is no boolean "same knot" function. Identification against a table returns
 
 ## 8. Library entries (outline)
 
-A separate document type, specified later with the content model. A provisional first form exists beside each knot document, `entry.json`, and holds only names and instructions, by language: the name of the knot, the names of its parts, and for each method its name and what each step tells the person to do. What an entry will hold:
+A separate document type, specified later with the content model. A provisional first form exists beside each knot document, `entry.json`, and holds, by language: the name of the knot, the names of its parts, and for each method its name and what each step tells the person to do; its category; what it is for in each discipline that uses it, and what it is shown tied to there; and whether it jams after it has taken a load (`afterLoad`), which every knot states and which closes what it is for in every discipline but knot theory. What an entry will hold:
 
 - Identity: canonical name, names by language, synonyms, reference numbers.
 - Classification: disciplines, purposes, structural tags.

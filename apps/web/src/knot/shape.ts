@@ -51,7 +51,8 @@ export function withThings(fit: Fit, things: readonly SceneObject[]): Fit {
     const half =
       thing.kind === 'plate'
         ? [PLATE_HALF * ay + (PLATE_THICKNESS / 2) * ax + near, PLATE_HALF * ax + (PLATE_THICKNESS / 2) * ay + near]
-        : [POST_RADIUS + 0.3, POST_RADIUS + 0.3];
+        : // a post stands on past the top and the bottom of the view: only its width is framed
+          [POST_RADIUS + 0.3, 0];
     minX = Math.min(minX, thing.at[0] - (half[0] as number) * thing.scale);
     maxX = Math.max(maxX, thing.at[0] + (half[0] as number) * thing.scale);
     minY = Math.min(minY, thing.at[1] - (half[1] as number) * thing.scale);

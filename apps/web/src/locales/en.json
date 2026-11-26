@@ -76,7 +76,11 @@
       "alternating": "The rope passes over and under in turn",
       "endsOutside": "Both ends lie outside the knot",
       "closure": "Jones polynomial, with the two ends joined",
-      "unsound": "The shape in space breaks a rule. This is a defect: please report it."
+      "unsound": "The shape in space breaks a rule. This is a defect: please report it.",
+      "joined": {
+        "over": "Jones polynomial, with the ends joined over the whole knot",
+        "under": "Jones polynomial, with the ends joined under the whole knot"
+      }
     },
     "tabs": {
       "label": "About this knot",

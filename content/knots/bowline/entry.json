@@ -11,8 +11,8 @@
     "nautical": {
       "object": "post",
       "text": {
-        "en": "A fixed eye at the end of a line, which does not close up when it is pulled: to make fast to a bollard, a post or a ring. It is easy to untie even after it has taken a load.",
-        "es": "Gaza fija en el extremo de un cabo, que no se cierra al tirar: para amarrar a un noray, un poste o una argolla. Se deshace con facilidad aun después de haber soportado carga."
+        "en": "A fixed eye at the end of a line, which does not close up when it is pulled: to make fast to a bollard, a post or a ring.",
+        "es": "Gaza fija en el extremo de un cabo, que no se cierra al tirar: para amarrar a un noray, un poste o una argolla."
       }
     },
     "pioneering": {
@@ -29,6 +29,10 @@
         "es": "Gaza fija en el extremo de una cuerda, que no se cierra al tirar."
       }
     }
+  },
+  "afterLoad": {
+    "en": "It is easy to untie even after it has taken a load.",
+    "es": "Se deshace con facilidad aun después de haber soportado carga."
   },
   "parts": {
     "standing-part": {
