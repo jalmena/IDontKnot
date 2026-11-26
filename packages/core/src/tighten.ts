@@ -55,6 +55,12 @@ export interface TightenOptions {
    * drawn into the thing.
    */
   readonly around?: readonly Rod[];
+  /**
+   * A knot tied in a bight, its rope doubled on itself: each point of the rope is kept beside the point as
+   * far from the other end, so that the two strands lie together all the way, as such a knot is dressed.
+   * The stretch that is held, where the rope turns back on itself, is left as it is.
+   */
+  readonly paired?: boolean;
 }
 
 /** A straight rigid thing: the two ends of its axis, and its radius. */
@@ -115,6 +121,10 @@ const SHARPEST = 0.48;
 /** How stiff the rope is, and how many times its ends are drawn at most, unless it is said otherwise. */
 const STIFFNESS = 0.02;
 const DRAWS = 400;
+/** How far apart, at most, the two strands of a doubled rope are kept, from middle to middle, in diameters. */
+const PAIRED = 1.15;
+/** How far, in each pass, the two strands of a doubled rope are brought to one depth: gently, so that the knot still closes. */
+const FLAT = 0.03;
 /** How far from a stretch that is held the rope moves as freely as elsewhere, in diameters. */
 const HELD_REACH = 3;
 /** How far each end is drawn at a time, in diameters, to begin with; and below what the knot is taken to give no more. */
@@ -181,6 +191,28 @@ export function tighten(
     return Math.min((away * h) / (HELD_REACH * d), 1);
   };
   const free = (i: number): boolean => i > gripped[0] && i < gripped[1];
+  // in a doubled rope, each particle and its fellow on the other strand: the one beside it as the knot is
+  // tied, for the two strands are not of one length, the one inside each bend being shorter
+  const couples: [number, number, number][] = [];
+  if (options.paired) {
+    const [last, first] = hold ? [hold[0], hold[1]] : [Math.floor(n / 2), Math.ceil(n / 2)];
+    // the fellow of the first particle is the nearest on the other strand; each next one's is found a
+    // little further back along it, for the other strand runs the other way
+    let fellow = -1;
+    for (let i = 0; i < last; i++) {
+      const [from, to] = fellow < 0 ? [first, n] : [Math.max(first, fellow - 6), fellow];
+      let [best, nearestTo] = [Infinity, -1];
+      for (let j = from; j <= to; j++) {
+        const apartNow = size(sub(p[i] as Particle, p[j] as Particle));
+        if (apartNow < best) [best, nearestTo] = [apartNow, j];
+      }
+      fellow = nearestTo;
+      // kept no further apart than they lie as tied, or than strands side by side, whichever is more
+      if (best < 1.3 * d) couples.push([i, nearestTo, Math.max(best, PAIRED * d)]);
+    }
+  }
+  const partner = new Int32Array(n + 1).fill(-1);
+  for (const [i, j] of couples) [partner[i], partner[j]] = [j, i];
 
   /** Moves two particles along the line between them until they are a distance apart, or at least that. */
   const apart = (q: Particle[], i: number, j: number, distance: number, exactly: boolean): void => {
@@ -197,8 +229,35 @@ export function tighten(
     }
   };
 
+  /** Moves two particles along the line between them until they are no further apart than a distance. */
+  const together = (q: Particle[], i: number, j: number, distance: number): void => {
+    const [a, b] = [q[i] as Particle, q[j] as Particle];
+    const delta = sub(b, a);
+    const now = size(delta) || 1e-9;
+    if (now <= distance) return;
+    const [wa, wb] = [free(i) ? 1 : 0, free(j) ? 1 : 0];
+    if (wa + wb === 0) return;
+    const move = (distance - now) / now / (wa + wb);
+    for (let c = 0; c < 3; c++) {
+      a[c] = (a[c] as number) - (delta[c] as number) * move * wa;
+      b[c] = (b[c] as number) + (delta[c] as number) * move * wb;
+    }
+  };
+
   /** Moves the particles towards keeping the rules of a rope. */
   const relax = (q: Particle[], sweeps: number): void => {
+    // the strands of a doubled rope slide along each other as the knot closes, the outer one round each bend
+    // being longer: each particle's fellow is found again, near the one it had
+    for (const couple of couples) {
+      const [i, was] = couple;
+      let [best, nearestTo] = [Infinity, was];
+      for (let j = Math.max(was - 4, 0); j <= Math.min(was + 4, n); j++) {
+        if (Math.abs(j - i) < neighbours) continue;
+        const apartNow = size(sub(q[i] as Particle, q[j] as Particle));
+        if (apartNow < best) [best, nearestTo] = [apartNow, j];
+      }
+      couple[1] = nearestTo;
+    }
     const pairs: [number, number][] = [];
     const reach = (d + 0.2) ** 2;
     for (let i = 0; i <= n; i++) {
@@ -228,6 +287,15 @@ export function tighten(
       });
       // and, last of all, it does not pass through itself, nor into what it is tied round
       for (let again = 0; again < 3; again++) for (const [i, j] of pairs) apart(q, i, j, (nearest + SPARE) * d, false);
+      // the two strands of a doubled rope lie together, side by side
+      for (const [i, j, most] of couples) {
+        together(q, i, j, most);
+        // and flat, side by side, neither riding on the other: as deep in the drawing as each other
+        const [a, b] = [q[i] as Particle, q[j] as Particle];
+        const middle = ((a[2] as number) + (b[2] as number)) / 2;
+        if (free(i)) a[2] = (a[2] as number) + (middle - (a[2] as number)) * FLAT;
+        if (free(j)) b[2] = (b[2] as number) + (middle - (b[2] as number)) * FLAT;
+      }
       for (const rod of rods) {
         const clear = off(rod) + SPARE * d;
         for (let i = 0; i <= n; i++) {
@@ -253,7 +321,10 @@ export function tighten(
         first = Math.min(first, i);
         last = Math.max(last, i);
       }
+      const fellow = partner[i] as number;
       for (let j = i + neighbours; j <= n; j++) {
+        // the other strand of a doubled rope, lying beside it, is not a knot
+        if (fellow >= 0 && Math.abs(j - fellow) < neighbours) continue;
         if (size(sub(q[i] as Particle, q[j] as Particle)) < 1.08 * d) {
           first = Math.min(first, i);
           last = Math.max(last, j);

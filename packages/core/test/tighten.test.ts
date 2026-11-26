@@ -182,3 +182,36 @@ describe('tightening round a thing', () => {
     else expect(checkFrame(document, { ...tightest, realises: 'topology' }).map((issue) => issue.rule)).toContain('G4');
   });
 });
+
+describe('tightening a knot tied in a bight', () => {
+  // the figure-eight loop is the figure-eight knot tied in a doubled rope: drawn tight, it must stay dressed
+  const loop = read('../../../content/knots/figure-eight-loop/knot.json') as KnotDocument;
+  const tight = loop.geometry?.frames.find((frame) => frame.id === TIGHT_FRAME) as Frame;
+  const [rope] = framePolylines(loop, tight);
+  const eye = loop.parts?.find((part) => part.type === 'eye');
+  if (!rope || !eye) throw new Error('the figure-eight loop has a rope and an eye');
+  const indices = rope.points.map((_, i) => i);
+  const first = indices.filter((i) => (rope.s[i] as number) < eye.from - 0.5);
+  const second = indices.filter((i) => (rope.s[i] as number) > eye.to + 0.5);
+
+  it('keeps its two strands together and flat, side by side, all the way: dressed', () => {
+    // each point of the first strand, and its fellow on the second, followed back from the end of the rope
+    let fellow = second.at(-1) as number;
+    for (const i of first) {
+      let [best, at] = [Infinity, fellow];
+      for (
+        let j = Math.max(fellow - 40, second[0] as number);
+        j <= Math.min(fellow + 40, second.at(-1) as number);
+        j++
+      ) {
+        const apart = between(rope.points[i] as Point3, rope.points[j] as Point3);
+        if (apart < best) [best, at] = [apart, j];
+      }
+      fellow = at;
+      const [a, b] = [rope.points[i] as Point3, rope.points[at] as Point3];
+      expect(best).toBeLessThan(1.3);
+      // neither rides on the other: the line between them is within ten degrees of the drawing
+      expect(Math.abs(b[2] - a[2]) / best).toBeLessThan(Math.sin((10 * Math.PI) / 180));
+    }
+  });
+});
