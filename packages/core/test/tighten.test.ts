@@ -194,9 +194,10 @@ describe('tightening a knot tied in a bight', () => {
   const first = indices.filter((i) => (rope.s[i] as number) < eye.from - 0.5);
   const second = indices.filter((i) => (rope.s[i] as number) > eye.to + 0.5);
 
-  it('keeps its two strands together and flat, side by side, all the way: dressed', () => {
+  it('keeps its two strands together all the way, and in its bends the outer one behind the inner: dressed', () => {
     // each point of the first strand, and its fellow on the second, followed back from the end of the rope
     let fellow = second.at(-1) as number;
+    let [bends, tucked] = [0, 0];
     for (const i of first) {
       let [best, at] = [Infinity, fellow];
       for (
@@ -208,10 +209,20 @@ describe('tightening a knot tied in a bight', () => {
         if (apart < best) [best, at] = [apart, j];
       }
       fellow = at;
-      const [a, b] = [rope.points[i] as Point3, rope.points[at] as Point3];
       expect(best).toBeLessThan(1.3);
-      // neither rides on the other: the line between them is within ten degrees of the drawing
-      expect(Math.abs(b[2] - a[2]) / best).toBeLessThan(Math.sin((10 * Math.PI) / 180));
+      // where the first strand bends sharply, which of the two is on the outside
+      const [a, b] = [rope.points[i] as Point3, rope.points[at] as Point3];
+      const [before, after] = [rope.points[Math.max(i - 60, 0)] as Point3, rope.points[i + 60]];
+      if (!after) continue;
+      const bend = [before[0] + after[0] - 2 * a[0], before[1] + after[1] - 2 * a[1]] as const;
+      if (Math.hypot(bend[0], bend[1]) < 0.9) continue;
+      bends++;
+      const inside = (b[0] - a[0]) * bend[0] + (b[1] - a[1]) * bend[1] > 0;
+      const [outer, inner] = inside ? [a, b] : [b, a];
+      if (outer[2] < inner[2] - 0.05) tucked++;
     }
+    // where another pair crosses over or under there is no room, and there the two lie flat
+    expect(bends).toBeGreaterThan(100);
+    expect(tucked / bends).toBeGreaterThan(0.5);
   });
 });
