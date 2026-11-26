@@ -8,3 +8,4 @@ export * from './document.ts';
 export * from './construction.ts';
 export * from './tighten.ts';
 export * from './layout.ts';
+export * from './closure.ts';
