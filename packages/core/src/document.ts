@@ -8,7 +8,7 @@
 
 import { checkStructure, type Component, type Crossing, type Diagram, type Issue, type Visit } from './diagram.ts';
 import type { Method } from './construction.ts';
-import { isPlanar } from './embedding.ts';
+import { isPlanar, ropeEndsShareOneFace } from './embedding.ts';
 import { diagramFromGeometry, type Point3, type Polyline } from './geometry.ts';
 
 export const KNOT_FORMAT = 'idk-knot';
@@ -106,7 +106,8 @@ export function documentDiagram(document: KnotDocument): Diagram | null {
 
 /**
  * Checks what can be checked without sampling curves: identifiers, references between the parts of the
- * document, the material coordinates of parts and control points, and the topology layer (rules T1 to T3).
+ * document, the material coordinates of parts and control points, and the topology layer (rules T1 to T3
+ * and T5).
  * A document with no errors can be given to the other functions of this module.
  */
 export function checkDocument(document: KnotDocument): DocumentIssue[] {
@@ -165,6 +166,12 @@ export function checkDocument(document: KnotDocument): DocumentIssue[] {
     issues.push(...structure.map((issue) => ({ ...issue, level: 'error' as const })));
     if (structure.length === 0 && !isPlanar(diagram)) {
       issues.push({ rule: 'T3', level: 'error', message: 'the diagram cannot be drawn on a plane' });
+    } else if (structure.length === 0 && document.topology?.closure === 'exterior' && !ropeEndsShareOneFace(diagram)) {
+      issues.push({
+        rule: 'T5',
+        level: 'error',
+        message: 'the ends of the rope do not lie in one face: they cannot be regarded as held outside the knot',
+      });
     }
   }
 

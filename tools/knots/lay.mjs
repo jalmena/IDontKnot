@@ -15,7 +15,7 @@ const layout = JSON.parse(readFileSync(new URL('layout.json', folder), 'utf8'));
 
 let document = layOut(layout);
 const [frame] = document.geometry.frames;
-const tightening = tighteningFrames(document, frame);
+const tightening = tighteningFrames(document, frame, layout.tightening);
 if (tightening.length > 0) {
   document = {
     ...document,

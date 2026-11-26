@@ -1,0 +1,57 @@
+{
+  "format": "idk-entry",
+  "formatVersion": "0.1.0",
+  "knot": "bowline",
+  "names": {
+    "en": "Bowline",
+    "es": "As de guía"
+  },
+  "parts": {
+    "standing-part": {
+      "en": "Standing part",
+      "es": "Firme"
+    },
+    "small-loop": {
+      "en": "Small loop",
+      "es": "Bucle"
+    },
+    "eye": {
+      "en": "Eye",
+      "es": "Gaza"
+    },
+    "collar": {
+      "en": "Collar",
+      "es": "Seno"
+    },
+    "tail": {
+      "en": "Tail",
+      "es": "Chicote"
+    }
+  },
+  "methods": {
+    "with-the-end": {
+      "name": {
+        "en": "With the end",
+        "es": "Con el chicote"
+      },
+      "steps": {
+        "make-loop": {
+          "en": "Make a small loop, laying the rope over the standing part.",
+          "es": "Haz un bucle pequeño, cruzando la cuerda por encima del firme."
+        },
+        "up-through-loop": {
+          "en": "Lead the end round to make the eye, and up through the loop from below.",
+          "es": "Lleva el chicote alrededor para formar la gaza y súbelo por el bucle desde abajo."
+        },
+        "round-standing-part": {
+          "en": "Take it round behind the standing part.",
+          "es": "Rodea el firme pasando el chicote por detrás."
+        },
+        "down-through-loop": {
+          "en": "Bring it back down through the loop, beside itself.",
+          "es": "Bájalo otra vez por el bucle, junto a sí mismo."
+        }
+      }
+    }
+  }
+}

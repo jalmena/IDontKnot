@@ -34,6 +34,13 @@ export interface TightenOptions {
    * goes as a whole: each time by a twentieth of a diameter or less.
    */
   readonly draw?: number;
+  /**
+   * A stretch of the rope that is not drawn tight with the knot, from one material coordinate to another:
+   * an eye, in which something stands. It is not made smaller: it goes with the knot as it is, by its two
+   * ends. The rope of the knot before it runs out into the start of the rope, and the rope after it into
+   * its end.
+   */
+  readonly held?: readonly [from: number, to: number];
 }
 
 export interface Tightening {
@@ -87,6 +94,8 @@ const SHARPEST = 0.48;
 /** How stiff the rope is, and how many times its ends are drawn at most, unless it is said otherwise. */
 const STIFFNESS = 0.02;
 const DRAWS = 400;
+/** How far from a stretch that is held the rope moves as freely as elsewhere, in diameters. */
+const HELD_REACH = 3;
 /** How far each end is drawn at a time, in diameters, to begin with; and below what the knot is taken to give no more. */
 const PULL = 0.05;
 const LEAST_PULL = 0.004;
@@ -127,6 +136,18 @@ export function tighten(
   // while the ends are drawn, the particles of the two ends are held: from the first to `gripped[0]`,
   // and from `gripped[1]` to the last. Otherwise none is.
   let gripped: [number, number] = [-1, n + 1];
+  // a stretch that is not drawn tight, and the particle at its middle, from which the rope is laid again
+  const hold: [number, number] | null = options.held
+    ? [Math.max(Math.round(options.held[0] / h), 1), Math.min(Math.round(options.held[1] / h), n - 1)]
+    : null;
+  const hook = hold ? Math.round((hold[0] + hold[1]) / 2) : -1;
+  // how much of a step a particle takes when the knot is made smaller: none in a stretch that is not drawn
+  // tight, and more and more with its distance from one, so that the rope does not bend sharply at its ends
+  const moved = (i: number): number => {
+    if (hold === null) return 1;
+    const away = i < hold[0] ? hold[0] - i : i > hold[1] ? i - hold[1] : 0;
+    return Math.min((away * h) / (HELD_REACH * d), 1);
+  };
   const free = (i: number): boolean => i > gripped[0] && i < gripped[1];
 
   /** Moves two particles along the line between them until they are a distance apart, or at least that. */
@@ -199,9 +220,12 @@ export function tighten(
       along.push((along[i - 1] as number) + size(sub(q[i] as Particle, q[i - 1] as Particle)));
     const total = along[n] as number;
     const [start, end] = [from(q[0] as Particle, q[3] as Particle), from(q[n] as Particle, q[n - 3] as Particle)];
+    // from the middle of a stretch that is not drawn tight, where it hangs; or else from the middle of the knot
+    const [left, right] = hold ? [hook, hook] : [middle, middle];
     let segment = 0;
-    return q.map((_, i) => {
-      const want = (along[middle] as number) + (i - middle) * h;
+    return q.map((point, i) => {
+      if (i >= left && i <= right) return point;
+      const want = i < left ? (along[left] as number) - (left - i) * h : (along[right] as number) + (i - right) * h;
       if (want <= 0)
         return mix(q[0] as Particle, [q[0]![0] + start[0], q[0]![1] + start[1], q[0]![2] + start[2]], -want);
       if (want >= total) {
@@ -236,12 +260,27 @@ export function tighten(
   while (taken.length < MOST_STEPS && shrink > LEAST_SHRINK) {
     const [first, last] = knot(p);
     const centre: Particle = [0, 0, 0];
-    for (let i = first; i <= last; i++)
+    let counted = 0;
+    for (let i = first; i <= last; i++) {
+      if (moved(i) === 0) continue;
+      counted++;
       for (let c = 0; c < 3; c++) centre[c] = (centre[c] as number) + (p[i]![c] as number);
-    for (let c = 0; c < 3; c++) centre[c] = (centre[c] as number) / (last - first + 1);
+    }
+    for (let c = 0; c < 3; c++) centre[c] = (centre[c] as number) / (counted || 1);
     const middle = Math.round((first + last) / 2);
     // every particle a little nearer the middle of the knot: the curve has the same shape, and is shorter
-    let q = p.map((point) => mix(centre, point, 1 - shrink));
+    // a stretch that is not drawn tight goes with the knot instead, as its two ends go: whole
+    const carried: Particle = [0, 0, 0];
+    if (hold) {
+      const [a, b] = [p[hold[0]] as Particle, p[hold[1]] as Particle];
+      for (let c = 0; c < 3; c++)
+        carried[c] = shrink * ((centre[c] as number) - ((a[c] as number) + (b[c] as number)) / 2);
+    }
+    let q = p.map((point, i): Particle => {
+      const own = moved(i);
+      const to = mix(centre, point, 1 - shrink * own);
+      return [to[0] + (1 - own) * carried[0], to[1] + (1 - own) * carried[1], to[2] + (1 - own) * carried[2]];
+    });
     let tries = 0;
     let kept: boolean;
     do {
@@ -336,7 +375,13 @@ export function tighteningFrames(document: KnotDocument, start: Frame, options: 
   if (document.components.length !== 1 || !rope || rope.kind !== 'rope' || rope.closed || !rope.length) return [];
   const [curve] = framePolylines(document, start);
   if (!curve) return [];
-  const { spacing, shapes } = tighten(curve.points, curve.s, rope.radius ?? 0.5, options);
+  // the eye of a knot is not drawn tight with it: something stands in it
+  const eye = document.parts?.find((part) => part.component === rope.id && part.type === 'eye');
+  const held = options.held ?? (eye ? ([eye.from, eye.to] as const) : undefined);
+  const { spacing, shapes } = tighten(curve.points, curve.s, rope.radius ?? 0.5, {
+    ...options,
+    ...(held ? { held } : {}),
+  });
   // a rope that may come nearer to itself than its thickness is pressed thinner by the difference
   const pressed = Math.round((1 - (options.nearest ?? NEAREST)) * 1000) / 1000;
   return shapes.map((shape, k) => {
