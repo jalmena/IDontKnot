@@ -182,3 +182,46 @@ describe('tightening round a thing', () => {
     else expect(checkFrame(document, { ...tightest, realises: 'topology' }).map((issue) => issue.rule)).toContain('G4');
   });
 });
+
+describe('tightening a knot tied in a bight', () => {
+  // the figure-eight loop is the figure-eight knot tied in a doubled rope: drawn tight, it must stay dressed
+  const loop = read('../../../content/knots/figure-eight-loop/knot.json') as KnotDocument;
+  const tight = loop.geometry?.frames.find((frame) => frame.id === TIGHT_FRAME) as Frame;
+  const [rope] = framePolylines(loop, tight);
+  const eye = loop.parts?.find((part) => part.type === 'eye');
+  if (!rope || !eye) throw new Error('the figure-eight loop has a rope and an eye');
+  const indices = rope.points.map((_, i) => i);
+  const first = indices.filter((i) => (rope.s[i] as number) < eye.from - 0.5);
+  const second = indices.filter((i) => (rope.s[i] as number) > eye.to + 0.5);
+
+  it('keeps its two strands together all the way, and in its bends the outer one behind the inner: dressed', () => {
+    // each point of the first strand, and its fellow on the second, followed back from the end of the rope
+    let fellow = second.at(-1) as number;
+    let [bends, tucked] = [0, 0];
+    for (const i of first) {
+      let [best, at] = [Infinity, fellow];
+      for (
+        let j = Math.max(fellow - 40, second[0] as number);
+        j <= Math.min(fellow + 40, second.at(-1) as number);
+        j++
+      ) {
+        const apart = between(rope.points[i] as Point3, rope.points[j] as Point3);
+        if (apart < best) [best, at] = [apart, j];
+      }
+      fellow = at;
+      expect(best).toBeLessThan(1.3);
+      // where the first strand bends sharply, which of the two is on the outside
+      const [a, b] = [rope.points[i] as Point3, rope.points[at] as Point3];
+      const [before, after] = [rope.points[Math.max(i - 60, 0)] as Point3, rope.points[i + 60]];
+      if (!after) continue;
+      const bend = [before[0] + after[0] - 2 * a[0], before[1] + after[1] - 2 * a[1]] as const;
+      if (Math.hypot(bend[0], bend[1]) < 0.5) continue;
+      bends++;
+      const inside = (b[0] - a[0]) * bend[0] + (b[1] - a[1]) * bend[1] > 0;
+      const [outer, inner] = inside ? [a, b] : [b, a];
+      if (outer[2] < inner[2] - 0.05) tucked++;
+    }
+    expect(bends).toBeGreaterThan(100);
+    expect(tucked / bends).toBeGreaterThan(0.8);
+  });
+});

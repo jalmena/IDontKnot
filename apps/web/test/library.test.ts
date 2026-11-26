@@ -43,6 +43,9 @@ describe.each(Object.entries(KNOTS))('what the library knot %s is for', (_id, { 
       if (use.object === 'post') expect(tiedRound || eye).toBe(true);
       if (use.object === 'ring') expect(eye).toBe(true);
       if (use.object === 'rope') expect(tiedRound).toBe(true);
+      if (use.object === 'poles') {
+        expect(document.components.filter((component) => component.kind === 'rigid').length).toBeGreaterThan(1);
+      }
     }
   });
 

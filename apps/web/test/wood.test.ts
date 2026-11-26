@@ -1,5 +1,5 @@
 import { expect, it } from 'vitest';
-import { endGrain, sideGrain } from '../src/viewer/wood.ts';
+import { endGrain, roundGrain, sideGrain } from '../src/viewer/wood.ts';
 
 const spread = (values: Uint8Array): number => {
   let [low, high] = [255, 0];
@@ -30,4 +30,34 @@ it('is wood: warm, more red than green, more green than blue', () => {
   for (let k = 0; k < colour.length; k += 4) [r, g, b] = [r + colour[k]!, g + colour[k + 1]!, b + colour[k + 2]!];
   expect(r).toBeGreaterThan(g);
   expect(g).toBeGreaterThan(b);
+});
+
+it('draws the side of a round pole with its grain straight along it, and tiling both ways without a seam', () => {
+  const { width, height, colour } = roundGrain(256, 128);
+  const at = (x: number, y: number): number => {
+    const k = 4 * (y * width + x);
+    return (colour[k]! + colour[k + 1]! + colour[k + 2]!) / 3;
+  };
+  // across a seam the picture changes no more than from one texel to the next within it
+  let [seam, within] = [0, 0];
+  for (let y = 0; y < height; y++) {
+    seam += Math.abs(at(width - 1, y) - at(0, y));
+    within += Math.abs(at(width / 2, y) - at(width / 2 - 1, y));
+  }
+  expect(seam).toBeLessThan(3 * within + 1);
+  [seam, within] = [0, 0];
+  for (let x = 0; x < width; x++) {
+    seam += Math.abs(at(x, height - 1) - at(x, 0));
+    within += Math.abs(at(x, height / 2) - at(x, height / 2 - 1));
+  }
+  expect(seam).toBeLessThan(3 * within + 1);
+  // the grain runs along the first axis: the picture changes much more round the pole than along it
+  let [along, round] = [0, 0];
+  for (let y = 1; y < height; y++) {
+    for (let x = 1; x < width; x++) {
+      along += Math.abs(at(x, y) - at(x - 1, y));
+      round += Math.abs(at(x, y) - at(x, y - 1));
+    }
+  }
+  expect(round).toBeGreaterThan(1.5 * along);
 });

@@ -15,7 +15,8 @@ const layout = JSON.parse(readFileSync(new URL('layout.json', folder), 'utf8'));
 
 let document = layOut(layout);
 const [frame] = document.geometry.frames;
-const tightening = tighteningFrames(document, frame, layout.tightening);
+// a knot drawn tight as it is tied, as a lashing is, is not drawn tight afterwards
+const tightening = layout.tightening === false ? [] : tighteningFrames(document, frame, layout.tightening);
 if (tightening.length > 0) {
   document = {
     ...document,

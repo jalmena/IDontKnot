@@ -48,11 +48,21 @@ describe('a knot tied round a post', () => {
     expect(post?.length).toBeCloseTo(11);
   });
 
-  it('is framed by its rope, with the post in the middle', () => {
+  it('is framed by its rope, as wide as with the post in the middle', () => {
     const things = thingsOf(document, curves);
     const fit = centredOn(fitOf(curves, undefined, things), things[0]);
     expect(fit.centre[0]).toBeCloseTo(0);
     // the length of the post does not make the box taller than the rope and the knot
     expect(fit.height).toBeLessThan(8);
   });
+});
+
+it('frames a hitch whose ends leave it on one side in the middle of its rope, at the size it has round its post', () => {
+  const { document: larks } = KNOTS['larks-head']!;
+  const curves = framePolylines(larks, shownFrame(larks)!);
+  const things = thingsOf(larks, curves);
+  const tight = fitOf(curves, undefined, things);
+  const fit = centredOn(tight, things[0]);
+  expect(fit.centre[0]).toBeCloseTo(tight.centre[0]);
+  expect(fit.width).toBeGreaterThan(tight.width);
 });

@@ -83,7 +83,7 @@ interface WoodMaps {
 }
 
 /** The wood of every thing, computed once in a worker: the side of a board or a post, and the end of a post. */
-let wood: { side: WoodMaps; end: WoodMaps } | null = null;
+let wood: { side: WoodMaps; round: WoodMaps; end: WoodMaps } | null = null;
 let asked: Promise<void> | null = null;
 
 function mapsOf(images: WoodImages): WoodMaps {
@@ -115,7 +115,7 @@ export function askForWood(): Promise<void> {
   asked ??= new Promise<void>((resolve) => {
     const worker = new Worker(new URL('./wood.worker.ts', import.meta.url), { type: 'module' });
     worker.addEventListener('message', (event: MessageEvent<WoodReply>) => {
-      wood = { side: mapsOf(event.data.side), end: mapsOf(event.data.end) };
+      wood = { side: mapsOf(event.data.side), round: mapsOf(event.data.round), end: mapsOf(event.data.end) };
       worker.terminate();
       resolve();
     });
@@ -138,8 +138,9 @@ function woodWith(maps: WoodMaps | undefined, place: (texture: DataTexture) => v
     bumpScale: 1.2,
     roughnessMap,
     roughness: 1,
-    clearcoat: 0.18,
-    clearcoatRoughness: 0.55,
+    // oiled, not varnished: a little sheen, and no mirror along its edges
+    clearcoat: 0.06,
+    clearcoatRoughness: 0.75,
     sheen: 0.12,
     sheenRoughness: 0.7,
   });
@@ -147,7 +148,8 @@ function woodWith(maps: WoodMaps | undefined, place: (texture: DataTexture) => v
 
 /**
  * The wood of a thing, face by face. A plate is a board: the grain runs across its faces and along its edges.
- * A post is a round of timber: the grain runs along its side, and its ends show the rings round its heart.
+ * A post is a round of timber, turned: the grain runs straight along its side, and its ends show the rings
+ * round its heart.
  */
 function woodFor(thing: SceneObject): MeshPhysicalMaterial[] {
   const k = thing.scale;
@@ -166,7 +168,7 @@ function woodFor(thing: SceneObject): MeshPhysicalMaterial[] {
     texture.center.set(0.5, 0.5);
     texture.repeat.set((thing.length ?? POST_HEIGHT) / (2 * Math.PI * POST_RADIUS), 1);
   };
-  return [woodWith(wood?.side, along), woodWith(wood?.end, () => undefined), woodWith(wood?.end, () => undefined)];
+  return [woodWith(wood?.round, along), woodWith(wood?.end, () => undefined), woodWith(wood?.end, () => undefined)];
 }
 
 /**

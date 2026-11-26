@@ -68,6 +68,8 @@ const NO_METHOD: Timeline = { start: 0, stops: [] };
 const NOTHING: readonly never[] = [];
 const NO_THINGS: readonly SceneObject[] = [];
 const STILL: Point3 = [0, 0, 0];
+/** How far in the view closes on a knot as it is tightened, at most: to this part of the view of it tied. */
+const CLOSEST = 0.7;
 /** How far a standing part runs on beyond the plate it passes through, in rope diameters. */
 const STANDING_BEYOND = 4;
 
@@ -229,10 +231,18 @@ export function KnotPage({ knot }: Props) {
   // knot is tightened its ends run out of the view, which closes in on the knot, where it has been moved to
   const fit = useMemo(() => {
     const clear = { ...VIEW_MARGINS, top: VIEW_MARGINS.top + NAME_HEIGHT };
-    if (!tightening || amount <= 0) return centredOn(fitOf(curves, clear, objects), centre);
+    const tied = centredOn(fitOf(curves, clear, objects), centre);
+    if (!tightening || amount <= 0) return tied;
     const window = windowAt(tightening, eased(amount));
     const middle: Point3 = [window.centre[0] + moved[0], window.centre[1] + moved[1], window.centre[2] + moved[2]];
-    return centredOn(withThings({ ...window, centre: middle, clear }, objects), centre);
+    const close = centredOn(withThings({ ...window, centre: middle, clear }, objects), centre);
+    // it closes in on the knot, but not to less than a part of what it takes in as the knot is tied: a small
+    // knot on a long rope, as a hitch is, would fill the view
+    return {
+      ...close,
+      width: Math.max(close.width, CLOSEST * tied.width),
+      height: Math.max(close.height, CLOSEST * tied.height),
+    };
   }, [curves, tightening, amount, objects, moved, centre]);
   // and the light goes up over it, so that strands that lie together are told apart
   const light = useMemo<Point3>(() => {

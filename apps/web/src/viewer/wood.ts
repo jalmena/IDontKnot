@@ -1,8 +1,9 @@
 /**
  * The images of wood, computed as a log would be cut: the growth rings are the distance from the pith of a
  * tree, bent and drawn out as the tree grew, and a board or a post shows them as the saw found them. The
- * side of a board shows them as long arches along the grain; the end of a post shows them as rings round
- * its heart, with rays across them and the cracks that wood opens as it dries. Pure: it gives arrays, and
+ * side of a board shows them as long arches along the grain; the side of a round pole, turned from the log,
+ * as long fine streaks where the rings come to its surface; the end of a post shows them as rings round its
+ * heart, with rays across them and the cracks that wood opens as it dries. Pure: it gives arrays, and
  * knows nothing about the renderer.
  */
 
@@ -10,6 +11,24 @@
 function noise(seed: number): (x: number, y: number) => number {
   const hash = (x: number, y: number): number => {
     let h = (x * 374761393 + y * 668265263 + seed * 1442695041) | 0;
+    h = Math.imul(h ^ (h >>> 13), 1274126177);
+    return ((h ^ (h >>> 16)) >>> 0) / 4294967295;
+  };
+  const smooth = (t: number): number => t * t * (3 - 2 * t);
+  return (x, y) => {
+    const [x0, y0] = [Math.floor(x), Math.floor(y)];
+    const [tx, ty] = [smooth(x - x0), smooth(y - y0)];
+    const top = hash(x0, y0) + (hash(x0 + 1, y0) - hash(x0, y0)) * tx;
+    const bottom = hash(x0, y0 + 1) + (hash(x0 + 1, y0 + 1) - hash(x0, y0 + 1)) * tx;
+    return top + (bottom - top) * ty;
+  };
+}
+
+/** Noise that repeats every `px` along x and every `py` along y, so that a picture of it tiles without a seam. */
+function tiling(seed: number, px: number, py: number): (x: number, y: number) => number {
+  const hash = (x: number, y: number): number => {
+    const [wx, wy] = [((x % px) + px) % px, ((y % py) + py) % py];
+    let h = (wx * 374761393 + wy * 668265263 + seed * 1442695041) | 0;
     h = Math.imul(h ^ (h >>> 13), 1274126177);
     return ((h ^ (h >>> 16)) >>> 0) / 4294967295;
   };
@@ -159,5 +178,52 @@ export function endGrain(size = 512, seed = 11): WoodImages {
       crack,
       ray,
     };
+  });
+}
+
+/**
+ * The side of a round pole, as a dowel is turned from a log: the grain runs along the first axis of the
+ * image, the second goes once round the pole, and the picture tiles both ways. The rings, nearly parallel to
+ * the surface, come to it as long fine streaks that drift slowly across; the fibres and the pores are drawn
+ * out along the grain; here and there a small knot turns the streaks round it.
+ */
+export function roundGrain(width = 1024, height = 512, seed = 19): WoodImages {
+  // periods: the image is so many lattice cells along and round, so that it tiles
+  const [along, round] = [6, 24];
+  const [drift, slow, streak, pores, fine, hair] = [
+    tiling(seed, along, round / 4),
+    tiling(seed + 1, 2, 3),
+    tiling(seed + 2, along * 4, round * 12),
+    tiling(seed + 3, along * 10, round * 24),
+    tiling(seed + 4, along * 2, round * 6),
+    tiling(seed + 5, along * 3, round * 40),
+  ];
+  // a few pin knots, each a place round which the streaks bend
+  const knots = [
+    [0.18, 0.31, 0.022],
+    [0.63, 0.74, 0.016],
+    [0.86, 0.12, 0.012],
+  ] as const;
+  const stripes = 9;
+  return images(width, height, (u, v) => {
+    // the streaks wander slowly round the pole as the rings meet its surface at a changing slant
+    let across =
+      v * stripes + 0.9 * (drift(u * along, v * (round / 4)) - 0.5) + 0.25 * (fine(u * along * 2, v * round * 6) - 0.5);
+    let knotted = 0;
+    for (const [ku, kv, size] of knots) {
+      // round the knot, the streaks open and close about it; at its heart, a small dark eye of rings
+      const du = (((u - ku + 1.5) % 1) - 0.5) / (size * 2.4);
+      const dv = (((v - kv + 1.5) % 1) - 0.5) / size;
+      const d = Math.hypot(du, dv);
+      across += (0.9 * Math.sign(dv) * Math.exp(-d * d * 0.35)) / (1 + d * 0.2);
+      knotted = Math.max(knotted, clamp(1.4 - d));
+    }
+    const ring = (((across % 1) + 1) % 1) * (1 - knotted) + knotted * ((Math.hypot(u, v) * 400) % 1);
+    // fibres in two sizes, both long along the grain; pores as short dashes along it, in the earlywood
+    const fibre =
+      0.6 * (streak(u * along * 4, v * round * 12) - 0.5) + 0.4 * (hair(u * along * 3, v * round * 40) - 0.5);
+    const pore = clamp((pores(u * along * 10, v * round * 24) - 0.78) / 0.1) * (ring > 0.1 && ring < 0.5 ? 0.8 : 0.15);
+    const tone = 0.25 + 0.5 * slow(u * 2, v * 3) + 0.5 * knotted;
+    return { ring, tone: clamp(tone), fibre: fibre * 0.8, pore, crack: 0, ray: 0 };
   });
 }

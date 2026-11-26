@@ -71,14 +71,15 @@ export function fitOf(curves: readonly FrameCurve[], clear?: Fit['clear'], thing
 }
 
 /**
- * A box widened to stand in the middle of a thing a knot is tied round: a hitch whose ends both leave it on
- * one side is seen with its post in the middle, as it is tied, not at the edge.
+ * A box as wide as one with a thing a knot is tied round in its middle, but in the middle of what it frames:
+ * a hitch whose ends both leave it on one side is seen at the size it has round its post, and in the middle
+ * of the view, not at its edge nor off to one side.
  */
 export function centredOn(fit: Fit, thing: SceneObject | undefined): Fit {
   if (!thing) return fit;
   const [x, half] = [thing.at[0], fit.width / 2];
   const reach = Math.max(Math.abs(fit.centre[0] - half - x), Math.abs(fit.centre[0] + half - x));
-  return { ...fit, centre: [x, fit.centre[1], fit.centre[2]], width: 2 * reach };
+  return { ...fit, width: 2 * reach };
 }
 
 /** A box grown to take in the things the rope is tied to, as they are seen from the front. */

@@ -17,6 +17,8 @@ import larksHeadEntry from '../../../../content/knots/larks-head/entry.json';
 import larksHead from '../../../../content/knots/larks-head/knot.json';
 import overhandEntry from '../../../../content/knots/overhand/entry.json';
 import overhand from '../../../../content/knots/overhand/knot.json';
+import squareLashingEntry from '../../../../content/knots/square-lashing/entry.json';
+import squareLashing from '../../../../content/knots/square-lashing/knot.json';
 
 /** What a knot is for in one discipline, by language code; and what it is shown tied to there, if anything. */
 export interface KnotUse {
@@ -68,6 +70,7 @@ export const KNOTS: Readonly<Record<string, LibraryKnot>> = {
   'figure-eight-loop': { document: figureEightLoop as unknown as KnotDocument, entry: figureEightLoopEntry },
   'larks-head': { document: larksHead as unknown as KnotDocument, entry: larksHeadEntry },
   overhand: { document: overhand as unknown as KnotDocument, entry: overhandEntry },
+  'square-lashing': { document: squareLashing as unknown as KnotDocument, entry: squareLashingEntry },
 };
 
 /** A text of an entry in this language, or in English when the entry does not have it. */
