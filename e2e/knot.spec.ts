@@ -240,18 +240,44 @@ test('shows a step done at once when the person has asked for less movement', as
   await expect(page.getByTestId('play')).toHaveText('Play');
 });
 
-test('shows the knot, its panel and the row of knots on one screen of a laptop', async ({ page, viewport }) => {
+test('shows each knot, its panel and the row of knots on one screen of a laptop', async ({ page, viewport }) => {
   test.skip((viewport?.width ?? 0) < 900, 'on a narrow screen the panel goes under the view');
   const edges = (selector: string) =>
     page.locator(selector).evaluate((element) => {
       const box = element.getBoundingClientRect();
       return { top: Math.round(box.top + window.scrollY), bottom: Math.round(box.bottom + window.scrollY) };
     });
-  const [view, panel, row] = [await edges('.rope-view'), await edges('.panel'), await edges('.shelf')];
-  // side by side, the view and the panel are one height; the row of knots is under them, on the same screen
-  expect(panel).toEqual(view);
-  expect(row.top).toBeGreaterThan(panel.bottom);
-  expect(row.bottom).toBeLessThanOrEqual(viewport?.height ?? 0);
+  // the bowline has the most steps: four
+  for (const knot of ['figure-eight', 'overhand', 'bowline']) {
+    for (const language of ['en', 'es']) {
+      await page.goto(`/knots/${knot}`);
+      await page.getByLabel(/Language|Idioma/).selectOption(language);
+      await expect(page.getByTestId('panel')).toHaveAttribute('data-checked', 'ok');
+      const [view, panel, row] = [await edges('.rope-view'), await edges('.panel'), await edges('.shelf')];
+      // side by side, the view and the panel are one height; the row of knots is under them, on the same screen
+      expect(panel, `${knot} in ${language}`).toEqual(view);
+      expect(row.top).toBeGreaterThan(panel.bottom);
+      expect(row.bottom, `${knot} in ${language}`).toBeLessThanOrEqual(viewport?.height ?? 0);
+    }
+  }
+});
+
+test('makes no claim about what knot a rope would be whose end lies inside it, as in a bowline', async ({ page }) => {
+  await page.goto('/knots/bowline');
+  await expect(page.getByTestId('panel')).toHaveAttribute('data-checked', 'ok');
+  await expect(page.getByTestId('parts').getByRole('button')).toHaveText([
+    'Standing part',
+    'Small loop',
+    'Eye',
+    'Collar',
+    'Tail',
+  ]);
+  await expect(page.getByTestId('steps').getByRole('button')).toHaveCount(4);
+  await page.getByRole('tab', { name: 'Mathematics' }).click();
+  await expect(page.getByTestId('crossings')).toHaveText('7');
+  // its tail is inside its eye: joining the two ends would be a choice, and none is made
+  await expect(page.getByTestId('facts')).toContainText('Both ends lie outside the knotno');
+  await expect(page.getByTestId('jones-closure')).toHaveCount(0);
 });
 
 test('names the knot, its parts and its steps in Spanish', async ({ page }) => {

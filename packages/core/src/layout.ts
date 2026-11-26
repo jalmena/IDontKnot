@@ -17,7 +17,9 @@ import {
   type KnotDocument,
   type Part,
 } from './document.ts';
+import { ropeEndsShareOneFace } from './embedding.ts';
 import { diagramFromGeometry, type Point3 } from './geometry.ts';
+import type { TightenOptions } from './tighten.ts';
 
 /** A point of the drawing: where it is in the plane and, at a crossing, how the rope passes there, or its height. */
 export type LayoutPoint = readonly [x: number, y: number, pass?: 'over' | 'under' | number];
@@ -48,6 +50,11 @@ export interface Layout {
     readonly from: LayoutPlace;
     readonly to: LayoutPlace;
   }[];
+  /**
+   * How the knot is drawn tight, where it is not as for every knot: a stiffer rope, for a knot whose loops
+   * would otherwise bend it too sharply before they close.
+   */
+  readonly tightening?: TightenOptions;
   /** How the knot is tied by leading the end of the rope along the drawing. */
   readonly method?: {
     readonly id: string;
@@ -136,7 +143,12 @@ export function layOut(layout: Layout): KnotDocument {
       },
     ],
     ...(parts.length > 0 ? { parts } : {}),
-    topology: { closure: 'exterior', diagram: { crossings: diagram.crossings, strands: diagram.strands } },
+    // a rope whose ends both lie outside its knot is taken as held there; one with an end inside, as the
+    // tail of a bowline is inside its eye, makes no claim about what knot it would be with its ends joined
+    topology: {
+      ...(ropeEndsShareOneFace(diagram) ? { closure: 'exterior' } : {}),
+      diagram: { crossings: diagram.crossings, strands: diagram.strands },
+    },
     geometry: { frames: [{ id: frame, realises: 'topology', curves: { [rope]: curve } }] },
   };
   if (!layout.method) return document;

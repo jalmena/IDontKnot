@@ -139,9 +139,10 @@ export function KnotPage({ knot }: Props) {
       alternating: passes.every((pass, i) => i === 0 || pass !== passes[i - 1]),
       writhe: writhe(diagram),
       endsOutside: ropeEndsShareOneFace(diagram),
-      closure: jonesPolynomial(closeOpenComponents(diagram)),
+      // what knot it is with its ends joined, for a document that takes its ends as held outside the knot
+      closure: document.topology?.closure === 'exterior' ? jonesPolynomial(closeOpenComponents(diagram)) : null,
     };
-  }, [curves]);
+  }, [curves, document]);
   // the shape is the diagram it claims and keeps the rules of geometry; the steps follow from one another
   const shaped = useMemo(
     () => checkDocument(document).every((issue) => issue.level !== 'error') && checkFrame(document, frame).length === 0,

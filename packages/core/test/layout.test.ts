@@ -4,7 +4,16 @@
  */
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { layOut, strandOf, tighteningFrames, documentDiagram, type KnotDocument, type Layout } from '../src/index.ts';
+import {
+  checkDocument,
+  documentDiagram,
+  framePolylines,
+  layOut,
+  strandOf,
+  tighteningFrames,
+  type KnotDocument,
+  type Layout,
+} from '../src/index.ts';
 
 const library = new URL('../../../content/knots/', import.meta.url);
 const read = (path: string): unknown => JSON.parse(readFileSync(new URL(path, library), 'utf8'));
@@ -22,7 +31,8 @@ describe('the knots of the library', () => {
     '%s is the document its drawing makes, and tightens as its file says',
     (id) => {
       const held = read(`${id}/knot.json`) as KnotDocument;
-      const made = layOut(read(`${id}/layout.json`) as Layout);
+      const layout = read(`${id}/layout.json`) as Layout;
+      const made = layOut(layout);
       expect(made.id).toBe(id);
       expect(made.components).toEqual(held.components);
       expect(made.parts).toEqual(held.parts);
@@ -32,7 +42,7 @@ describe('the knots of the library', () => {
 
       const [first] = made.geometry?.frames ?? [];
       if (!first) throw new Error('a drawing makes a frame');
-      const tightening = tighteningFrames(made, first);
+      const tightening = tighteningFrames(made, first, layout.tightening);
       expect(held.geometry?.tightening).toEqual([first.id, ...tightening.map((frame) => frame.id)]);
       for (const frame of tightening) {
         const other = held.geometry?.frames.find((candidate) => candidate.id === frame.id);
@@ -46,6 +56,42 @@ describe('the knots of the library', () => {
     },
     30_000,
   );
+});
+
+describe('the bowline of the library', () => {
+  const bowline = read('bowline/knot.json') as KnotDocument;
+
+  it('makes no claim about the knot its rope would be with its ends joined: its tail is inside its eye', () => {
+    expect(bowline.topology?.closure).toBeUndefined();
+    expect((read('figure-eight/knot.json') as KnotDocument).topology?.closure).toBe('exterior');
+    // and a document that did claim it would be refused
+    const claimed = { ...bowline, topology: { ...bowline.topology!, closure: 'exterior' } };
+    expect(checkDocument(claimed).map((issue) => issue.rule)).toEqual(['T5']);
+    expect(checkDocument(bowline)).toEqual([]);
+  });
+
+  it('keeps its eye open when it is tightened, and draws the knot round it tight', () => {
+    const frames = bowline.geometry?.frames ?? [];
+    const [dressed, tight] = [frames[0], frames.find((frame) => frame.id === 'tight')];
+    const eye = bowline.parts?.find((part) => part.type === 'eye');
+    if (!dressed || !tight || !eye) throw new Error('the bowline has its shapes and its eye');
+    const across = (frame: typeof dressed): number => {
+      const [curve] = framePolylines(bowline, frame);
+      const inEye = (curve?.points ?? []).filter(
+        (_, i) => (curve?.s[i] ?? 0) > eye.from && (curve?.s[i] ?? 0) < eye.to,
+      );
+      const ys = inEye.map((point) => point[1]);
+      return Math.max(...ys) - Math.min(...ys);
+    };
+    // the eye is as wide tight as it was tied, near enough
+    expect(across(tight) / across(dressed)).toBeGreaterThan(0.8);
+    // while the knot itself gives rope: the two ends are further apart
+    const span = (frame: typeof dressed): number => {
+      const points = frame.curves['rope']?.points ?? [];
+      return Math.abs((points.at(-1)?.[0] ?? 0) - (points[0]?.[0] ?? 0));
+    };
+    expect(span(tight)).toBeGreaterThan(span(dressed) + 5);
+  });
 });
 
 describe('laying out a drawing', () => {

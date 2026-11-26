@@ -74,7 +74,7 @@ This is a signed Gauss code, generalised to several components, open components 
 | T2 | Every sign is `+1` or `-1`. |
 | T3 | The code can be drawn on a sphere: the combinatorial map defined by the strands and signs has genus 0. Codes of higher genus (virtual diagrams) are rejected. |
 | T4 | Where material coordinates are given, they increase along each strand. |
-| T5 | If `closure` is `exterior`, every rope end lies in one common face. |
+| T5 | If `closure` is `exterior`, every rope end lies in one common face. Checked with the document: a rope with an end inside its knot cannot claim to be held outside it. |
 
 T3 is not a formality. For the trefoil code above, only two of the eight possible sign assignments pass: all `+1` and all `-1`, the two mirror images.
 
@@ -122,7 +122,7 @@ Splices, eyes and nets need points where three or more rope ends meet. The forma
 
 ### Drawings
 
-The knots of the library are not written as documents by hand. Each has a drawing, `layout.json`, beside its document: the path of its rope in the plane as a list of points; at each crossing, whether the rope passes over or under there; and its parts and the steps that tie it, placed by the crossings the rope meets along itself ("from one diameter after the third crossing"). `tools/knots/lay.mjs` makes the document from the drawing: it gives the points their height and their material coordinates, reads the diagram from the shape, places the parts and the steps, works out the diagram each step leaves, and computes the tightening. A test makes every knot again and compares it with its file. Only a knot of one open rope can be drawn so far.
+The knots of the library are not written as documents by hand. Each has a drawing, `layout.json`, beside its document: the path of its rope in the plane as a list of points; at each crossing, whether the rope passes over or under there; and its parts and the steps that tie it, placed by the crossings the rope meets along itself ("from one diameter after the third crossing"). `tools/knots/lay.mjs` makes the document from the drawing: it gives the points their height and their material coordinates, reads the diagram from the shape, places the parts and the steps, works out the diagram each step leaves, and computes the tightening. A test makes every knot again and compares it with its file. Only a knot of one open rope can be drawn so far. A drawing whose rope ends both lie outside its knot is given the closure `exterior`; one with an end inside, as a bowline's tail is inside its eye, is given none, and makes no claim about what knot it would be with its ends joined.
 
 ### Tightening
 
@@ -131,6 +131,8 @@ The knots of the library are not written as documents by hand. Each has a drawin
 The frames are computed, not drawn by hand: `tools/knots/tighten.mjs` writes them into the document, and they are kept with it. The computation makes the knot a little smaller step by step, and lets the rope it gives up run out into the two ends, which lengthen; after each step the rope is moved until it neither passes through itself, nor bends tighter than it can, nor stretches. Then the two ends are drawn apart, a little at a time, until the knot gives no more rope. Nothing rubs: the result is the shape a knot takes when pulled by both ends, not a statement about how it holds.
 
 A rope in a knot drawn hard does not keep its thickness: it is pressed thinner where it bears on itself. A frame may say so with `pressed`, a part of the thickness of its ropes (0.1 for a tenth): in that frame, centerlines may come nearer by that much, and bends be tighter by that much, than rules G2 and G3 otherwise allow. The frames of a tightening in the library are pressed by a tenth, which the Product Owner chose from rendered alternatives; a rope held to all its thickness leaves the knot visibly looser than a real one. Only a knot of one open rope is tightened so far.
+
+An eye is not drawn tight with the knot, since something stands in it: a part of type `eye` keeps its shape and goes with the knot as its two ends go, and the rope from the knot to it bends round gradually. A drawing may also say how its knot is tightened where it is not as for every knot (`tightening`, for instance a stiffer rope): the bowline is tightened with a stiffer rope, which keeps the rope from bending too sharply where it enters the eye before the knot has closed.
 
 The named parts of a rope are stretches of its material in the frame the knot is tied in. In a tightened frame the same material lies elsewhere, so a view names the parts only on the frame the knot is tied in.
 

@@ -3,6 +3,8 @@
  * built into the application: an instance shows the library it was built with.
  */
 import type { KnotDocument } from '@idontknot/core';
+import bowlineEntry from '../../../../content/knots/bowline/entry.json';
+import bowline from '../../../../content/knots/bowline/knot.json';
 import figureEightEntry from '../../../../content/knots/figure-eight/entry.json';
 import figureEight from '../../../../content/knots/figure-eight/knot.json';
 import overhandEntry from '../../../../content/knots/overhand/entry.json';
@@ -34,6 +36,7 @@ export interface LibraryKnot {
 
 export const KNOTS: Readonly<Record<string, LibraryKnot>> = {
   // JSON has no tuples and no literal types, so the file is taken on trust here; `checkDocument` then checks it
+  bowline: { document: bowline as unknown as KnotDocument, entry: bowlineEntry },
   'figure-eight': { document: figureEight as unknown as KnotDocument, entry: figureEightEntry },
   overhand: { document: overhand as unknown as KnotDocument, entry: overhandEntry },
 };
