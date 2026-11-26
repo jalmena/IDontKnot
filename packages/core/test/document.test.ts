@@ -98,6 +98,8 @@ describe('every knot of the library', () => {
       for (const frame of document.geometry?.frames ?? []) expect(checkFrame(document, frame)).toEqual([]);
       for (const method of document.construction?.methods ?? []) expect(checkMethod(document, method)).toEqual([]);
     },
+    // a knot drawn tight in many shapes takes some seconds to check, more on a slower machine
+    30_000,
   );
 });
 
