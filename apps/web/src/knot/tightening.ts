@@ -3,7 +3,14 @@
  * places along the rope so that one can be turned into the next point for point, and what the view takes
  * in at each. Pure: it knows nothing about the views or the clock.
  */
-import { diagramFromGeometry, framePolylines, type FrameCurve, type KnotDocument, type Point3 } from '@idontknot/core';
+import {
+  diagramFromGeometry,
+  framePolylines,
+  SPAN_PIECES,
+  type FrameCurve,
+  type KnotDocument,
+  type Point3,
+} from '@idontknot/core';
 import { pointAt } from './parts.ts';
 
 export interface Tightening {
@@ -34,8 +41,27 @@ const STEP = 0.15;
 /** How much rope the view takes in at each side of a knot that is being tightened, in rope diameters. */
 const BESIDE = 2.8;
 
+/** What has been worked out for each document: working it out takes a moment for a knot with many shapes. */
+const known = new WeakMap<KnotDocument, Tightening | null>();
+
 /** How a knot of one rope is tightened, if its document says. */
 export function tighteningOf(document: KnotDocument): Tightening | null {
+  if (!known.has(document)) known.set(document, work(document));
+  return known.get(document) ?? null;
+}
+
+/**
+ * The curve to look for crossings on: a shape given by many points is its own control points, which are
+ * close enough together; only one given by few is cut finer, as the views draw it.
+ */
+function forCrossings(curve: FrameCurve): FrameCurve {
+  const each = curve.points.length > 1500 ? SPAN_PIECES : 1;
+  if (each === 1) return curve;
+  const keep = (_: unknown, i: number): boolean => i % each === 0 || i === curve.points.length - 1;
+  return { ...curve, points: curve.points.filter(keep), s: curve.s.filter(keep) };
+}
+
+function work(document: KnotDocument): Tightening | null {
   const ids = document.geometry?.tightening ?? [];
   const frames = ids.flatMap((id) => document.geometry?.frames.filter((frame) => frame.id === id) ?? []);
   const [component] = document.components;
@@ -49,7 +75,8 @@ export function tighteningOf(document: KnotDocument): Tightening | null {
   if (curves.length !== frames.length) return null;
 
   // where along the rope each shape meets its crossings: the places of the knot that every shape has
-  const met = curves.map((curve: FrameCurve): number[] | null => {
+  const met = curves.map((full: FrameCurve): number[] | null => {
+    const curve = forCrossings(full);
     const { visits, issues } = diagramFromGeometry([curve]);
     if (issues.length > 0) return null;
     const along = (visits[curve.id] ?? []).map(({ at }) => {

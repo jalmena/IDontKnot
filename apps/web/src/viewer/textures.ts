@@ -33,15 +33,26 @@ class RopeImages {
   readonly relief = new Map<RopeMaterialId, Required<Pick<ImagesReply, 'width' | 'height' | 'normal' | 'detail'>>>();
   private readonly asked = new Set<string>();
   private readonly waiting = new Set<() => void>();
-  private worker: Worker | null = null;
+  /**
+   * Workers, one for each of a few ropes at once: the first visit to a page of several ropes computes their
+   * images side by side. The colours of one rope go to one worker, which keeps the rope's surface for them.
+   */
+  private readonly workers: Worker[] = [];
+  private readonly workerOf = new Map<RopeMaterialId, Worker>();
 
   /** Asks once for the images of one colour of a rope. Those waiting are told when they arrive. */
   ask(material: RopeMaterialId, colour: string): void {
     const key = keyOf(material, colour);
     if (this.asked.has(key)) return;
     this.asked.add(key);
-    this.worker ??= this.start();
-    this.worker.postMessage({ material, colour } satisfies ImagesRequest);
+    let worker = this.workerOf.get(material);
+    if (!worker) {
+      const most = Math.min(Math.max((navigator.hardwareConcurrency ?? 2) - 1, 1), 3);
+      worker = this.workers.length < most ? this.start() : (this.workers[this.workerOf.size % most] as Worker);
+      if (!this.workers.includes(worker)) this.workers.push(worker);
+      this.workerOf.set(material, worker);
+    }
+    worker.postMessage({ material, colour } satisfies ImagesRequest);
   }
 
   /** Calls `listener` each time images arrive, until the function this returns is called. */
@@ -63,6 +74,16 @@ class RopeImages {
 }
 
 const images = new RopeImages();
+
+/**
+ * Asks ahead for the images of these ropes, in their first colour: a page that will show several ropes
+ * asks for all of them at once, and they are computed side by side instead of one after another.
+ */
+export function askAhead(materials: readonly RopeMaterialId[]): void {
+  for (const material of materials) {
+    if (ROPE_MATERIALS[material].construction !== 'smooth') images.ask(material, ropeColour(material, 0));
+  }
+}
 
 /** The textures of one renderer, made from the images the page shares. */
 export class RopeTextures {

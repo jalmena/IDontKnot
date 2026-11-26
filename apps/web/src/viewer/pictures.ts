@@ -14,6 +14,42 @@ const IDLE = 1500;
 const PATIENCE = 6000;
 
 const kept = new Map<string, Promise<string>>();
+
+/**
+ * Pictures are kept in the browser too, under the name of the build that drew them, so that a page of knots
+ * seen before is shown at once. While developing nothing is kept: the name of the build does not change.
+ */
+const STORED = 'idk.picture ';
+const BUILD = import.meta.env.PROD ? `${new URL(import.meta.url).pathname} ` : null;
+
+function read(key: string): string | null {
+  if (!BUILD) return null;
+  try {
+    return window.localStorage.getItem(STORED + BUILD + key);
+  } catch {
+    return null;
+  }
+}
+
+function write(key: string, picture: string): void {
+  if (!BUILD) return;
+  try {
+    window.localStorage.setItem(STORED + BUILD + key, picture);
+  } catch {
+    // the browser keeps no more: the picture is drawn again next time
+  }
+}
+
+// what an earlier build kept is thrown away
+if (BUILD) {
+  try {
+    for (const name of Object.keys(window.localStorage)) {
+      if (name.startsWith(STORED) && !name.startsWith(STORED + BUILD)) window.localStorage.removeItem(name);
+    }
+  } catch {
+    // it stays a little longer
+  }
+}
 let last: Promise<unknown> = Promise.resolve();
 let studio: { readonly host: HTMLElement; readonly view: RopeViewport } | null = null;
 let closing: number | undefined;
@@ -25,8 +61,19 @@ let closing: number | undefined;
  */
 export function pictureOf(key: string, ropes: readonly RopeSpec[], fit: Fit, wait = 0): Promise<string> {
   let picture = kept.get(key);
+  const stored = picture ? null : read(key);
+  if (stored) {
+    picture = Promise.resolve(stored);
+    kept.set(key, picture);
+  }
   if (!picture) {
-    picture = last.then(() => new Promise((resolve) => window.setTimeout(resolve, wait))).then(() => draw(ropes, fit));
+    picture = last
+      .then(() => new Promise((resolve) => window.setTimeout(resolve, wait)))
+      .then(() => draw(ropes, fit))
+      .then((made) => {
+        write(key, made);
+        return made;
+      });
     // a picture that could not be drawn is asked for again the next time, and does not stop the others
     last = picture.catch(() => void kept.delete(key));
     kept.set(key, picture);
