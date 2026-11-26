@@ -56,6 +56,18 @@ test('changes the discipline at the top right: back to the knots, in the rope of
   await expect(page.getByLabel('Material')).toHaveValue('line');
 });
 
+test('leads back to the choice of discipline from the name of the application', async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem('idk.discipline', 'nautical'));
+  await page.goto('/knots/bowline');
+  await page.getByRole('link', { name: 'IDontKnot' }).click();
+  await expect(page).toHaveURL(/\/disciplines$/);
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Disciplines');
+  // the discipline chosen is still there to change, and choosing one leads to its knots
+  await expect(page.getByTestId('discipline')).toHaveValue('nautical');
+  await page.locator('[data-discipline="pioneering"]').click();
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Pioneering');
+});
+
 test('says so when a discipline has no knots yet', async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem('idk.discipline', 'climbing'));
   await page.goto('/');

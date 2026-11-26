@@ -31,11 +31,13 @@ interface LinkProps {
   readonly className?: string;
   /** Whether this link leads to the page being shown. */
   readonly current?: boolean;
+  /** What the link says, for a link that shows only a picture. */
+  readonly label?: string;
   readonly children: ReactNode;
 }
 
 /** A link to another page of the application, followed without loading it again. */
-export function Link({ to, className, current, children }: LinkProps) {
+export function Link({ to, className, current, label, children }: LinkProps) {
   const follow = (event: MouseEvent<HTMLAnchorElement>): void => {
     // leave to the browser anything that is not a plain click: a new tab, a download
     if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
@@ -43,7 +45,7 @@ export function Link({ to, className, current, children }: LinkProps) {
     go(to);
   };
   return (
-    <a href={to} className={className} aria-current={current ? 'page' : undefined} onClick={follow}>
+    <a href={to} className={className} aria-current={current ? 'page' : undefined} aria-label={label} onClick={follow}>
       {children}
     </a>
   );

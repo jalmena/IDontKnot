@@ -31,7 +31,7 @@ All notable changes to this project are recorded here. The format follows [Keep 
 - A third knot, the bowline: its eye keeps its shape while the knot is drawn tight round it, as an eye round a post does.
 - The licence of the content of the library: Creative Commons Attribution-ShareAlike 4.0.
 - A "Tighten" button on the page of a knot, beside "Next": the knot is seen to tighten, the view closes in on it and the light moves up over it. "Loosen" brings it back.
-- Disciplines: the application opens on them, and one chosen leads to its knots, grouped by category, in its rope. It can be changed at the top right of every page.
+- Disciplines: the application opens on them, and one chosen leads to its knots, grouped by category, in its rope. It can be changed at the top right of every page, and the logo leads back to the choice.
 - A "Use" tab on the page of a knot: its category, what it is for in the discipline, and a button that shows it tied to a plate or round a post, in computed wood.
 
 ### Changed

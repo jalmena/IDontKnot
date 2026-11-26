@@ -33,10 +33,11 @@ export function App() {
   return (
     <div className="app">
       <header className="app__header">
-        <a className="brand" href="/" aria-label="IDontKnot">
+        {/* the name of the application leads back to the choice of discipline */}
+        <Link to={DISCIPLINES} className="brand" label="IDontKnot">
           <Mark size={44} />
           <img className="brand__name" src="/wordmark.svg" alt="" />
-        </a>
+        </Link>
         <p className="app__tagline">{t('app.tagline')}</p>
         <nav className="app__nav" aria-label={t('nav.label')}>
           <Link to="/" current={(atHome && !choosing) || id !== null}>
