@@ -36,6 +36,7 @@ All notable changes to this project are recorded here. The format follows [Keep 
 
 ### Changed
 
+- The three-strand polyester is satin and ivory: it looked too bright to be real.
 - Faster to load: the server compresses what it sends (the script of the interface goes from 1.1 MB to 324 kB), the pictures of knots are kept in the browser, the images of several ropes are computed side by side, and a knot's page no longer spends most of a second preparing its tightening.
 - A knot whose rope has an end inside it, as the tail of a bowline is inside its eye, no longer claims what knot it would be with its ends joined: the core refuses that claim for such a document (rule T5), and its page leaves it out.
 - The torus knot laboratory moved to `/lab`.
