@@ -71,9 +71,10 @@ export interface Layout {
   }[];
   /**
    * How the knot is drawn tight, where it is not as for every knot: a stiffer rope, for a knot whose loops
-   * would otherwise bend it too sharply before they close.
+   * would otherwise bend it too sharply before they close. Or none: a lashing is drawn tight turn by turn
+   * as it is tied, and its drawing is how it is left.
    */
-  readonly tightening?: TightenOptions;
+  readonly tightening?: TightenOptions | false;
   /** How the knot is tied by leading the end of the rope along the drawing. */
   readonly method?: {
     readonly id: string;

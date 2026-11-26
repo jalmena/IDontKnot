@@ -483,6 +483,9 @@ test('shows a lashing round its two poles when asked', async ({ page }) => {
   await expect(page.getByTestId('panel')).toHaveAttribute('data-checked', 'ok');
   const canvas = page.getByTestId('rope-canvas');
   await expect(canvas).toHaveAttribute('data-objects', '');
+  // a lashing is drawn tight turn by turn as it is tied, not afterwards
+  await expect(page.getByTestId('play')).toBeVisible();
+  await expect(page.getByTestId('tighten')).toHaveCount(0);
   await page.getByRole('tab', { name: 'Use' }).click();
   await expect(page.getByTestId('category')).toHaveText('Lashing');
   await page.getByRole('button', { name: 'Show the poles' }).click();

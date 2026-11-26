@@ -9,7 +9,7 @@ node --conditions=source tools/knots/lay.mjs overhand
 pnpm exec prettier --write content
 ```
 
-Makes `content/knots/<id>/knot.json` from the drawing beside it, `layout.json`, and computes its tightening too. The drawing gives the path of the rope in the plane, how it passes at each crossing, and its parts and the steps that tie it, placed by the crossings the rope meets. Nothing is written if the document breaks a rule; `--dry` writes nothing in any case.
+Makes `content/knots/<id>/knot.json` from the drawing beside it, `layout.json`, and computes its tightening too, unless the drawing says `"tightening": false`, as a lashing's does: it is drawn tight turn by turn as it is tied. The drawing gives the path of the rope in the plane, how it passes at each crossing, and its parts and the steps that tie it, placed by the crossings the rope meets. Nothing is written if the document breaks a rule; `--dry` writes nothing in any case.
 
 To add a knot: write its `layout.json` and its `entry.json` (names and instructions, by language), run the tool, and add the knot to `apps/web/src/knot/library.ts`.
 

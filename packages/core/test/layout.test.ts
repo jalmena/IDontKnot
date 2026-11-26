@@ -42,6 +42,11 @@ describe('the knots of the library', () => {
 
       const [first] = made.geometry?.frames ?? [];
       if (!first) throw new Error('a drawing makes a frame');
+      if (layout.tightening === false) {
+        expect(held.geometry?.tightening).toBeUndefined();
+        expect(held.geometry?.frames).toHaveLength(1);
+        return;
+      }
       const tightening = tighteningFrames(made, first, layout.tightening);
       expect(held.geometry?.tightening).toEqual([first.id, ...tightening.map((frame) => frame.id)]);
       for (const frame of tightening) {

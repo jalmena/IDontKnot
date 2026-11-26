@@ -742,9 +742,7 @@
       "to": "end"
     }
   ],
-  "tightening": {
-    "drawnBy": "end"
-  },
+  "tightening": false,
   "method": {
     "id": "with-the-end",
     "start": 2.637,
