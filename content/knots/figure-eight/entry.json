@@ -6,6 +6,29 @@
     "en": "Figure-eight knot",
     "es": "Nudo de ocho"
   },
+  "category": "stopper",
+  "uses": {
+    "nautical": {
+      "object": "plate",
+      "text": {
+        "en": "A stopper at the end of a sheet, or of any line that runs through a fairlead or a block: it keeps the end from running out. It is bulkier than the overhand knot, and easier to untie after it has taken a load.",
+        "es": "Tope al final de una escota, o de cualquier cabo que corre por una guía o un motón: impide que el extremo se escape. Es más grueso que el nudo simple, y más fácil de deshacer después de haber soportado carga."
+      }
+    },
+    "decorative": {
+      "object": "plate",
+      "text": {
+        "en": "A stopper at the end of a rope, to keep it from slipping through a hole or out of the hand.",
+        "es": "Tope en el extremo de una cuerda, para que no se escape por un agujero o de la mano."
+      }
+    },
+    "theory": {
+      "text": {
+        "en": "With its ends joined it is the figure-eight knot, 4₁: the only knot with four crossings, and amphichiral, the same as its mirror image.",
+        "es": "Con los extremos unidos es el nudo de ocho, 4₁: el único nudo de cuatro cruces, y anfiquiral, igual que su imagen en un espejo."
+      }
+    }
+  },
   "parts": {
     "standing-part": {
       "en": "Standing part",

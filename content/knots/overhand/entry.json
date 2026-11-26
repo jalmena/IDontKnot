@@ -6,6 +6,22 @@
     "en": "Overhand knot",
     "es": "Nudo simple"
   },
+  "category": "stopper",
+  "uses": {
+    "decorative": {
+      "object": "plate",
+      "text": {
+        "en": "The simplest stopper, and the start of many other knots. After a load it can jam so tight that it is hard to untie.",
+        "es": "El tope más sencillo, y el comienzo de muchos otros nudos. Después de soportar carga puede apretarse tanto que cuesta deshacerlo."
+      }
+    },
+    "theory": {
+      "text": {
+        "en": "With its ends joined it is the trefoil knot, 3₁: the simplest knot that cannot be undone without cutting the rope, and chiral, different from its mirror image.",
+        "es": "Con los extremos unidos es el nudo de trébol, 3₁: el nudo más sencillo que no se puede deshacer sin cortar la cuerda, y quiral, distinto de su imagen en un espejo."
+      }
+    }
+  },
   "parts": {
     "standing-part": {
       "en": "Standing part",

@@ -48,6 +48,7 @@ import { buildFuzz, buildTuft, FUZZ_PIECES } from './fuzz.ts';
 import { ROPE_MATERIALS, ropeColour, type RopeMaterialId } from './materials.ts';
 import { rgbOf, toned } from './images.ts';
 import { RopeTextures } from './textures.ts';
+import { askForWood, meshOf, woodIsReady, type SceneObject } from './things.ts';
 import {
   buildCap,
   buildDome,
@@ -194,6 +195,10 @@ export class RopeViewport {
   private readonly edge = new MeshBasicMaterial({ color: EDGE_COLOUR, side: BackSide });
   private readonly loose = new LineBasicMaterial({ vertexColors: true, transparent: true, depthWrite: false });
   private readonly ropes = new Group();
+  /** What the ropes are shown tied to. */
+  private readonly things = new Group();
+  private objects: readonly SceneObject[] = [];
+  private disposed = false;
   private readonly key = new DirectionalLight(0xfff3e0, 3.2);
   private environment: Texture | null = null;
   private specs: readonly RopeSpec[] = [];
@@ -239,6 +244,7 @@ export class RopeViewport {
     if (detail === 'full') this.lightRoom();
     else this.lightPlainly();
     this.scene.add(this.ropes);
+    this.scene.add(this.things);
 
     this.controls = new OrbitControls(this.camera, this.renderer.domElement);
     this.controls.enablePan = false;
@@ -368,6 +374,40 @@ export class RopeViewport {
     return { x: (seen.x + 1) / 2, y: (1 - seen.y) / 2, hidden };
   }
 
+  /** Shows the ropes tied to these things, in place of any shown before. */
+  setObjects(objects: readonly SceneObject[], draw = true): void {
+    this.objects = objects;
+    // things are drawn in a plain colour of wood until their wood has been computed, and again when it has
+    if (objects.length > 0 && !woodIsReady()) {
+      void askForWood().then(() => {
+        if (this.objects === objects && !this.disposed) this.setObjects(objects);
+      });
+    }
+    this.dropThings();
+    for (const thing of objects) {
+      const mesh = meshOf(thing);
+      mesh.castShadow = this.detail === 'full';
+      mesh.receiveShadow = this.detail === 'full';
+      this.things.add(mesh);
+    }
+    this.host.dataset['objects'] = objects.map((thing) => thing.kind).join(' ');
+    if (this.detail === 'full') this.renderer.shadowMap.needsUpdate = true;
+    if (draw) this.render();
+  }
+
+  private dropThings(): void {
+    for (const mesh of [...this.things.children] as Mesh[]) {
+      mesh.geometry.dispose();
+      for (const material of [mesh.material].flat() as MeshPhysicalMaterial[]) {
+        material.map?.dispose();
+        material.bumpMap?.dispose();
+        material.roughnessMap?.dispose();
+        material.dispose();
+      }
+      this.things.remove(mesh);
+    }
+  }
+
   /**
    * Moves the key light: the direction it comes from, seen from the ropes. The shadows follow at once; the
    * loose fibres of a rope are lit from there the next time the ropes are given.
@@ -398,12 +438,14 @@ export class RopeViewport {
   }
 
   dispose(): void {
+    this.disposed = true;
     if (this.wait !== null) window.clearTimeout(this.wait);
     this.observer.disconnect();
     this.controls.removeEventListener('change', this.turned);
     this.controls.removeEventListener('start', this.touched);
     this.controls.dispose();
     this.clear();
+    this.dropThings();
     this.edge.dispose();
     this.loose.dispose();
     this.textures.dispose();

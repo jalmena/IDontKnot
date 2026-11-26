@@ -3,6 +3,7 @@ import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { chosenDetail } from './detail.ts';
 import { LIGHT_FROM_THE_SIDE, RopeViewport, type Fit, type RopeSpec, type Stretch } from './RopeViewport.ts';
+import type { SceneObject } from './things.ts';
 
 /** A name written over the view, at a point of the scene: it follows that point as the view turns. */
 export interface ViewName {
@@ -39,9 +40,12 @@ interface Props {
    * person is looking instead of framing it afresh. A knot that tightens is still the same knot.
    */
   readonly subject?: unknown;
+  /** What the ropes are shown tied to. */
+  readonly objects?: readonly SceneObject[];
 }
 
 const NONE: readonly Stretch[] = [];
+const NO_OBJECTS: readonly SceneObject[] = [];
 const WHOLE: readonly number[] = [];
 
 /**
@@ -64,6 +68,7 @@ export function RopeView({
   corner,
   light = LIGHT_FROM_THE_SIDE,
   subject,
+  objects = NO_OBJECTS,
 }: Props) {
   const { t } = useTranslation();
   const host = useRef<HTMLDivElement>(null);
@@ -103,6 +108,10 @@ export function RopeView({
   useEffect(() => {
     viewport.current?.setLight(light, drawn.current === ropes);
   }, [light]);
+
+  useEffect(() => {
+    viewport.current?.setObjects(objects, drawn.current === ropes);
+  }, [objects]);
 
   useEffect(() => {
     viewport.current?.setRopes(ropes);

@@ -2,6 +2,7 @@ import { serveStatic } from '@hono/node-server/serve-static';
 import { checkStructure, embed, ropeEndsShareOneFace, type Diagram, type Issue } from '@idontknot/core';
 import { Hono, type MiddlewareHandler } from 'hono';
 import { bodyLimit } from 'hono/body-limit';
+import { compress } from 'hono/compress';
 import { secureHeaders } from 'hono/secure-headers';
 
 export interface AppOptions {
@@ -85,6 +86,8 @@ export function createApp(options: AppOptions): Hono {
   app.all('/api/*', (c) => c.json({ error: 'not found' }, 404));
 
   if (options.webDir !== undefined) {
+    // what can be made smaller is sent compressed: the script of the interface goes from a megabyte to a third
+    app.use('*', compress());
     app.use('*', keeping);
     app.use('*', serveStatic({ root: options.webDir }));
     // any other path belongs to the single-page interface

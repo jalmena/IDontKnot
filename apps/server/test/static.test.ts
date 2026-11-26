@@ -24,3 +24,13 @@ it('has the page asked for each time, at whatever address it is served', async (
 it('says nothing about the other files, which keep their names when they change', async () => {
   expect(await keeping('/font.txt')).toBeNull();
 });
+
+it('sends what can be made smaller compressed, to a browser that takes it so', async () => {
+  // the stand-in file of the build is long enough to be worth compressing
+  const response = await app.request('/assets/index-1a2b3c4d.js', { headers: { 'accept-encoding': 'gzip' } });
+  expect(response.status).toBe(200);
+  const plain = await app.request('/assets/index-1a2b3c4d.js');
+  expect(plain.headers.get('content-encoding')).toBeNull();
+  expect(response.headers.get('content-encoding')).toBe('gzip');
+  expect(response.headers.get('cache-control')).toBe('public, max-age=31536000, immutable');
+});

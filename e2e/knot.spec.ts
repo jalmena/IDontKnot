@@ -47,6 +47,8 @@ test('shows what the core computes on the tab for mathematics', async ({ page })
 
   // the arrow keys move between the tabs
   await page.keyboard.press('ArrowLeft');
+  await expect(page.getByRole('tab', { name: 'Use' })).toBeFocused();
+  await page.keyboard.press('Home');
   await expect(page.getByRole('tab', { name: 'The knot' })).toBeFocused();
   await expect(page.getByTestId('parts')).toBeVisible();
 });
@@ -262,6 +264,41 @@ test('shows each knot, its panel and the row of knots on one screen of a laptop'
   }
 });
 
+test('says what the knot is for in the discipline, and shows what it is tied to', async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem('idk.discipline', 'nautical'));
+  await page.goto('/knots/figure-eight');
+  await page.getByRole('tab', { name: 'Use' }).click();
+  await expect(page.getByTestId('category')).toHaveText('Stopper knot');
+  await expect(page.getByTestId('use')).toContainText('A stopper at the end of a sheet');
+  const canvas = page.getByTestId('rope-canvas');
+  await expect(canvas).toHaveAttribute('data-objects', '');
+  const show = page.getByRole('button', { name: 'Show the plate' });
+  await show.click();
+  await expect(show).toHaveAttribute('aria-pressed', 'true');
+  await expect(canvas).toHaveAttribute('data-objects', 'plate');
+  // it stays while the knot is tightened, and goes when asked
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.getByRole('tab', { name: 'The knot' }).click();
+  await page.getByTestId('tighten').click();
+  await expect(canvas).toHaveAttribute('data-objects', 'plate');
+  await page.getByRole('tab', { name: 'Use' }).click();
+  await page.getByRole('button', { name: 'Show the plate' }).click();
+  await expect(canvas).toHaveAttribute('data-objects', '');
+
+  // an eye is shown round a post
+  await page.goto('/knots/bowline');
+  await page.getByRole('tab', { name: 'Use' }).click();
+  await expect(page.getByTestId('category')).toHaveText('Loop');
+  await page.getByRole('button', { name: 'Show the post' }).click();
+  await expect(canvas).toHaveAttribute('data-objects', 'post');
+
+  // a knot that a discipline does not use says so, and has nothing to show
+  await page.goto('/knots/overhand');
+  await page.getByRole('tab', { name: 'Use' }).click();
+  await expect(page.getByTestId('use')).toHaveText('The library records no use of this knot in Nautical.');
+  await expect(page.getByTestId('show-object')).toHaveCount(0);
+});
+
 test('makes no claim about what knot a rope would be whose end lies inside it, as in a bowline', async ({ page }) => {
   await page.goto('/knots/bowline');
   await expect(page.getByTestId('panel')).toHaveAttribute('data-checked', 'ok');
@@ -283,7 +320,7 @@ test('makes no claim about what knot a rope would be whose end lies inside it, a
 test('names the knot, its parts and its steps in Spanish', async ({ page }) => {
   await page.getByLabel('Language').selectOption('es');
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Nudo de ocho');
-  await expect(page.getByRole('tab')).toHaveText(['El nudo', 'Matemáticas']);
+  await expect(page.getByRole('tab')).toHaveText(['El nudo', 'Utilidad', 'Matemáticas']);
   await expect(page.getByTestId('parts').getByRole('button')).toHaveText([
     'Firme',
     'Primer bucle',
@@ -312,7 +349,8 @@ test('says so when there is no such knot or page, and leads back to the library'
   await page.goto('/some/deep/link');
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('There is nothing at this address.');
   await page.getByRole('link', { name: 'Go to the library' }).click();
-  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Knots');
+  // with no discipline chosen yet, the library begins with the disciplines
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Disciplines');
 });
 
 test('has no accessibility violations that axe can detect, on either tab', async ({ page }) => {
