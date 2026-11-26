@@ -475,7 +475,7 @@ export function tighten(
  * measured over so many particles either side.
  */
 const DRESS_BEND = 0.4;
-const DRESS_TURN = 1.25;
+const DRESS_TURN = 1.5;
 const DRESS_SPAN = 6;
 /** How many particles of the eye, at either end, are left for the rope to come round from the pair. */
 const EYE_EASE = 7;
@@ -608,10 +608,10 @@ function tightenInBight(
       const bend: Particle = [lo[0] + hi[0] - 2 * c[0], lo[1] + hi[1] - 2 * c[1], 0];
       const span = (Math.min(i + DRESS_SPAN, line.length - 1) - Math.max(i - DRESS_SPAN, 0)) / 2;
       const step = size(sub(hi, lo)) / (2 * span || 1);
-      const curvature = (2 * size(bend)) / ((span * step) ** 2 || 1);
-      // the first strand is inside the bend when it lies the way the bend turns; the inner one comes forward
-      const inside = side * dotOf(left, bend) > 0;
-      return (inside ? 1 : -1) * DRESS_TURN * Math.min(curvature / (DRESS_BEND / d), 1) * amount;
+      // how sharply the pair bends towards the side of its first strand: the inner strand comes forward, and
+      // through a turn from one way to the other, gradually, for the bend passes through nothing
+      const towards = (2 * side * dotOf(left, bend)) / ((span * step) ** 2 || 1);
+      return DRESS_TURN * Math.min(Math.max(towards / (DRESS_BEND / d), -1), 1) * amount;
     });
     for (let pass = 0; pass < 4; pass++) {
       const was = [...turned];
