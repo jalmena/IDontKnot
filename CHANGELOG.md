@@ -36,7 +36,8 @@ All notable changes to this project are recorded here. The format follows [Keep 
 
 ### Changed
 
-- The things a knot is tied to stay where they are while it is tightened and loosened: the rope moves instead, so that the knot rests against its plate and an eye stays round its post. A standing part runs on through its plate, and a post stands nearly upright through its eye, over one side and under the other. The wood is computed ahead and kept in the browser.
+- The things a knot is tied to stay where they are while it is tightened and loosened: the rope moves instead, so that the knot rests against its plate and an eye stays round its post. A standing part runs on through the middle of its plate, tied and tight alike, and a post stands nearly upright through its eye, over one side and under the other. The wood is computed ahead and kept in the browser.
+- What a knot is for ends, for every knot, with whether it jams after it has taken a load or still unties easily.
 - A knot with an end inside it, such as the bowline, shows its Jones polynomial with its ends joined over the whole knot and under it.
 - The three-strand polyester is satin and ivory: it looked too bright to be real.
 - Faster to load: the server compresses what it sends (the script of the interface goes from 1.1 MB to 324 kB), the pictures of knots are kept in the browser, the images of several ropes are computed side by side, and a knot's page no longer spends most of a second preparing its tightening.
