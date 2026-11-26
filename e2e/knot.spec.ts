@@ -271,7 +271,9 @@ test('says what the knot is for in the discipline, and shows what it is tied to'
   await expect(page.getByTestId('category')).toHaveText('Stopper knot');
   await expect(page.getByTestId('use')).toContainText('A stopper at the end of a sheet');
   // what it is for ends with whether it jams after a load
-  await expect(page.getByTestId('use')).toHaveText(/ It is bulkier than the overhand knot\. After it has taken a load/);
+  await expect(page.getByTestId('use')).toHaveText(
+    / It is bulkier than the overhand knot\. After a heavy load it tightens/,
+  );
   const canvas = page.getByTestId('rope-canvas');
   await expect(canvas).toHaveAttribute('data-objects', '');
   const show = page.getByRole('button', { name: 'Show the plate' });

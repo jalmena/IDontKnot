@@ -30,8 +30,8 @@
     }
   },
   "afterLoad": {
-    "en": "After it has taken a load it tightens, but it is easier to untie than the overhand knot.",
-    "es": "Después de soportar carga se aprieta, pero se deshace con más facilidad que el nudo simple."
+    "en": "After a heavy load it tightens, but it can usually still be untied by hand.",
+    "es": "Tras soportar mucha carga se aprieta, pero por lo general aún se deshace a mano."
   },
   "parts": {
     "standing-part": {
