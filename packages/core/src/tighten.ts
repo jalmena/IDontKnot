@@ -62,6 +62,11 @@ export interface TightenOptions {
    * The stretch that is held, where the rope turns back on itself, is left as it is.
    */
   readonly paired?: boolean;
+  /**
+   * Which ends draw the knot tight: both; or its start alone, the standing part, as a timber hitch is drawn
+   * tight by the load on it while its end, twisted round its own turn, is held by nothing but the knot.
+   */
+  readonly drawnBy?: 'both' | 'start';
 }
 
 /** A straight rigid thing: the two ends of its axis, and its radius. */
@@ -568,7 +573,8 @@ function drawnTight(
     const total = along[n] as number;
     const [start, end] = [from(q[0] as Particle, q[3] as Particle), from(q[n] as Particle, q[n - 3] as Particle)];
     // from the middle of a stretch that is not drawn tight, where it hangs; or else from the middle of the knot
-    const [left, right] = hold ? [hook, hook] : [middle, middle];
+    // or from its end, if only its start draws it: what the knot gives up goes to the standing part
+    const [left, right] = options.drawnBy === 'start' ? [n, n] : hold ? [hook, hook] : [middle, middle];
     let segment = 0;
     return q.map((point, i) => {
       if (i >= left && i <= right) return point;
@@ -711,10 +717,11 @@ function drawnTight(
     const middle = Math.round((first + last) / 2);
     const [start, end] = [from(p[0] as Particle, p[3] as Particle), from(p[n] as Particle, p[n - 3] as Particle)];
     let q = p.map((point, i): Particle => {
-      const way = i <= a ? start : i >= b ? end : null;
+      const way = i <= a ? start : i >= b && options.drawnBy !== 'start' ? end : null;
       return way ? [point[0] + way[0] * pull, point[1] + way[1] * pull, point[2] + way[2] * pull] : [...point];
     });
-    gripped = [a, b];
+    // the end, if it does not draw, is left free
+    gripped = [a, options.drawnBy === 'start' ? n + 1 : b];
     relax(q, 40);
     gripped = [-1, n + 1];
     let tries = 0;

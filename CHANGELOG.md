@@ -35,7 +35,8 @@ All notable changes to this project are recorded here. The format follows [Keep 
 - A "Use" tab on the page of a knot: its category, what it is for in the discipline, and a button that shows it tied to a plate or round a post, in computed wood.
 - Two knots: the double overhand knot, a stopper for climbing and for every day, which closes into the cinquefoil knot, 5₁; and the figure-eight loop, tied by following a figure-eight knot back, as climbers tie in. The overhand knot is now also in Shibari, at the ends of the rope.
 - Knots tied round a post: a drawing can say what its rope is tied round, a straight rigid thing that becomes a component of the knot, which its tightening leaves where it is and keeps the rope out of. Two such knots: the clove hitch, in Climbing, Nautical and Pioneering, and the lark's head, in Climbing (as a girth hitch), Shibari and General. The post is shown when it is asked for, in the Use tab; the Mathematics tab gives the Jones polynomial of the rope alone, which is not knotted without its post.
-- The square lashing, in Pioneering: a clove hitch on the upright, three wraps, two frapping turns and a clove hitch on the crossbar, round two poles shown when asked for. It is drawn tight turn by turn as it is tied, so it has no tightening afterwards.
+- The timber hitch, in Pioneering, round a post shown when asked for: a turn round the post, a half hitch round the standing part and three twists of the end round its own turn. It is drawn tight by its standing part alone, as the load on it draws it; its end is held by nothing but the knot.
+- Sets of knots tied together into one thing, such as a lashing, wait for a section of their own, Structures, open to every discipline. The square lashing, round two poles, waits there (`content/structures`), out of the library.
 
 ### Changed
 

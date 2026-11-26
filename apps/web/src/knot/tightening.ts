@@ -287,7 +287,7 @@ function keptApart(points: Point3[], a: readonly Point3[], b: readonly Point3[],
   const neighbours = Math.ceil((0.95 * Math.PI * d) / step);
   const key = (point: Point3): string =>
     `${Math.floor(point[0] / least)},${Math.floor(point[1] / least)},${Math.floor(point[2] / least)}`;
-  for (let pass = 0; pass < 3; pass++) {
+  for (let pass = 0; pass < 6; pass++) {
     const cells = new Map<string, number[]>();
     points.forEach((point, i) => {
       const k = key(point);
