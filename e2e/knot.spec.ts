@@ -250,7 +250,15 @@ test('shows each knot, its panel and the row of knots on one screen of a laptop'
       return { top: Math.round(box.top + window.scrollY), bottom: Math.round(box.bottom + window.scrollY) };
     });
   // the figure-eight loop has the most steps, six: they scroll beside the view
-  for (const knot of ['figure-eight', 'overhand', 'bowline', 'double-overhand', 'figure-eight-loop']) {
+  for (const knot of [
+    'figure-eight',
+    'overhand',
+    'bowline',
+    'double-overhand',
+    'clove-hitch',
+    'larks-head',
+    'figure-eight-loop',
+  ]) {
     for (const language of ['en', 'es']) {
       await page.goto(`/knots/${knot}`);
       await page.getByLabel(/Language|Idioma/).selectOption(language);
@@ -393,4 +401,34 @@ test('has no accessibility violations that axe can detect, on either tab', async
   await page.getByRole('tab', { name: 'Mathematics' }).click();
   await expect(page.getByTestId('facts')).toBeVisible();
   expect(await violations()).toEqual([]);
+});
+
+test('shows a knot tied round a post round its own post when asked, and says that alone its rope is not knotted', async ({
+  page,
+}) => {
+  await page.addInitScript(() => localStorage.setItem('idk.discipline', 'nautical'));
+  await page.goto('/knots/clove-hitch');
+  await expect(page.getByTestId('panel')).toHaveAttribute('data-checked', 'ok');
+  const canvas = page.getByTestId('rope-canvas');
+  const posts = page.getByTestId('diagram').locator('polyline[stroke="#9b6a3c"]');
+  // until it is asked for, there is no post, on the view or on the diagram
+  await expect(canvas).toHaveAttribute('data-objects', '');
+  await page.getByRole('button', { name: 'Diagram' }).click();
+  await expect(posts).toHaveCount(0);
+  await page.getByRole('button', { name: '3D' }).click();
+  await page.getByRole('tab', { name: 'Use' }).click();
+  await page.getByRole('button', { name: 'Show the post' }).click();
+  await expect(canvas).toHaveAttribute('data-objects', 'post');
+  await page.getByRole('tab', { name: 'Mathematics' }).click();
+  await expect(page.getByTestId('jones-alone')).toHaveText('1');
+  // drawn tight, it stays where it is
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.getByRole('tab', { name: 'The knot' }).click();
+  await page.getByTestId('tighten').click();
+  await expect(page.getByTestId('panel')).toHaveAttribute('data-tightened', '1');
+  await expect(canvas).toHaveAttribute('data-objects', 'post');
+  // and on the diagram it is drawn as a post, not as rope (a straight upright line has no width to be seen
+  // by, so it is counted)
+  await page.getByRole('button', { name: 'Diagram' }).click();
+  await expect(posts).not.toHaveCount(0);
 });

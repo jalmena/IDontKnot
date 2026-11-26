@@ -12,8 +12,16 @@
  * measure of how well it holds.
  */
 
-import { framePolylines, sampleCurve, type CurvePoint, type Frame, type KnotDocument } from './document.ts';
-import type { Point3 } from './geometry.ts';
+import {
+  documentDiagram,
+  framePolylines,
+  identicalDiagrams,
+  sampleCurve,
+  type CurvePoint,
+  type Frame,
+  type KnotDocument,
+} from './document.ts';
+import { diagramFromGeometry, type Point3 } from './geometry.ts';
 
 export interface TightenOptions {
   /** The distance between the particles that follow the rope, in rope diameters. */
@@ -41,6 +49,19 @@ export interface TightenOptions {
    * its end.
    */
   readonly held?: readonly [from: number, to: number];
+  /**
+   * Straight rigid things the rope is tied round, such as a post: it does not pass into them, and they do
+   * not move. A knot tied round one is drawn tight by its ends alone: made smaller as a whole, it would be
+   * drawn into the thing.
+   */
+  readonly around?: readonly Rod[];
+}
+
+/** A straight rigid thing: the two ends of its axis, and its radius. */
+export interface Rod {
+  readonly from: Point3;
+  readonly to: Point3;
+  readonly radius: number;
 }
 
 export interface Tightening {
@@ -120,6 +141,17 @@ export function tighten(
   const nearest = options.nearest ?? NEAREST;
   const sharpest = options.sharpest ?? SHARPEST;
   const held = BEND_HELD * sharpest;
+  const rods = options.around ?? [];
+  // the rope may be pressed against a thing as it is against itself
+  const off = (rod: Rod): number => rod.radius + radius * nearest;
+  /** The point of the axis of a rod nearest to a point. */
+  const onAxis = (point: Point3, rod: Rod): Particle => {
+    const axis = sub(rod.to, rod.from);
+    const along = axis[0] * axis[0] + axis[1] * axis[1] + axis[2] * axis[2];
+    const v = sub(point, rod.from);
+    const t = along > 0 ? Math.min(Math.max((v[0] * axis[0] + v[1] * axis[1] + v[2] * axis[2]) / along, 0), 1) : 0;
+    return mix(rod.from, rod.to, t);
+  };
 
   // nearer than this along the rope, two particles are neighbours and may be as close as they like
   const neighbours = Math.round((0.95 * Math.PI * d) / h);
@@ -194,15 +226,33 @@ export function tighten(
       SPANS.forEach((m, which) => {
         for (let i = m; i + m <= n; i++) apart(q, i - m, i + m, least[which] as number, false);
       });
-      // and, last of all, it does not pass through itself
+      // and, last of all, it does not pass through itself, nor into what it is tied round
       for (let again = 0; again < 3; again++) for (const [i, j] of pairs) apart(q, i, j, (nearest + SPARE) * d, false);
+      for (const rod of rods) {
+        const clear = off(rod) + SPARE * d;
+        for (let i = 0; i <= n; i++) {
+          if (!free(i)) continue;
+          const point = q[i] as Particle;
+          const centre = onAxis(point, rod);
+          const away = sub(point, centre);
+          const now = size(away);
+          if (now >= clear || now < 1e-9) continue;
+          for (let c = 0; c < 3; c++) point[c] = (centre[c] as number) + ((away[c] as number) * clear) / now;
+        }
+      }
     }
   };
 
-  /** The stretch of rope that is the knot: from the first particle that touches another to the last. */
+  /** The stretch of rope that is the knot: from the first particle that touches another, or a thing, to the last. */
   const knot = (q: Particle[]): [first: number, last: number] => {
     let [first, last] = [n, 0];
     for (let i = 0; i <= n; i++) {
+      if (
+        rods.some((rod) => size(sub(q[i] as Particle, onAxis(q[i] as Particle, rod))) < 1.08 * (rod.radius + radius))
+      ) {
+        first = Math.min(first, i);
+        last = Math.max(last, i);
+      }
       for (let j = i + neighbours; j <= n; j++) {
         if (size(sub(q[i] as Particle, q[j] as Particle)) < 1.08 * d) {
           first = Math.min(first, i);
@@ -243,6 +293,8 @@ export function tighten(
       for (let j = i + neighbours; j <= n; j++) {
         if (size(sub(q[i] as Particle, q[j] as Particle)) < nearest * d) return false;
       }
+      for (const rod of rods)
+        if (size(sub(q[i] as Particle, onAxis(q[i] as Particle, rod))) < off(rod) - 1e-6) return false;
     }
     const fine = sampleCurve(
       { type: 'catmull-rom', points: q.map((point, k) => [...point, k * h] as const) },
@@ -256,7 +308,8 @@ export function tighten(
 
   const taken: Particle[][] = [];
   const inKnot: number[] = [];
-  let shrink = SHRINK;
+  // a knot tied round a thing is not made smaller as a whole: its ends alone draw it tight
+  let shrink = rods.length > 0 ? 0 : SHRINK;
   while (taken.length < MOST_STEPS && shrink > LEAST_SHRINK) {
     const [first, last] = knot(p);
     const centre: Particle = [0, 0, 0];
@@ -368,29 +421,56 @@ function controlPoints(shape: readonly Point3[], spacing: number, length: number
 /**
  * The frames that the knot of a document passes through as it is tightened from one of its frames: a few
  * on the way and, last, the tightest, which says it realises the topology if the frame it started from
- * does. Only for a document that is one open rope: for any other, nothing.
+ * does. Only for a document that is one open rope, with or without straight rigid things it is tied round,
+ * which stay where they are: for any other, nothing.
  */
 export function tighteningFrames(document: KnotDocument, start: Frame, options: TightenOptions = {}): Frame[] {
-  const [rope] = document.components;
-  if (document.components.length !== 1 || !rope || rope.kind !== 'rope' || rope.closed || !rope.length) return [];
-  const [curve] = framePolylines(document, start);
+  const ropes = document.components.filter((component) => component.kind === 'rope');
+  const [rope] = ropes;
+  if (ropes.length !== 1 || !rope || rope.closed || !rope.length) return [];
+  const curves = framePolylines(document, start);
+  const curve = curves.find((each) => each.id === rope.id);
   if (!curve) return [];
+  const rigid = document.components.filter((component) => component.kind === 'rigid');
+  const around = rigid.flatMap((thing): Rod[] => {
+    const axis = curves.find((each) => each.id === thing.id);
+    const [from, to] = [axis?.points[0], axis?.points.at(-1)];
+    return from && to ? [{ from, to, radius: thing.radius ?? 0.5 }] : [];
+  });
   // the eye of a knot is not drawn tight with it: something stands in it
   const eye = document.parts?.find((part) => part.component === rope.id && part.type === 'eye');
   const held = options.held ?? (eye ? ([eye.from, eye.to] as const) : undefined);
   const { spacing, shapes } = tighten(curve.points, curve.s, rope.radius ?? 0.5, {
     ...options,
     ...(held ? { held } : {}),
+    ...(around.length > 0 ? { around } : {}),
   });
+  // what the rope is tied round stays where it is
+  const things = Object.fromEntries(
+    rigid.flatMap((thing) => (start.curves[thing.id] ? [[thing.id, start.curves[thing.id]]] : [])),
+  );
   // a rope that may come nearer to itself than its thickness is pressed thinner by the difference
   const pressed = Math.round((1 - (options.nearest ?? NEAREST)) * 1000) / 1000;
-  return shapes.map((shape, k) => {
-    const tightest = k === shapes.length - 1;
-    return {
-      id: tightest ? TIGHT_FRAME : `tightening-${k + 1}`,
-      ...(tightest && start.realises ? { realises: start.realises } : {}),
-      ...(pressed > 0.05 ? { pressed } : {}),
-      curves: { [rope.id]: { type: 'catmull-rom', points: controlPoints(shape, spacing, rope.length as number) } },
-    };
-  });
+  const frames = shapes.map((shape, k): Frame => ({
+    id: k === shapes.length - 1 ? TIGHT_FRAME : `tightening-${k + 1}`,
+    ...(pressed > 0.05 ? { pressed } : {}),
+    curves: {
+      [rope.id]: { type: 'catmull-rom', points: controlPoints(shape, spacing, rope.length as number) },
+      ...things,
+    },
+  }));
+  // the tightest says it realises the topology when the frame it started from does, and seen from the front
+  // it does: a rope drawn tight round a thing may twist where it turns round it, and show a loop that the
+  // knot does not have
+  const tightest = frames.at(-1);
+  const declared = documentDiagram(document);
+  if (tightest && start.realises && declared) {
+    const { diagram, issues } = diagramFromGeometry(framePolylines(document, tightest));
+    if (issues.length === 0 && identicalDiagrams(declared, diagram)) {
+      // written where it always has been, after the id
+      const { id, ...rest } = tightest;
+      frames[frames.length - 1] = { id, realises: start.realises, ...rest };
+    }
+  }
+  return frames;
 }

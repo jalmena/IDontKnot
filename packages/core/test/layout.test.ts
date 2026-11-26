@@ -145,3 +145,34 @@ describe('laying out a drawing', () => {
     expect(method?.steps[0]?.result.crossings).toHaveLength(1);
   });
 });
+
+describe('a drawing of a rope tied round a thing', () => {
+  const layout: Layout = {
+    id: 'round-a-post',
+    rope: { radius: 0.5 },
+    things: [{ id: 'post', from: [0, -3, 0], to: [0, 3, 0], radius: 1 }],
+    path: [
+      [-6, 0, 0],
+      [-2, 0.2, 2],
+      [0, 0.3, 2],
+      [2, 0.4, 2],
+      [6, 0.5, 0],
+    ],
+  };
+  const document = layOut(layout);
+
+  it('makes the thing a straight rigid component, with its radius and length', () => {
+    expect(document.components[1]).toEqual({ id: 'post', kind: 'rigid', closed: false, radius: 1, length: 6 });
+    const axis = document.geometry?.frames[0]?.curves['post'];
+    expect(axis?.type).toBe('polyline');
+    expect(axis?.points[0]).toEqual([0, -3, 0, 0]);
+    expect(axis?.points.at(-1)).toEqual([0, 3, 0, 6]);
+  });
+
+  it('meets the thing where the rope passes over it, as a crossing of the diagram', () => {
+    const strands = document.topology?.diagram.strands ?? {};
+    expect(strands['rope']).toHaveLength(1);
+    expect(strands['rope']?.[0]?.[1]).toBe('o');
+    expect(strands['post']?.[0]?.[1]).toBe('u');
+  });
+});

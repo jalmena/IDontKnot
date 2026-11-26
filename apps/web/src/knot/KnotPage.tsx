@@ -35,7 +35,7 @@ import { inLanguage, type LibraryKnot } from './library.ts';
 import { fed } from './feeding.ts';
 import { boundsOf, hungBelow, partShape, pointAt } from './parts.ts';
 import { timelineOf, type Timeline } from './playback.ts';
-import { fitOf, ropesOf, shownFrame, withThings } from './shape.ts';
+import { centredOn, fitOf, ropesOf, shownFrame, thingsOf, withThings } from './shape.ts';
 import { eased, entryAt, shapeAt, tighteningOf, windowAt } from './tightening.ts';
 import { Tying } from './Tying.tsx';
 import { usePlayback } from './usePlayback.ts';
@@ -64,6 +64,12 @@ const STANDING_BEYOND = 4;
 
 /** The Jones polynomials of a knot with its ends joined, as far as they can be said: see `joinedAcross`. */
 function closuresOf(document: KnotDocument, curves: readonly FrameCurve[], diagram: Diagram): Facts['closures'] {
+  // a rope tied round a thing is a knot only round it: with its ends joined, it is taken alone
+  if (curves.some((curve) => curve.kind === 'rigid')) {
+    const alone = diagramFromGeometry(curves.filter((curve) => curve.kind !== 'rigid'));
+    if (alone.issues.length > 0 || !ropeEndsShareOneFace(alone.diagram)) return [];
+    return [{ side: 'alone', value: jonesPolynomial(closeOpenComponents(alone.diagram)) }];
+  }
   if (document.topology?.closure === 'exterior') {
     return [{ side: 'outside', value: jonesPolynomial(closeOpenComponents(diagram)) }];
   }
@@ -120,22 +126,28 @@ export function KnotPage({ knot }: Props) {
   // fixed there; as the knot is tightened, it is the rope that moves
   const thing = (discipline ? entry.uses?.[discipline] : undefined)?.object;
   const eyePart = document.parts?.find((part) => part.type === 'eye');
-  // a knot that can be shown tied to a thing of wood has its wood computed ahead, before it is asked for
+  // what the knot is tied round, if it is tied round something: it is part of the knot, and always shown
+  const fixed = useMemo(() => thingsOf(document, curves), [document, curves]);
+  // a knot that is, or can be shown, tied to a thing of wood has its wood computed ahead, before it is asked for
+  const wooden = thing !== undefined || fixed.length > 0;
   useEffect(() => {
-    if (thing) void askForWood();
-  }, [thing]);
+    if (wooden) void askForWood();
+  }, [wooden]);
   const ropeRadius = document.components[0]?.radius ?? 0.5;
   const ropeLength = document.components[0]?.length ?? 0;
   const tiedShape = useMemo<RopeShape | null>(() => {
     const [curve] = curves;
     return curve ? { points: curve.points, s: curve.s, radius: ropeRadius } : null;
   }, [curves, ropeRadius]);
-  const objects = useMemo<readonly SceneObject[]>(() => {
+  const shownWith = useMemo<readonly SceneObject[]>(() => {
     if (!placed || !tiedShape) return NO_THINGS;
     if (thing === 'plate') return [plateFor(tiedShape)];
     if (thing === 'post' && eyePart) return [postFor(tiedShape, [eyePart.from, eyePart.to])];
     return NO_THINGS;
   }, [placed, thing, tiedShape, eyePart]);
+  // shown only when asked for, in the Use tab: a knot tied round a thing is shown round its own, as drawn
+  const objects = useMemo(() => (placed && fixed.length > 0 ? fixed : shownWith), [placed, fixed, shownWith]);
+  const centre = placed ? fixed[0] : undefined;
   const pulledShape = useMemo<RopeShape | null>(() => {
     if (!tightening || amount <= 0) return null;
     const points = shapeAt(tightening, eased(amount));
@@ -143,16 +155,17 @@ export function KnotPage({ knot }: Props) {
   }, [tightening, amount, ropeLength, ropeRadius]);
   // how far the tightened rope is moved: so that it rests against the plate, or its eye stays round the post
   const moved = useMemo<Point3>(() => {
-    const [held] = objects;
+    // the rope is moved only against a thing it is shown with: round one it is tied round, it is drawn tight
+    const [held] = shownWith;
     if (!held || !pulledShape || !tiedShape || !tightening) return STILL;
     if (held.kind === 'plate') {
       const entry = entryAt(tightening, eased(amount));
       return towardsPlate(held, tiedShape, tightening.entries[0] ?? 0, pulledShape, entry);
     }
     return eyePart ? aroundPost(tiedShape, pulledShape, [eyePart.from, eyePart.to]) : STILL;
-  }, [objects, pulledShape, tiedShape, tightening, amount, eyePart]);
+  }, [shownWith, pulledShape, tiedShape, tightening, amount, eyePart]);
   // a standing part through a plate runs on beyond it
-  const lengthen = objects[0]?.kind === 'plate' ? STANDING_BEYOND * 2 * ropeRadius : 0;
+  const lengthen = shownWith[0]?.kind === 'plate' ? STANDING_BEYOND * 2 * ropeRadius : 0;
   // a knot that is being tightened, or is tight, is drawn in the shape it has come to; one that is being
   // tied, with its rope fed along the way of the knot from its standing part as its end is led
   const ropes = useMemo(() => {
@@ -191,11 +204,11 @@ export function KnotPage({ knot }: Props) {
   // knot is tightened its ends run out of the view, which closes in on the knot, where it has been moved to
   const fit = useMemo(() => {
     const clear = { ...VIEW_MARGINS, top: VIEW_MARGINS.top + NAME_HEIGHT };
-    if (!tightening || amount <= 0) return fitOf(curves, clear, objects);
+    if (!tightening || amount <= 0) return centredOn(fitOf(curves, clear, objects), centre);
     const window = windowAt(tightening, eased(amount));
-    const centre: Point3 = [window.centre[0] + moved[0], window.centre[1] + moved[1], window.centre[2] + moved[2]];
-    return withThings({ ...window, centre, clear }, objects);
-  }, [curves, tightening, amount, objects, moved]);
+    const middle: Point3 = [window.centre[0] + moved[0], window.centre[1] + moved[1], window.centre[2] + moved[2]];
+    return centredOn(withThings({ ...window, centre: middle, clear }, objects), centre);
+  }, [curves, tightening, amount, objects, moved, centre]);
   // and the light goes up over it, so that strands that lie together are told apart
   const light = useMemo<Point3>(() => {
     const t = eased(amount);
@@ -293,7 +306,11 @@ export function KnotPage({ knot }: Props) {
   // on the diagram a name sits above its part; the name of an end of the rope is written outward from
   // where that end leaves the knot, so that it does not run over the knot, and the drawing makes room for it
   const drawing = useMemo(() => {
-    const [minX, minY, maxX, maxY] = boundsOf(curves, 1.6);
+    // framed by the rope: a post it is tied round runs on beyond the drawing
+    const [minX, minY, maxX, maxY] = boundsOf(
+      curves.filter((curve) => curve.kind !== 'rigid'),
+      1.6,
+    );
     let room = 0;
     const placed = partNames.map(({ at, ...rest }, i) => {
       const { inner, outer } = parts[i]!;
@@ -309,16 +326,34 @@ export function KnotPage({ knot }: Props) {
         anchor: leftward ? ('end' as const) : ('start' as const),
       };
     });
+    // a name that would be written over one before it goes under the rope instead
+    const boxes: (readonly [number, number, number, number])[] = [];
+    const names = placed.map((name) => {
+      const width = name.text.length * DIAGRAM_TEXT * 0.56;
+      const left =
+        'anchor' in name ? (name.anchor === 'end' ? name.at[0] - width : name.at[0]) : name.at[0] - width / 2;
+      const box = (y: number) => [left, y - 0.3 * DIAGRAM_TEXT, left + width, y + 0.8 * DIAGRAM_TEXT] as const;
+      const hits = (b: readonly [number, number, number, number]): boolean =>
+        boxes.some(([l, d, r, u]) => b[0] < r && b[2] > l && b[1] < u && b[3] > d);
+      let at = name.at;
+      if (hits(box(at[1]))) at = [at[0], at[1] - 2 * NAME_RISE - DIAGRAM_TEXT];
+      boxes.push(box(at[1]));
+      return { ...name, at };
+    });
     // the same room on both sides, so that the knot stays in the middle as it is in the 3D view
-    return { bounds: [minX - room, minY, maxX + room, maxY + NAME_ROOM] as const, names: placed };
+    return { bounds: [minX - room, minY, maxX + room, maxY + NAME_ROOM] as const, names };
   }, [curves, partNames, parts]);
   // the diagram of the rope as far as it is laid: the crossings made so far
+  // and the post a knot is tied round is drawn on it only when it is shown
   const laid = useMemo(() => {
-    if (tied) return { curves, visits: facts.visits, crossings: facts.diagram.crossings.length };
-    const cut = curves.map((curve, index) => (index === rope ? cutCurve(curve, state.position) : curve));
+    const drawn = placed ? curves : curves.filter((curve) => curve.kind !== 'rigid');
+    if (tied && drawn.length === curves.length) {
+      return { curves, visits: facts.visits, crossings: facts.diagram.crossings.length };
+    }
+    const cut = drawn.map((curve, index) => (!tied && index === rope ? cutCurve(curve, state.position) : curve));
     const { diagram, visits } = diagramFromGeometry(cut);
     return { curves: cut, visits, crossings: diagram.crossings.length };
-  }, [tied, curves, facts, rope, state.position]);
+  }, [placed, tied, curves, facts, rope, state.position]);
 
   return (
     <section className="lab" aria-labelledby="knot-title">

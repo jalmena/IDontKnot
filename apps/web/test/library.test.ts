@@ -36,8 +36,11 @@ describe.each(Object.entries(KNOTS))('what the library knot %s is for', (_id, { 
       for (const { code } of LANGUAGES) expect(use.text[code]).toBeTruthy();
       if (use.object === undefined) continue;
       expect(OBJECT_KINDS).toContain(use.object);
-      // a post stands in an eye: a knot shown on one has an eye
-      if (use.object === 'post') expect(document.parts?.some((part) => part.type === 'eye')).toBe(true);
+      // a post stands in an eye, or the knot is tied round it
+      if (use.object === 'post') {
+        const tiedRound = document.components.some((component) => component.kind === 'rigid');
+        expect(tiedRound || document.parts?.some((part) => part.type === 'eye')).toBe(true);
+      }
     }
   });
 

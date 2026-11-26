@@ -73,6 +73,7 @@ Its differentiator is that the system reasons about knots through a mathematical
 | 2026-11-26 | Joined ends | A knot whose rope has an end inside it, such as the bowline, shows its Jones polynomial with its ends joined over the whole knot and under it, the two closures that do not depend on the way the join takes. |
 | 2026-11-26 | After a load | Whether a knot jams after it has taken a load, or still unties easily, is said for every knot: it is the last sentence of what it is for, in the Use tab. |
 | 2026-11-26 | Three knots for every discipline | At least three knots in each discipline, from the first dozen: Climbing, the figure-eight loop, the clove hitch and the lark's head (as a girth hitch); Nautical, the figure-eight knot, the bowline, the clove hitch and the reef knot; Shibari, the overhand knot (at the ends of the rope), the lark's head and the single column tie; Pioneering, the bowline, the clove hitch and the square lashing; General, the overhand and figure-eight knots, the bowline, the reef knot and the figure-eight loop; Mathematics, the overhand and figure-eight knots and the double overhand knot. The double overhand knot takes the place of the closed trefoil, which is the knot the overhand knot already closes into. Then the sheet bend and the carrick bend. |
+| 2026-11-26 | Posts when asked for | The post a knot is tied round appears only when it is asked for, in the Use tab, as the plate and the post of the other knots do. |
 
 ## Open decisions
 

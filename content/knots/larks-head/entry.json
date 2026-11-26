@@ -1,0 +1,77 @@
+{
+  "format": "idk-entry",
+  "formatVersion": "0.1.0",
+  "knot": "larks-head",
+  "names": {
+    "en": "Lark's head",
+    "es": "Nudo de alondra"
+  },
+  "category": "hitch",
+  "uses": {
+    "climbing": {
+      "object": "post",
+      "text": {
+        "en": "As a girth hitch, tied with a sling: to fix the sling to the harness, or round a tree or a spike of rock.",
+        "es": "Como nudo de alondra hecho con una cinta: para fijar la cinta al arnés, o alrededor de un árbol o de un saliente de roca."
+      }
+    },
+    "shibari": {
+      "object": "post",
+      "text": {
+        "en": "To fix the bight of a rope round a limb or a post at the start of a tie, and go on with both strands.",
+        "es": "Para fijar el seno de la cuerda a un miembro o a un poste al empezar una atadura, y seguir con los dos cabos."
+      }
+    },
+    "decorative": {
+      "object": "post",
+      "text": {
+        "en": "To hang a tag, a charm or a cord from a ring or a rail.",
+        "es": "Para colgar una etiqueta, un colgante o un cordón de una anilla o de una barra."
+      }
+    }
+  },
+  "afterLoad": {
+    "en": "After a load it unties easily; but pulled by one strand alone, it can slip.",
+    "es": "Después de soportar carga se deshace con facilidad; pero si se tira de un solo cabo, puede deslizarse."
+  },
+  "parts": {
+    "standing-part": {
+      "en": "Standing part",
+      "es": "Firme"
+    },
+    "collar": {
+      "en": "Collar",
+      "es": "Seno"
+    },
+    "tail": {
+      "en": "Tail",
+      "es": "Chicote"
+    }
+  },
+  "methods": {
+    "with-the-end": {
+      "name": {
+        "en": "With the end",
+        "es": "Con el chicote"
+      },
+      "steps": {
+        "round-post": {
+          "en": "Lead the end across the front of the post and round behind it.",
+          "es": "Pasa el chicote por delante del poste y rodéalo por detrás."
+        },
+        "round-legs": {
+          "en": "Bring it out round the standing part, over it, and down.",
+          "es": "Sácalo rodeando el firme, por encima de él, y bájalo."
+        },
+        "round-other-way": {
+          "en": "Take it round the post the other way, behind it first.",
+          "es": "Rodea el poste en el otro sentido, primero por detrás."
+        },
+        "out-under": {
+          "en": "Bring it out across the front, under the turn it made, beside the standing part.",
+          "es": "Sácalo por delante, por debajo de la vuelta que hizo, junto al firme."
+        }
+      }
+    }
+  }
+}

@@ -79,7 +79,8 @@
       "unsound": "La forma en el espacio incumple una regla. Es un defecto: por favor, comunícalo.",
       "joined": {
         "over": "Polinomio de Jones, uniendo los extremos por encima de todo el nudo",
-        "under": "Polinomio de Jones, uniendo los extremos por debajo de todo el nudo"
+        "under": "Polinomio de Jones, uniendo los extremos por debajo de todo el nudo",
+        "alone": "Polinomio de Jones de la cuerda sola, con los dos extremos unidos"
       }
     },
     "tabs": {

@@ -34,6 +34,7 @@ All notable changes to this project are recorded here. The format follows [Keep 
 - Disciplines: the application opens on them, and one chosen leads to its knots, grouped by category, in its rope. It can be changed at the top right of every page, and the logo leads back to the choice.
 - A "Use" tab on the page of a knot: its category, what it is for in the discipline, and a button that shows it tied to a plate or round a post, in computed wood.
 - Two knots: the double overhand knot, a stopper for climbing and for every day, which closes into the cinquefoil knot, 5₁; and the figure-eight loop, tied by following a figure-eight knot back, as climbers tie in. The overhand knot is now also in Shibari, at the ends of the rope.
+- Knots tied round a post: a drawing can say what its rope is tied round, a straight rigid thing that becomes a component of the knot, which its tightening leaves where it is and keeps the rope out of. Two such knots: the clove hitch, in Climbing, Nautical and Pioneering, and the lark's head, in Climbing (as a girth hitch), Shibari and General. The post is shown when it is asked for, in the Use tab; the Mathematics tab gives the Jones polynomial of the rope alone, which is not knotted without its post.
 
 ### Changed
 
