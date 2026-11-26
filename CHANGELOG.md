@@ -28,11 +28,13 @@ All notable changes to this project are recorded here. The format follows [Keep 
 - Tightening in the core: the shapes an open rope passes through as its knot is drawn tight by both ends, without stretching or passing through itself; and a tool that writes them into a knot of the library as frames, which are checked like any other.
 - Laying out in the core: a knot's document made from a drawing of its rope in the plane, with its parts and the steps that tie it placed by the crossings the rope meets. A tool writes a knot of the library from its drawing, and a test makes every knot again and compares.
 - A second knot in the library: the overhand knot.
+- A third knot, the bowline: its eye keeps its shape while the knot is drawn tight round it, as an eye round a post does.
 - The licence of the content of the library: Creative Commons Attribution-ShareAlike 4.0.
 - A "Tighten" button on the page of a knot, beside "Next": the knot is seen to tighten, the view closes in on it and the light moves up over it. "Loosen" brings it back.
 
 ### Changed
 
+- A knot whose rope has an end inside it, as the tail of a bowline is inside its eye, no longer claims what knot it would be with its ends joined: the core refuses that claim for such a document (rule T5), and its page leaves it out.
 - The torus knot laboratory moved to `/lab`.
 - Both pages share one layout that fits one screen of a laptop: the view with the title of the page inside it, and a panel of the same height beside it.
 - The diagram is shown in place of the 3D view, by a switch on the view, instead of beside it.

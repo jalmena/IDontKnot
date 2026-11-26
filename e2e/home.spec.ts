@@ -11,7 +11,7 @@ test('opens on the knots of the library, each with its name and its picture', as
   await expect(page.getByRole('link', { name: 'Knots', exact: true })).toHaveAttribute('aria-current', 'page');
 
   const knots = page.getByRole('navigation', { name: 'All knots' });
-  await expect(knots.getByRole('link')).toHaveText(['Figure-eight knot', 'Overhand knot']);
+  await expect(knots.getByRole('link')).toHaveText(['Bowline', 'Figure-eight knot', 'Overhand knot']);
   // the picture is drawn a moment after the page: it is an image with something in it
   const picture = knots.locator('img').first();
   await expect.poll(() => picture.evaluate((image: HTMLImageElement) => image.naturalWidth)).toBeGreaterThan(100);
@@ -69,6 +69,7 @@ test('names the library and its knots in Spanish', async ({ page }) => {
   await page.getByLabel('Language').selectOption('es');
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Nudos');
   await expect(page.getByRole('navigation', { name: 'Todos los nudos' }).getByRole('link')).toHaveText([
+    'As de guía',
     'Nudo de ocho',
     'Nudo simple',
   ]);
@@ -79,7 +80,7 @@ test('names the library and its knots in Spanish', async ({ page }) => {
 });
 
 test('has no accessibility violations that axe can detect', async ({ page }) => {
-  await expect(page.getByRole('navigation', { name: 'All knots' }).locator('img')).toHaveCount(2);
+  await expect(page.getByRole('navigation', { name: 'All knots' }).locator('img')).toHaveCount(3);
   const results = await new AxeBuilder({ page }).analyze();
   expect(results.violations.map((violation) => `${violation.id}: ${violation.help}`)).toEqual([]);
 });

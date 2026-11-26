@@ -492,7 +492,7 @@ a {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  margin-bottom: 0.6rem;
+  margin-bottom: 0.45rem;
 }
 
 .player__play {
@@ -516,13 +516,14 @@ button:disabled {
   cursor: default;
 }
 
+/* four steps, of two lines each, fit beside the view on one screen of a laptop */
 .steps {
   margin: 0.4rem 0 0;
   padding: 0;
   list-style: none;
   counter-reset: step;
   display: grid;
-  gap: 0.5rem;
+  gap: 0.4rem;
 }
 
 .steps li {
@@ -534,7 +535,7 @@ button:disabled {
   grid-template-columns: 1.6rem 1fr;
   gap: 0.6rem;
   width: 100%;
-  padding: 0.6rem 0.9rem;
+  padding: 0.38rem 0.9rem;
   border-radius: 10px;
   text-align: left;
   line-height: 1.35;

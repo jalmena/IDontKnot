@@ -9,7 +9,7 @@ export interface Facts {
   readonly writhe: number;
   readonly endsOutside: boolean;
   /** The Jones polynomial of the knot with its ends joined, as the core returns it. */
-  readonly closure: Readonly<Record<string, number>>;
+  readonly closure: Readonly<Record<string, number>> | null;
 }
 
 interface Props {
@@ -55,12 +55,14 @@ export function KnotFacts({ facts, material }: Props) {
           ))}
         </dd>
       </div>
-      <div className="facts__wide">
-        <dt>{t('knot.facts.closure')}</dt>
-        <dd>
-          <Polynomial value={facts.closure} testId="jones-closure" />
-        </dd>
-      </div>
+      {facts.closure && (
+        <div className="facts__wide">
+          <dt>{t('knot.facts.closure')}</dt>
+          <dd>
+            <Polynomial value={facts.closure} testId="jones-closure" />
+          </dd>
+        </div>
+      )}
     </dl>
   );
 }
