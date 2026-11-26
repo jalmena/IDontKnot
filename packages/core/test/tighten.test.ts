@@ -215,14 +215,13 @@ describe('tightening a knot tied in a bight', () => {
       const [before, after] = [rope.points[Math.max(i - 60, 0)] as Point3, rope.points[i + 60]];
       if (!after) continue;
       const bend = [before[0] + after[0] - 2 * a[0], before[1] + after[1] - 2 * a[1]] as const;
-      if (Math.hypot(bend[0], bend[1]) < 0.9) continue;
+      if (Math.hypot(bend[0], bend[1]) < 0.5) continue;
       bends++;
       const inside = (b[0] - a[0]) * bend[0] + (b[1] - a[1]) * bend[1] > 0;
       const [outer, inner] = inside ? [a, b] : [b, a];
       if (outer[2] < inner[2] - 0.05) tucked++;
     }
-    // where another pair crosses over or under there is no room, and there the two lie flat
     expect(bends).toBeGreaterThan(100);
-    expect(tucked / bends).toBeGreaterThan(0.5);
+    expect(tucked / bends).toBeGreaterThan(0.8);
   });
 });
