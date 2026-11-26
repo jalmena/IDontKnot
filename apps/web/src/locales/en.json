@@ -136,12 +136,12 @@
       "theory": "Mathematics"
     },
     "about": {
-      "climbing": "Tying in, belaying, abseiling and working at height, in trees too.",
-      "nautical": "Making fast, hoisting and joining lines on board.",
-      "shibari": "Ties on the body, with consent and care.",
-      "pioneering": "Lashings, and structures of poles and rope.",
+      "climbing": "Tying in, belaying and abseiling.",
+      "nautical": "Mooring, hoisting and joining lines.",
+      "shibari": "Body ties, with consent and care.",
+      "pioneering": "Lashings and structures of poles.",
       "decorative": "Knots for every day, and for show.",
-      "theory": "Knots as mathematical objects: diagrams and invariants."
+      "theory": "Knots as mathematical objects."
     },
     "short": {
       "climbing": "Climbing",
