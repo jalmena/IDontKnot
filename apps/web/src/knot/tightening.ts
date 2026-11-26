@@ -31,6 +31,8 @@ export interface Tightening {
   readonly windows: readonly Window[];
   /** The seconds it takes to be tightened at the speed of one: the more the knot changes, the longer. */
   readonly seconds: number;
+  /** The thickness of the rope. */
+  readonly diameter: number;
 }
 
 /** A box in the x-y plane, by its middle and its size. */
@@ -151,7 +153,7 @@ function work(document: KnotDocument): Tightening | null {
     }
   }
   const seconds = SECONDS * Math.min(Math.max(Math.sqrt(swept / SWEPT), 1), SLOWEST);
-  return { rope: component.id, shapes, count, windows, entries, seconds };
+  return { rope: component.id, shapes, count, windows, entries, seconds, diameter: d };
 }
 
 /** The same curve as so many stretches of equal length. */
@@ -260,7 +262,80 @@ export function shapeAt(tightening: Tightening, amount: number): Point3[] {
       through(p0[2], point[2], p2[2], p3[2]),
     ];
   });
+  keptApart(points, a, b, t, tightening.diameter);
   return evenly(points, tightening.count);
+}
+
+/**
+ * How near two strands of a rope may come as it goes from one shape to the next, in diameters: as near as in
+ * a shape, where the rope is pressed thinner where it bears on itself, and a little more.
+ */
+const NEAREST = 0.86;
+
+/**
+ * Keeps the rope from passing through itself between two shapes: each shape keeps the rope out of itself,
+ * but a point going straight from its place in one to its place in the next may go through another strand.
+ * Two places of the rope that come too near are moved apart, along the way they lie apart in the two shapes
+ * either side, so that each stays on the side of the other it is on in both. Changes `points`.
+ */
+function keptApart(points: Point3[], a: readonly Point3[], b: readonly Point3[], t: number, d: number): void {
+  const n = points.length;
+  if (n < 3) return;
+  const least = NEAREST * d;
+  const step = Math.hypot(...[0, 1, 2].map((c) => (points[1] as Point3)[c]! - (points[0] as Point3)[c]!)) || d;
+  // nearer than this along the rope, two places are neighbours, and may be as near as they like
+  const neighbours = Math.ceil((0.95 * Math.PI * d) / step);
+  const key = (point: Point3): string =>
+    `${Math.floor(point[0] / least)},${Math.floor(point[1] / least)},${Math.floor(point[2] / least)}`;
+  for (let pass = 0; pass < 3; pass++) {
+    const cells = new Map<string, number[]>();
+    points.forEach((point, i) => {
+      const k = key(point);
+      const cell = cells.get(k);
+      if (cell) cell.push(i);
+      else cells.set(k, [i]);
+    });
+    let moved = false;
+    for (let i = 0; i < n; i++) {
+      const home = points[i] as Point3;
+      const [cx, cy, cz] = [Math.floor(home[0] / least), Math.floor(home[1] / least), Math.floor(home[2] / least)];
+      for (let dx = -1; dx <= 1; dx++) {
+        for (let dy = -1; dy <= 1; dy++) {
+          for (let dz = -1; dz <= 1; dz++) {
+            for (const j of cells.get(`${cx + dx},${cy + dy},${cz + dz}`) ?? []) {
+              if (j < i + neighbours) continue;
+              const [p, q] = [points[i] as Point3, points[j] as Point3];
+              const now = [q[0] - p[0], q[1] - p[1], q[2] - p[2]] as const;
+              if (Math.hypot(...now) >= least) continue;
+              // the way they lie apart in the shapes either side
+              const [ai, aj, bi, bj] = [a[i], a[j], b[i], b[j]] as Point3[];
+              const way = [0, 1, 2].map((c) => mix(aj![c]! - ai![c]!, bj![c]! - bi![c]!, t)) as [
+                number,
+                number,
+                number,
+              ];
+              const long = Math.hypot(...way);
+              const unit = long > 1e-6 ? way.map((v) => v / long) : now.map((v) => v / (Math.hypot(...now) || 1));
+              const apart = now[0] * unit[0]! + now[1] * unit[1]! + now[2] * unit[2]!;
+              // no nearer than they may be, nor than they are in the two shapes: a shape is left as it is
+              const [inA, inB] = [
+                Math.hypot(...[0, 1, 2].map((c) => aj![c]! - ai![c]!)),
+                Math.hypot(...[0, 1, 2].map((c) => bj![c]! - bi![c]!)),
+              ];
+              const allowed = Math.min(least, mix(inA, inB, t));
+              if (apart >= allowed) continue;
+              const push = (allowed - apart) / 2;
+              const [ux, uy, uz] = [unit[0]! * push, unit[1]! * push, unit[2]! * push];
+              points[i] = [p[0] - ux, p[1] - uy, p[2] - uz];
+              points[j] = [q[0] + ux, q[1] + uy, q[2] + uz];
+              moved = true;
+            }
+          }
+        }
+      }
+    }
+    if (!moved) return;
+  }
 }
 
 /** What the view takes in when the knot is tightened by `amount`. */

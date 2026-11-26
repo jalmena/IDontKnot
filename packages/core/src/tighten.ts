@@ -171,6 +171,12 @@ const NARROWEST = 0.05;
  */
 const CLEAR = 2;
 const NEARLY = 0.25;
+/**
+ * How near two stretches of the rope may come, in diameters, going straight from one shape kept to the next,
+ * before a shape between them is kept too; and how many shapes are kept at most.
+ */
+const THROUGH = 0.5;
+const MOST_KEPT = 24;
 /** The side of the cells in which the front is looked at for holes, in diameters. */
 const HOLE_CELL = 0.05;
 
@@ -773,32 +779,83 @@ function drawnTight(
     closed++;
   }
 
-  // the shapes kept are as far apart as each other in how much the knot has changed, so that played one after
-  // another at an even pace the knot is drawn tight in one even pull: how far each particle has moved across
-  // the rope, for sliding along it changes nothing that is seen
+  return { spacing: h, shapes: evenlyChanged(initial, taken, options.keep ?? 11, d) };
+}
+
+/**
+ * Of the shapes a knot passes through, so many on the way and the last, as far apart as each other in how
+ * much the knot changes, so that played one after another at an even pace the knot is drawn tight in one
+ * even pull: how far each point moves across the rope, for sliding along it changes nothing that is seen.
+ * And more where stretches of the rope go round each other.
+ */
+function evenlyChanged(
+  initial: readonly Point3[],
+  taken: readonly (readonly Point3[])[],
+  most: number,
+  d: number,
+): (readonly Point3[])[] {
+  // how far the points of a shape have moved across the rope since another, in all
+  const across = (shape: readonly Point3[], was: readonly Point3[]): number => {
+    const n = shape.length - 1;
+    let all = 0;
+    for (let i = 0; i <= n; i++) {
+      const tangent = from(shape[Math.min(i + 1, n)] as Point3, shape[Math.max(i - 1, 0)] as Point3);
+      const moved = sub(shape[i] as Point3, was[i] as Point3);
+      const along = dotOf(moved, tangent);
+      const off = size([moved[0] - tangent[0] * along, moved[1] - tangent[1] * along, moved[2] - tangent[2] * along]);
+      all += off;
+    }
+    return all;
+  };
   const changed = [0];
   let was = initial;
   for (const shape of taken) {
-    let across = 0;
-    for (let i = 0; i <= n; i++) {
-      const tangent = from(shape[Math.min(i + 1, n)] as Particle, shape[Math.max(i - 1, 0)] as Particle);
-      const moved = sub(shape[i] as Particle, was[i] as Particle);
-      const along = dotOf(moved, tangent);
-      across += size([moved[0] - tangent[0] * along, moved[1] - tangent[1] * along, moved[2] - tangent[2] * along]);
-    }
-    changed.push((changed.at(-1) as number) + across);
+    changed.push((changed.at(-1) as number) + across(shape, was));
     was = shape;
   }
+  if (taken.length === 0) return [];
   const total = changed.at(-1) as number;
-  const keep = Math.min(options.keep ?? 6, Math.max(taken.length - 1, 0));
-  const shapes: Particle[][] = [];
+  const keep = Math.min(most, Math.max(taken.length - 1, 0));
+  // the shapes kept, by their place among those taken, the last always
+  const kept: number[] = [];
   let next = 1;
   for (let k = 1; k <= keep; k++) {
     while (next < taken.length && (changed[next] as number) < (total * k) / (keep + 1)) next++;
-    shapes.push(taken[next - 1] as Particle[]);
+    if (next - 1 !== kept.at(-1)) kept.push(next - 1);
   }
-  if (taken.length > 0) shapes.push(taken[taken.length - 1] as Particle[]);
-  return { spacing: h, shapes };
+  if (kept.at(-1) !== taken.length - 1) kept.push(taken.length - 1);
+  // where going straight from one shape kept to the next would carry the rope through itself, as when one
+  // stretch goes round another, the shape halfway between is kept too, until none would, or there is none
+  // left between
+  const throughItself = (was: readonly Point3[], now: readonly Point3[]): boolean => {
+    const n = now.length;
+    const step = size(sub(now[1] as Point3, now[0] as Point3)) || d;
+    const neighbours = Math.ceil((Math.PI * d) / step);
+    const least = (THROUGH * d) ** 2;
+    for (const t of [0.25, 0.5, 0.75]) {
+      const between = now.map((point, i) => mix(was[i] as Point3, point, t));
+      for (let i = 0; i < n; i += 2) {
+        for (let j = i + neighbours; j < n; j += 2) {
+          const way = sub(between[j] as Point3, between[i] as Point3);
+          if (dotOf(way, way) < least) return true;
+        }
+      }
+    }
+    return false;
+  };
+  for (let k = 0; k < kept.length && kept.length < MOST_KEPT; k++) {
+    const before = k === 0 ? -1 : (kept[k - 1] as number);
+    const here = kept[k] as number;
+    if (here - before < 2) continue;
+    if (!throughItself(before < 0 ? initial : (taken[before] as readonly Point3[]), taken[here] as readonly Point3[]))
+      continue;
+    const halfway = ((changed[before + 1] as number) + (changed[here + 1] as number)) / 2;
+    let middle = before + 1;
+    while (middle < here - 1 && (changed[middle + 1] as number) < halfway) middle++;
+    kept.splice(k, 0, middle);
+    k--;
+  }
+  return kept.map((index) => taken[index] as readonly Point3[]);
 }
 
 /**
@@ -894,7 +951,7 @@ function tightenInBight(
     middle,
     along,
     (half + radius) * PAIR_WIDTH,
-    { ...plain, nearest: 1, sharpest: Math.max(plain.sharpest ?? SHARPEST, PAIR_SHARPEST) },
+    { ...plain, keep: 24, nearest: 1, sharpest: Math.max(plain.sharpest ?? SHARPEST, PAIR_SHARPEST) },
     false,
   );
   if (core.shapes.length === 0) return null;
@@ -996,7 +1053,7 @@ function tightenInBight(
     const trim = Math.max(-spare, 0);
     return evenly(longer, trim, total + 2 * reach - trim, n);
   });
-  return { spacing: h, shapes };
+  return { spacing: h, shapes: evenlyChanged(p, shapes, options.keep ?? 11, d) };
 }
 
 const dotOf = (a: Point3, b: Point3): number => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];

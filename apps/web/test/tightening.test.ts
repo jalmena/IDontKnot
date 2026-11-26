@@ -19,7 +19,8 @@ it('reads how a knot is tightened: its shapes, each given at the same places of 
   // the rope does not stretch: every shape is as long as the rope
   for (const shape of tightening.shapes) {
     expect(run(shape) / length).toBeGreaterThan(0.99);
-    expect(run(shape) / length).toBeLessThan(1.01);
+    // and a little longer where it is pushed aside, so as not to pass through itself
+    expect(run(shape) / length).toBeLessThan(1.015);
   }
   // every shape begins and ends where its frame does
   expect(tightening.shapes[0]?.[0]).toEqual([-9.6, 0, 0]);
@@ -36,7 +37,8 @@ it('goes from the shape the knot is tied in to the tightest, as points at equal 
     const shape = shapeAt(tightening, amount);
     expect(shape).toHaveLength(tightening.count + 1);
     const gaps = shape.slice(1).map((point, i) => Math.hypot(...point.map((x, c) => x - shape[i]![c]!)));
-    expect(Math.max(...gaps) / Math.min(...gaps)).toBeLessThan(1.05);
+    // a little uneven where the rope is pushed aside, so as not to pass through itself
+    expect(Math.max(...gaps) / Math.min(...gaps)).toBeLessThan(1.08);
   }
   // it begins as the shape the knot is tied in, and ends as the tightest
   const [first, last] = [tightening.shapes[0]!, tightening.shapes.at(-1)!];
@@ -59,7 +61,8 @@ it('tightens steadily: no part of the knot closes ahead of the rest and opens ag
     // a shape between two shapes of the tightening is not a shorter rope, as it is when each point of
     // the rope is moved straight from its place in one to its place in the next
     expect(run(shape) / length).toBeGreaterThan(0.985);
-    expect(run(shape) / length).toBeLessThan(1.01);
+    // and a little longer where it is pushed aside, so as not to pass through itself
+    expect(run(shape) / length).toBeLessThan(1.015);
   }
   // its loops close steadily until it is about a diameter high
   const lowest = heights.indexOf(Math.min(...heights));
@@ -100,3 +103,24 @@ it('takes longer to draw tight a knot that changes more, but never more than a l
     expect(seconds(id)).toBeLessThanOrEqual(1.8 * 1.6 + 1e-9);
   }
 });
+
+it('never passes the rope through itself as a knot is drawn tight', () => {
+  for (const id of Object.keys(KNOTS)) {
+    const knot = tighteningOf(KNOTS[id]!.document);
+    if (!knot) continue;
+    const d = knot.diameter;
+    for (let k = 0; k <= 60; k++) {
+      const shape = shapeAt(knot, k / 60);
+      const step = Math.hypot(...shape[1]!.map((x, c) => x - shape[0]![c]!));
+      const neighbours = Math.ceil((Math.PI * d) / step);
+      let least = Infinity;
+      for (let i = 0; i < shape.length; i += 2) {
+        for (let j = i + neighbours; j < shape.length; j += 2) {
+          least = Math.min(least, Math.hypot(...shape[i]!.map((x, c) => x - shape[j]![c]!)));
+        }
+      }
+      // as near as a rope pressed a little thinner where it bears on itself, and no nearer
+      expect(least / d, `${id} at ${k / 60}`).toBeGreaterThan(0.84);
+    }
+  }
+}, 60_000);
