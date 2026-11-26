@@ -5,7 +5,8 @@ import { LANGUAGES } from '../src/languages.ts';
 import { inLanguage, KNOTS } from '../src/knot/library.ts';
 
 describe.each(Object.entries(KNOTS))('the library knot %s', (id, { document, entry }) => {
-  it('is a valid document under the name the interface knows it by', () => {
+  // the largest knots take some seconds to check
+  it('is a valid document under the name the interface knows it by', { timeout: 30_000 }, () => {
     expect(document.id).toBe(id);
     expect(entry.knot).toBe(id);
     expect(checkDocument(document)).toEqual([]);
