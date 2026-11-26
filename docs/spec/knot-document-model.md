@@ -241,7 +241,7 @@ A separate document type, specified later with the content model. A provisional 
 | Closed knots and links | Supported |
 | Open ropes with roles on their ends | Supported |
 | Several ropes | Supported |
-| Thin rigid objects: poles, bars, posts, rings, carabiners, limbs as capsules | Supported as rigid components |
+| Thin rigid objects: poles, bars, posts, rings, carabiners, limbs as capsules | Supported as rigid components. Implemented for straight ones: a drawing names them, the core writes each as a polyline of its axis with its radius, and tightening keeps the rope out of them. |
 | Parametric families (torus knots, Turk's heads, braids, plaits) | Supported through generators that emit documents; braid words are an input notation |
 | Keyframed geometry and tying sequences | Supported |
 | Junctions: splices, eyes, nets | Reserved in the format, not in the first implementation |
