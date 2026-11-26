@@ -107,6 +107,7 @@
     "use": {
       "category": "Categoría",
       "what": "Para qué sirve",
+      "cautions": "Precauciones",
       "inUse": "En uso",
       "none": "La biblioteca no recoge ningún uso de este nudo en {{discipline}}.",
       "show": {

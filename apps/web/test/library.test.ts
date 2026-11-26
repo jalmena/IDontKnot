@@ -44,6 +44,10 @@ describe.each(Object.entries(KNOTS))('what the library knot %s is for', (_id, { 
     }
   });
 
+  it('says what to take care of with it, in every language', () => {
+    for (const { code } of LANGUAGES) expect(entry.cautions[code]).toBeTruthy();
+  });
+
   it('says whether it jams after a load, in every language, and says it once', () => {
     for (const { code } of LANGUAGES) {
       const afterLoad = entry.afterLoad[code];

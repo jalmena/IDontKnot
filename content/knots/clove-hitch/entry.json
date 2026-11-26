@@ -11,8 +11,8 @@
     "climbing": {
       "object": "post",
       "text": {
-        "en": "To make the rope fast to the carabiner of an anchor: it is tied with one hand, and the rope it holds can be let out or taken in without untying it.",
-        "es": "Para amarrar la cuerda al mosquetón de una reunión: se hace con una mano, y la cuerda que sujeta se puede soltar o recoger sin deshacerlo."
+        "en": "To make the rope fast to the carabiner of an anchor; the rope it holds can be let out or taken in without untying it.",
+        "es": "Para amarrar la cuerda al mosquetón de una reunión; la cuerda que sujeta se puede soltar o recoger sin deshacerlo."
       }
     },
     "nautical": {
@@ -31,8 +31,12 @@
     }
   },
   "afterLoad": {
-    "en": "After a load it unties easily, by pushing its turns apart; but it can work loose if the load comes and goes, or the post turns.",
-    "es": "Después de soportar carga se deshace con facilidad, separando las vueltas; pero puede aflojarse si la carga va y viene o el poste gira."
+    "en": "After a load it unties easily, by pushing its turns apart.",
+    "es": "Después de soportar carga se deshace con facilidad, separando las vueltas."
+  },
+  "cautions": {
+    "en": "It can work loose if the load comes and goes, or if the post turns; where it must hold, finish it with a half hitch round the standing part.",
+    "es": "Puede aflojarse si la carga va y viene o si el poste gira; donde tenga que aguantar, remátalo con un cote alrededor del firme."
   },
   "parts": {
     "standing-part": {

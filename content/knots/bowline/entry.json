@@ -34,6 +34,10 @@
     "en": "It is easy to untie even after it has taken a load.",
     "es": "Se deshace con facilidad aun después de haber soportado carga."
   },
+  "cautions": {
+    "en": "Without a load it can shake loose, and pulled sideways across its eye it can capsize: leave a long tail and, where a life depends on it, back it up with another knot.",
+    "es": "Sin carga puede aflojarse con las sacudidas, y si se tira de la gaza hacia los lados puede volcarse: deja el chicote largo y, si de él depende una vida, asegúralo con otro nudo."
+  },
   "parts": {
     "standing-part": {
       "en": "Standing part",

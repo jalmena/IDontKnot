@@ -10,8 +10,8 @@
   "uses": {
     "climbing": {
       "text": {
-        "en": "The usual knot for tying in to the end of the rope: a figure-eight knot is tied in the rope, and the end is led through the tie-in points of the harness and followed back through it.",
-        "es": "El nudo habitual para encordarse al extremo de la cuerda: se hace un nudo de ocho en la cuerda, y el chicote se pasa por los puntos de encordamiento del arnés y se lleva de vuelta siguiendo el ocho."
+        "en": "The usual knot for tying in to the end of the rope, through the tie-in points of the harness.",
+        "es": "El nudo habitual para encordarse al extremo de la cuerda, por los puntos de encordamiento del arnés."
       }
     },
     "decorative": {
@@ -25,6 +25,10 @@
   "afterLoad": {
     "en": "After a heavy load it jams, and can be hard to untie.",
     "es": "Tras soportar mucha carga se aprieta, y puede costar deshacerlo."
+  },
+  "cautions": {
+    "en": "Dress it so that the two strands lie side by side all the way without crossing, draw it tight, leave a tail of at least a hand's width, and check it every time before it takes a load.",
+    "es": "Ordénalo para que los dos cabos vayan juntos sin cruzarse en todo el recorrido, apriétalo, deja un chicote de al menos un palmo y revísalo siempre antes de cargarlo."
   },
   "parts": {
     "standing-part": {

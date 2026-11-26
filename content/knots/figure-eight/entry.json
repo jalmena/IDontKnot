@@ -33,6 +33,10 @@
     "en": "After a heavy load it tightens, but it can usually still be untied by hand.",
     "es": "Tras soportar mucha carga se aprieta, pero por lo general aún se deshace a mano."
   },
+  "cautions": {
+    "en": "Leave a tail beyond it of a few diameters of the rope: a knot tied right at the end can work off it.",
+    "es": "Deja más allá del nudo un chicote de unos cuantos diámetros de la cuerda: un nudo hecho justo en el extremo puede salirse."
+  },
   "parts": {
     "standing-part": {
       "en": "Standing part",

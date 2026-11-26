@@ -33,6 +33,10 @@
     "en": "After it has taken a load it jams harder than the overhand knot, and is hard to untie.",
     "es": "Después de soportar carga se aprieta más que el nudo simple, y cuesta deshacerlo."
   },
+  "cautions": {
+    "en": "Draw it tight before it takes a load, and leave a tail beyond it: tied loosely, it can loosen and slip off the end.",
+    "es": "Apriétalo bien antes de que soporte carga y deja chicote más allá: si queda flojo, puede aflojarse y salirse por el extremo."
+  },
   "parts": {
     "standing-part": {
       "en": "Standing part",

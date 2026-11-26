@@ -293,6 +293,8 @@ test('says what the knot is for in the discipline, and shows what it is tied to'
   await expect(page.getByTestId('use')).toHaveText(
     / It is bulkier than the overhand knot\. After a heavy load it tightens/,
   );
+  // and then what to take care of with it, in a section of its own
+  await expect(page.getByTestId('cautions')).toContainText('Leave a tail beyond it');
   const canvas = page.getByTestId('rope-canvas');
   await expect(canvas).toHaveAttribute('data-objects', '');
   const show = page.getByRole('button', { name: 'Show the plate' });
@@ -332,6 +334,7 @@ test('says what the knot is for in the discipline, and shows what it is tied to'
   await page.getByRole('tab', { name: 'Use' }).click();
   await expect(page.getByTestId('use')).toContainText('the trefoil knot');
   await expect(page.getByTestId('use')).not.toContainText('load');
+  await expect(page.getByTestId('cautions')).toHaveCount(0);
 });
 
 test('makes no claim about what knot a rope would be whose end lies inside it, as in a bowline', async ({ page }) => {
