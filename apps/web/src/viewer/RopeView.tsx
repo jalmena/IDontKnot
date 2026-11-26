@@ -11,6 +11,8 @@ export interface ViewName {
   readonly text: string;
   readonly at: Point3;
   readonly marked: boolean;
+  /** Hung under the rope instead of over it: the name of a part that runs beside another named part. */
+  readonly below?: boolean;
 }
 
 interface Props {
@@ -165,7 +167,10 @@ export function RopeView({
         {names && (
           <div ref={tags} className="rope-view__names" aria-hidden="true">
             {names.map((name) => (
-              <span key={name.id} className={name.marked ? 'tag tag--marked' : 'tag'}>
+              <span
+                key={name.id}
+                className={['tag', name.marked && 'tag--marked', name.below && 'tag--below'].filter(Boolean).join(' ')}
+              >
                 {name.text}
               </span>
             ))}

@@ -1,7 +1,7 @@
 import { framePolylines, type Frame, type Part } from '@idontknot/core';
 import { expect, it } from 'vitest';
 import { KNOTS } from '../src/knot/library.ts';
-import { boundsOf, partShape, pointAt } from '../src/knot/parts.ts';
+import { boundsOf, hungBelow, partShape, pointAt } from '../src/knot/parts.ts';
 
 const { document } = KNOTS['figure-eight']!;
 const frame = document.geometry?.frames[0] as Frame;
@@ -74,4 +74,54 @@ it('boxes the curves with a margin', () => {
   const [minX, minY, maxX, maxY] = boundsOf([curve], 0);
   expect([minX, maxX]).toEqual([-9.6, 9.6]); // and its two ends are as long as each other
   expect(minY).toBeCloseTo(-maxY, 6); // the knot is as tall above its rope as below it
+});
+
+it('hangs the lower of two names that would run into each other under the rope, and no other', () => {
+  // the standing part and the tail of a knot tied in a bight leave it side by side
+  expect(
+    hungBelow(
+      [
+        [-12, 0.56, 0],
+        [-12, -0.56, 0],
+        [8, 3, 0],
+      ],
+      2,
+    ),
+  ).toEqual([false, true, false]);
+  // two at one height: the second
+  expect(
+    hungBelow(
+      [
+        [0, 0, 0],
+        [1, 0, 0],
+      ],
+      2,
+    ),
+  ).toEqual([false, true]);
+  expect(
+    hungBelow(
+      [
+        [0, 0, 0],
+        [5, 0, 0],
+      ],
+      2,
+    ),
+  ).toEqual([false, false]);
+});
+
+it('hangs the tail of the figure-eight loop under its standing part', () => {
+  const { document } = KNOTS['figure-eight-loop']!;
+  const [frame] = document.geometry!.frames;
+  const [curve] = framePolylines(document, frame!);
+  const length = document.components[0]!.length!;
+  const shapes = document.parts!.map((part) => partShape(part, curve!, length));
+  const below = hungBelow(
+    shapes.map((shape) => shape.anchor),
+    2,
+  );
+  expect(Object.fromEntries(shapes.map((shape, i) => [shape.id, below[i]]))).toEqual({
+    'standing-part': false,
+    eye: false,
+    tail: true,
+  });
 });

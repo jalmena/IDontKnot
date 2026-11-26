@@ -45,6 +45,16 @@ export function partShape(part: Part, curve: FrameCurve, length: number): PartSh
   return { id: part.id, type: part.type, from: part.from / length, to: part.to / length, points, anchor, inner, outer };
 }
 
+/**
+ * Which names hang under the rope: of two parts whose names would hang within `near` of each other, as the
+ * standing part and the tail of a knot tied in a bight do, the lower one's.
+ */
+export function hungBelow(anchors: readonly Point3[], near: number): boolean[] {
+  return anchors.map(([x, y], i) =>
+    anchors.some(([u, v], j) => j !== i && Math.hypot(u - x, v - y) < near && (v > y || (v === y && j < i))),
+  );
+}
+
 export type Bounds = readonly [minX: number, minY: number, maxX: number, maxY: number];
 
 /** The box in the x-y plane that holds these curves, with a margin all round. */

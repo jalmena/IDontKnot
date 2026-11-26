@@ -33,7 +33,7 @@ import { KnotUse } from './KnotUse.tsx';
 import { aroundPost, lengthened, plateFor, postFor, towardsPlate, type RopeShape } from './objects.ts';
 import { inLanguage, type LibraryKnot } from './library.ts';
 import { fed } from './feeding.ts';
-import { boundsOf, partShape, pointAt } from './parts.ts';
+import { boundsOf, hungBelow, partShape, pointAt } from './parts.ts';
 import { timelineOf, type Timeline } from './playback.ts';
 import { fitOf, ropesOf, shownFrame, withThings } from './shape.ts';
 import { eased, entryAt, shapeAt, tighteningOf, windowAt } from './tightening.ts';
@@ -255,16 +255,20 @@ export function KnotPage({ knot }: Props) {
       );
   }, [parts, shown, tied, rope, state.position, length, lengthen]);
   const marked = useMemo(() => parts.filter((part) => part.id === shown).map((part) => part.points), [parts, shown]);
-  const partNames = useMemo(
-    () =>
-      parts.map((part) => ({
-        id: part.id,
-        text: inLanguage(entry.parts[part.id], language) || part.id,
-        at: part.anchor,
-        marked: part.id === shown,
-      })),
-    [parts, shown, entry, language],
-  );
+  const partNames = useMemo(() => {
+    // two diameters apart, two names would run into each other
+    const below = hungBelow(
+      parts.map((part) => part.anchor),
+      4 * ropeRadius,
+    );
+    return parts.map((part, i) => ({
+      id: part.id,
+      text: inLanguage(entry.parts[part.id], language) || part.id,
+      at: part.anchor,
+      marked: part.id === shown,
+      below: below[i] ?? false,
+    }));
+  }, [parts, shown, entry, language, ropeRadius]);
   // while the knot is tied step by step, what is named is the end that is led
   const end = useMemo(
     () => [
@@ -293,13 +297,15 @@ export function KnotPage({ knot }: Props) {
     let room = 0;
     const placed = partNames.map(({ at, ...rest }, i) => {
       const { inner, outer } = parts[i]!;
-      if (!inner || !outer || inner[0] === outer[0]) return { ...rest, at: [at[0], at[1] + NAME_RISE] as const };
+      // a name hung under the rope on the view is written under it on the diagram too
+      const rise = rest.below ? -NAME_RISE - DIAGRAM_TEXT : NAME_RISE;
+      if (!inner || !outer || inner[0] === outer[0]) return { ...rest, at: [at[0], at[1] + rise] as const };
       const leftward = outer[0] < inner[0];
       const width = rest.text.length * DIAGRAM_TEXT * 0.56 + 0.5;
       room = Math.max(room, leftward ? minX - (inner[0] - width) : inner[0] + width - maxX);
       return {
         ...rest,
-        at: [inner[0], inner[1] + NAME_RISE] as const,
+        at: [inner[0], inner[1] + rise] as const,
         anchor: leftward ? ('end' as const) : ('start' as const),
       };
     });
