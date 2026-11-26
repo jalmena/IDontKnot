@@ -62,6 +62,11 @@ export interface TightenOptions {
    * The stretch that is held, where the rope turns back on itself, is left as it is.
    */
   readonly paired?: boolean;
+  /**
+   * Which ends draw the knot tight: both, as a knot pulled by its two ends; or the end alone, as a lashing is
+   * drawn tight by the rope it is made with while its start stays where it was made fast.
+   */
+  readonly drawnBy?: 'both' | 'end';
 }
 
 /** A straight rigid thing: the two ends of its axis, and its radius. */
@@ -343,7 +348,8 @@ export function tighten(
     const total = along[n] as number;
     const [start, end] = [from(q[0] as Particle, q[3] as Particle), from(q[n] as Particle, q[n - 3] as Particle)];
     // from the middle of a stretch that is not drawn tight, where it hangs; or else from the middle of the knot
-    const [left, right] = hold ? [hook, hook] : [middle, middle];
+    // from where the rope is fixed: its start, if only its end draws it; else the middle of what is held, or of the knot
+    const [left, right] = options.drawnBy === 'end' ? [0, 0] : hold ? [hook, hook] : [middle, middle];
     let segment = 0;
     return q.map((point, i) => {
       if (i >= left && i <= right) return point;
@@ -440,7 +446,7 @@ export function tighten(
     const middle = Math.round((first + last) / 2);
     const [start, end] = [from(p[0] as Particle, p[3] as Particle), from(p[n] as Particle, p[n - 3] as Particle)];
     let q = p.map((point, i): Particle => {
-      const way = i <= a ? start : i >= b ? end : null;
+      const way = i <= a && options.drawnBy !== 'end' ? start : i >= b ? end : null;
       return way ? [point[0] + way[0] * pull, point[1] + way[1] * pull, point[2] + way[2] * pull] : [...point];
     });
     gripped = [a, b];

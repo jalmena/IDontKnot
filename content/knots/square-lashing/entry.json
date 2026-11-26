@@ -1,0 +1,103 @@
+{
+  "format": "idk-entry",
+  "formatVersion": "0.1.0",
+  "knot": "square-lashing",
+  "names": {
+    "en": "Square lashing",
+    "es": "Trinca cuadrada"
+  },
+  "category": "lashing",
+  "uses": {
+    "pioneering": {
+      "object": "poles",
+      "text": {
+        "en": "To bind two poles that cross at a right angle, as the frame of a gateway, a table or a tower is built in camp.",
+        "es": "Para unir dos palos que se cruzan en ángulo recto, como se levanta en un campamento el marco de una puerta, una mesa o una torre."
+      }
+    }
+  },
+  "afterLoad": {
+    "en": "After a load it is undone by untying the last clove hitch and unwinding the turns: it does not jam.",
+    "es": "Después de soportar carga se deshace soltando el ballestrinque final y desenrollando las vueltas: no se atasca."
+  },
+  "cautions": {
+    "en": "Draw each wrap tight as it is laid, and the frapping turns tighter still: a loose lashing lets the poles turn on each other. Take a rope long enough to finish.",
+    "es": "Tensa cada vuelta al darla, y las ahorcaduras aún más: una trinca floja deja que los palos giren uno sobre otro. Usa una cuerda lo bastante larga para terminar."
+  },
+  "parts": {
+    "tail": {
+      "en": "Tail",
+      "es": "Chicote"
+    },
+    "first-hitch": {
+      "en": "Starting clove hitch",
+      "es": "Ballestrinque inicial"
+    },
+    "wraps": {
+      "en": "Wraps",
+      "es": "Vueltas"
+    },
+    "fraps": {
+      "en": "Frapping turns",
+      "es": "Ahorcaduras"
+    },
+    "last-hitch": {
+      "en": "Finishing clove hitch",
+      "es": "Ballestrinque final"
+    },
+    "end": {
+      "en": "End",
+      "es": "Extremo"
+    }
+  },
+  "methods": {
+    "with-the-end": {
+      "name": {
+        "en": "With the end",
+        "es": "Con el extremo"
+      },
+      "steps": {
+        "first-hitch-1": {
+          "en": "Start with a clove hitch on the upright, below the crossbar: take the end round the upright.",
+          "es": "Empieza con un ballestrinque en el palo vertical, por debajo del travesaño: rodea el palo con el extremo."
+        },
+        "first-hitch-2": {
+          "en": "Cross it over itself and take it round the upright again.",
+          "es": "Crúzalo por encima de sí mismo y rodea otra vez el palo."
+        },
+        "first-hitch-3": {
+          "en": "Tuck it under the crossing, to finish the hitch, and lead the rope up in front of the upright.",
+          "es": "Mételo por debajo del cruce para terminar el ballestrinque, y sube la cuerda por delante del palo."
+        },
+        "wrap-1-1": {
+          "en": "Up in front of the crossbar, behind the upright above it, down in front of the crossbar on the other side and behind the upright below it: the first wrap.",
+          "es": "Sube por delante del travesaño, pasa por detrás del palo por encima, baja por delante del travesaño al otro lado y vuelve por detrás del palo por debajo: la primera vuelta."
+        },
+        "wrap-2-1": {
+          "en": "A second wrap the same way, outside the first.",
+          "es": "Una segunda vuelta igual, por fuera de la primera."
+        },
+        "wrap-3-1": {
+          "en": "And a third, outside the second.",
+          "es": "Y una tercera, por fuera de la segunda."
+        },
+        "frap-1-1": {
+          "en": "Take the rope between the poles and round all the wraps, drawing it tight: a frapping turn.",
+          "es": "Pasa la cuerda entre los palos y alrededor de todas las vueltas, tensándola: una ahorcadura."
+        },
+        "frap-2-1": {
+          "en": "A second frapping turn outside the first, then round behind the upright to the crossbar.",
+          "es": "Una segunda ahorcadura por fuera de la primera, y luego por detrás del palo hasta el travesaño."
+        },
+        "last-hitch-1": {
+          "en": "Finish with a clove hitch on the crossbar: round it, over itself and round again.",
+          "es": "Remata con un ballestrinque en el travesaño: rodéalo, cruza por encima y rodéalo otra vez."
+        },
+        "last-hitch-2": {
+          "en": "Tuck the end under the crossing.",
+          "es": "Mete el extremo por debajo del cruce."
+        }
+      }
+    }
+  }
+}

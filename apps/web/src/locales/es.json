@@ -114,7 +114,8 @@
         "plate": "Mostrar la placa",
         "post": "Mostrar el poste",
         "ring": "Mostrar la anilla",
-        "rope": "Mostrar la otra cuerda"
+        "rope": "Mostrar la otra cuerda",
+        "poles": "Mostrar los palos"
       }
     }
   },

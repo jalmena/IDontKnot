@@ -114,7 +114,8 @@
         "plate": "Show the plate",
         "post": "Show the post",
         "ring": "Show the ring",
-        "rope": "Show the other rope"
+        "rope": "Show the other rope",
+        "poles": "Show the poles"
       }
     }
   },
