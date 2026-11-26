@@ -29,6 +29,8 @@ export interface Tightening {
   readonly entries: readonly number[];
   /** What the view takes in at each shape: the knot, and a little of the rope at each side of it. */
   readonly windows: readonly Window[];
+  /** The seconds it takes to be tightened at the speed of one: the more the knot changes, the longer. */
+  readonly seconds: number;
 }
 
 /** A box in the x-y plane, by its middle and its size. */
@@ -42,6 +44,14 @@ export interface Window {
 const STEP = 0.15;
 /** How much rope the view takes in at each side of a knot that is being tightened, in rope diameters. */
 const BESIDE = 2.8;
+/**
+ * The seconds a knot takes to be tightened, or loosened again, at the speed of one; and how much rope, in
+ * square diameters, it sweeps across in that time. One that sweeps across more takes longer, by the square
+ * root of how much more, and at most this many times as long.
+ */
+const SECONDS = 1.8;
+const SWEPT = 100;
+const SLOWEST = 1.6;
 
 /** What has been worked out for each document: working it out takes a moment for a knot with many shapes. */
 const known = new WeakMap<KnotDocument, Tightening | null>();
@@ -125,7 +135,23 @@ function work(document: KnotDocument): Tightening | null {
     );
   });
   const entries = marks.map((each) => (each.length > 2 ? (each[1] as number) : 0));
-  return { rope: component.id, shapes, count, windows, entries };
+  // how much rope the knot sweeps across from one shape to the next, as it changes: sliding along itself
+  // changes nothing that is seen
+  let swept = 0;
+  for (let k = 1; k < shapes.length; k++) {
+    const [was, now] = [shapes[k - 1] as Point3[], shapes[k] as Point3[]];
+    for (let i = 1; i < now.length - 1; i++) {
+      const [a, b] = [now[i - 1] as Point3, now[i + 1] as Point3];
+      const tangent = [b[0] - a[0], b[1] - a[1], b[2] - a[2]] as const;
+      const long = Math.hypot(...tangent) || 1;
+      const moved = [0, 1, 2].map((c) => (now[i] as Point3)[c]! - (was[i] as Point3)[c]!) as [number, number, number];
+      const along = (moved[0] * tangent[0] + moved[1] * tangent[1] + moved[2] * tangent[2]) / long;
+      const across = Math.hypot(...moved.map((value, c) => value - (tangent[c]! / long) * along));
+      swept += (across * long) / 2 / (d * d);
+    }
+  }
+  const seconds = SECONDS * Math.min(Math.max(Math.sqrt(swept / SWEPT), 1), SLOWEST);
+  return { rope: component.id, shapes, count, windows, entries, seconds };
 }
 
 /** The same curve as so many stretches of equal length. */

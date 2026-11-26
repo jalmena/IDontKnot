@@ -107,19 +107,9 @@ export function KnotPage({ knot }: Props) {
   const [pinned, setPinned] = useState<string | null>(null);
   const [pointed, setPointed] = useState<string | null>(null);
   const shown = pointed ?? pinned;
-  const { tight, amount, tighten, loosen, slacken } = useTightness();
   const [discipline] = useDiscipline();
   // whether the knot is shown tied to what it is tied to in the discipline
   const [placed, setPlaced] = useState(false);
-  // another knot has other parts, and is as it was tied: none of them is chosen yet
-  const [opened, setOpened] = useState(knot);
-  if (opened !== knot) {
-    setOpened(knot);
-    setPinned(null);
-    setPointed(null);
-    setPlaced(false);
-    slacken();
-  }
 
   const frame = shownFrame(document) as Frame;
   const curves = useMemo(() => framePolylines(document, frame), [document, frame]);
@@ -132,6 +122,17 @@ export function KnotPage({ knot }: Props) {
   const tied = !method || rope < 0 || state.position >= length - 1e-9;
 
   const tightening = useMemo(() => tighteningOf(document), [document]);
+  // drawn tight at the speed the knot is tied at
+  const { tight, amount, tighten, loosen, slacken } = useTightness((tightening?.seconds ?? 1.8) / speed);
+  // another knot has other parts, and is as it was tied: none of them is chosen yet
+  const [opened, setOpened] = useState(knot);
+  if (opened !== knot) {
+    setOpened(knot);
+    setPinned(null);
+    setPointed(null);
+    setPlaced(false);
+    slacken();
+  }
   const pulled = tightening !== null && amount > 0;
   // what the knot is tied to, in the discipline: placed where the knot, tied, is against it or round it, and
   // fixed there; as the knot is tightened, it is the rope that moves

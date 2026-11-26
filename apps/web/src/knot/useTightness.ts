@@ -1,16 +1,19 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-/** The seconds a knot takes to be tightened, or to be loosened again. */
-const TIME = 1.8;
-
 /**
  * How tight a knot is drawn, from 0 (as it was tied) to 1 (tight), as state of a component. Asked to
- * tighten or to loosen, it gets there a little with each frame; with less movement asked for, at once.
+ * tighten or to loosen, it gets there a little with each frame, in `seconds`; with less movement asked
+ * for, at once.
  */
-export function useTightness() {
+export function useTightness(seconds: number) {
   const [tight, setTight] = useState(false);
   const [amount, setAmount] = useState(0);
   const now = useRef(0);
+  // the time it takes may change while it moves, as the speed is changed
+  const time = useRef(seconds);
+  useEffect(() => {
+    time.current = seconds;
+  }, [seconds]);
 
   useEffect(() => {
     const goal = tight ? 1 : 0;
@@ -21,9 +24,9 @@ export function useTightness() {
       return;
     }
     let last = performance.now();
-    let request = requestAnimationFrame(function step(time) {
-      const moved = Math.min((time - last) / 1000, 0.1) / TIME;
-      last = time;
+    let request = requestAnimationFrame(function step(clock) {
+      const moved = Math.min((clock - last) / 1000, 0.1) / Math.max(time.current, 0.05);
+      last = clock;
       now.current = goal > now.current ? Math.min(now.current + moved, goal) : Math.max(now.current - moved, goal);
       setAmount(now.current);
       if (now.current !== goal) request = requestAnimationFrame(step);

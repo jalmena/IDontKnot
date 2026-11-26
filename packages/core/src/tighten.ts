@@ -335,6 +335,7 @@ function drawnTight(
     return mix(points[i] as Point3, points[i + 1] as Point3, Math.min(Math.max((coordinate - a) / (b - a || 1), 0), 1));
   };
   let p: Particle[] = Array.from({ length: n + 1 }, (_, k) => at(k * h));
+  const initial = p;
 
   // while the ends are drawn, the particles of the two ends are held: from the first to `gripped[0]`,
   // and from `gripped[1]` to the last. Otherwise none is.
@@ -772,9 +773,30 @@ function drawnTight(
     closed++;
   }
 
+  // the shapes kept are as far apart as each other in how much the knot has changed, so that played one after
+  // another at an even pace the knot is drawn tight in one even pull: how far each particle has moved across
+  // the rope, for sliding along it changes nothing that is seen
+  const changed = [0];
+  let was = initial;
+  for (const shape of taken) {
+    let across = 0;
+    for (let i = 0; i <= n; i++) {
+      const tangent = from(shape[Math.min(i + 1, n)] as Particle, shape[Math.max(i - 1, 0)] as Particle);
+      const moved = sub(shape[i] as Particle, was[i] as Particle);
+      const along = dotOf(moved, tangent);
+      across += size([moved[0] - tangent[0] * along, moved[1] - tangent[1] * along, moved[2] - tangent[2] * along]);
+    }
+    changed.push((changed.at(-1) as number) + across);
+    was = shape;
+  }
+  const total = changed.at(-1) as number;
   const keep = Math.min(options.keep ?? 6, Math.max(taken.length - 1, 0));
   const shapes: Particle[][] = [];
-  for (let k = 1; k <= keep; k++) shapes.push(taken[Math.round((k * taken.length) / (keep + 1)) - 1] as Particle[]);
+  let next = 1;
+  for (let k = 1; k <= keep; k++) {
+    while (next < taken.length && (changed[next] as number) < (total * k) / (keep + 1)) next++;
+    shapes.push(taken[next - 1] as Particle[]);
+  }
   if (taken.length > 0) shapes.push(taken[taken.length - 1] as Particle[]);
   return { spacing: h, shapes };
 }

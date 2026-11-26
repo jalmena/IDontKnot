@@ -91,3 +91,12 @@ it('moves slowly at both ends of a movement', () => {
   expect(eased(0.9)).toBeGreaterThan(0.9);
   expect([-1, 2].map(eased)).toEqual([0, 1]);
 });
+
+it('takes longer to draw tight a knot that changes more, but never more than a little longer', () => {
+  const seconds = (id: string): number => tighteningOf(KNOTS[id]!.document)?.seconds ?? 0;
+  expect(seconds('overhand')).toBeGreaterThanOrEqual(1.8);
+  expect(seconds('double-overhand')).toBeGreaterThan(seconds('overhand') + 0.5);
+  for (const id of ['overhand', 'double-overhand', 'figure-eight', 'bowline', 'clove-hitch', 'larks-head']) {
+    expect(seconds(id)).toBeLessThanOrEqual(1.8 * 1.6 + 1e-9);
+  }
+});
