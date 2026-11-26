@@ -66,14 +66,16 @@ function forCrossings(curve: FrameCurve): FrameCurve {
 function work(document: KnotDocument): Tightening | null {
   const ids = document.geometry?.tightening ?? [];
   const frames = ids.flatMap((id) => document.geometry?.frames.filter((frame) => frame.id === id) ?? []);
-  const [component] = document.components;
-  if (frames.length < 2 || frames.length !== ids.length || document.components.length !== 1 || !component?.length) {
-    return null;
-  }
+  // one rope, and maybe things it is tied round, which stay where they are
+  const ropes = document.components.filter((each) => each.kind === 'rope');
+  const [component] = ropes;
+  if (frames.length < 2 || frames.length !== ids.length || ropes.length !== 1 || !component?.length) return null;
   const length = component.length;
   const d = 2 * (component.radius ?? 0.5);
   const count = Math.round(length / (STEP * d));
-  const curves = frames.flatMap((frame) => framePolylines(document, frame).slice(0, 1));
+  const curves = frames.flatMap((frame) =>
+    framePolylines(document, frame).filter((curve) => curve.id === component.id),
+  );
   if (curves.length !== frames.length) return null;
 
   // where along the rope each shape meets its crossings: the places of the knot that every shape has

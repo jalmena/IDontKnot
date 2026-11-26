@@ -12,7 +12,10 @@ export interface Facts {
    * The Jones polynomial of the knot with its ends joined, as the core returns it: outside the knot when
    * its ends lie there; or else over the whole knot, and under it.
    */
-  readonly closures: readonly { side: 'outside' | 'over' | 'under'; value: Readonly<Record<string, number>> }[];
+  readonly closures: readonly {
+    side: 'outside' | 'over' | 'under' | 'alone';
+    value: Readonly<Record<string, number>>;
+  }[];
 }
 
 interface Props {

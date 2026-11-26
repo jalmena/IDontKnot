@@ -5,12 +5,16 @@
 import type { KnotDocument } from '@idontknot/core';
 import bowlineEntry from '../../../../content/knots/bowline/entry.json';
 import bowline from '../../../../content/knots/bowline/knot.json';
+import cloveHitchEntry from '../../../../content/knots/clove-hitch/entry.json';
+import cloveHitch from '../../../../content/knots/clove-hitch/knot.json';
 import doubleOverhandEntry from '../../../../content/knots/double-overhand/entry.json';
 import doubleOverhand from '../../../../content/knots/double-overhand/knot.json';
 import figureEightEntry from '../../../../content/knots/figure-eight/entry.json';
 import figureEight from '../../../../content/knots/figure-eight/knot.json';
 import figureEightLoopEntry from '../../../../content/knots/figure-eight-loop/entry.json';
 import figureEightLoop from '../../../../content/knots/figure-eight-loop/knot.json';
+import larksHeadEntry from '../../../../content/knots/larks-head/entry.json';
+import larksHead from '../../../../content/knots/larks-head/knot.json';
 import overhandEntry from '../../../../content/knots/overhand/entry.json';
 import overhand from '../../../../content/knots/overhand/knot.json';
 
@@ -56,9 +60,11 @@ export interface LibraryKnot {
 export const KNOTS: Readonly<Record<string, LibraryKnot>> = {
   // JSON has no tuples and no literal types, so the file is taken on trust here; `checkDocument` then checks it
   bowline: { document: bowline as unknown as KnotDocument, entry: bowlineEntry },
+  'clove-hitch': { document: cloveHitch as unknown as KnotDocument, entry: cloveHitchEntry },
   'double-overhand': { document: doubleOverhand as unknown as KnotDocument, entry: doubleOverhandEntry },
   'figure-eight': { document: figureEight as unknown as KnotDocument, entry: figureEightEntry },
   'figure-eight-loop': { document: figureEightLoop as unknown as KnotDocument, entry: figureEightLoopEntry },
+  'larks-head': { document: larksHead as unknown as KnotDocument, entry: larksHeadEntry },
   overhand: { document: overhand as unknown as KnotDocument, entry: overhandEntry },
 };
 

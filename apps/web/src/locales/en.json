@@ -79,7 +79,8 @@
       "unsound": "The shape in space breaks a rule. This is a defect: please report it.",
       "joined": {
         "over": "Jones polynomial, with the ends joined over the whole knot",
-        "under": "Jones polynomial, with the ends joined under the whole knot"
+        "under": "Jones polynomial, with the ends joined under the whole knot",
+        "alone": "Jones polynomial of the rope alone, with its two ends joined"
       }
     },
     "tabs": {

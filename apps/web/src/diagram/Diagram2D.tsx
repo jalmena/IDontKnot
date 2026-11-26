@@ -32,6 +32,10 @@ interface Props {
 const LINE = 0.13;
 const TEXT = 0.34;
 const HALF = 3.3;
+/** The colour of a post on the diagram, and how much broader than a rope it is drawn. */
+const WOOD = '#9b6a3c';
+const RIGID_WIDTH = 2.6;
+
 const path = (points: readonly (readonly number[])[]): string =>
   points.map((point) => `${(point[0] as number).toFixed(3)},${(point[1] as number).toFixed(3)}`).join(' ');
 
@@ -44,6 +48,8 @@ export function Diagram2D({ curves, visits, colours, label, bounds, line = LINE,
     [curves, visits, minX, minY, maxX, maxY],
   );
   const colourOf = new Map(curves.map((curve, index) => [curve.id, colours[index % colours.length] ?? '#fff']));
+  // what a rope is tied round is drawn broad, in the colour of wood
+  const rigid = new Set(curves.filter((curve) => curve.kind === 'rigid').map((curve) => curve.id));
 
   return (
     <svg
@@ -61,8 +67,8 @@ export function Diagram2D({ curves, visits, colours, label, bounds, line = LINE,
         {strokes.map((stroke, index) => (
           <polyline
             key={index}
-            stroke={colourOf.get(stroke.component)}
-            strokeWidth={line}
+            stroke={rigid.has(stroke.component) ? WOOD : colourOf.get(stroke.component)}
+            strokeWidth={rigid.has(stroke.component) ? line * RIGID_WIDTH : line}
             points={path(stroke.points)}
           />
         ))}
