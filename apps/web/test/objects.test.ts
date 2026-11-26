@@ -18,6 +18,8 @@ it('sets a plate across the standing part of a stopper, short of the knot, with 
     const { rope } = shapeOf(id);
     const plate = plateFor(rope);
     expect(plate.kind).toBe('plate');
+    // it stands across the drawing, upright to it
+    expect(plate.axis[2]).toBe(0);
     // on the standing part: the rope passes through the middle of it, along its axis
     const nearest = Math.min(...rope.points.map((point) => between(point, plate.at)));
     expect(nearest).toBeLessThan(0.2);
@@ -71,7 +73,13 @@ it('moves a tightened knot so that it rests against its plate, and an eye so tha
   const back = towardsPlate(plate, rope, 0, far, 0);
   back.forEach((value, c) => expect(value).toBeCloseTo(-3 * plate.axis[c]!, 6));
   // the same shape is not moved
-  expect(towardsPlate(plate, rope, 0, rope, 0).map((value) => Math.abs(value))).toEqual([0, 0, 0]);
+  towardsPlate(plate, rope, 0, rope, 0).forEach((value) => expect(value).toBeCloseTo(0, 6));
+  // a knot drawn aside is brought back across, so that its standing part goes through the middle of the hole
+  const aside = { ...rope, points: rope.points.map((p): Point3 => [p[0], p[1] + 0.8, p[2] - 0.5]) };
+  const across = towardsPlate(plate, rope, 0, aside, 0);
+  const moved = aside.points.map((p): Point3 => [p[0] + across[0], p[1] + across[1], p[2] + across[2]]);
+  const nearest = Math.min(...moved.map((point) => between(point, plate.at)));
+  expect(nearest).toBeLessThan(0.1);
 
   const { document, rope: eyed } = shapeOf('bowline');
   const eye = document.parts?.find((part) => part.type === 'eye');

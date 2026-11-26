@@ -56,7 +56,8 @@ export function plateFor(rope: RopeShape): SceneObject {
   const d = 2 * rope.radius;
   const at = Math.max(entersKnot(rope) - (0.8 + PLATE_THICKNESS / 2) * d, 0);
   const { point, tangent } = along(rope, at);
-  return { kind: 'plate', at: point, axis: tangent, scale: d };
+  // it stands across the drawing: where the rope rises to pass over a strand, the plate does not lean with it
+  return { kind: 'plate', at: point, axis: unit([tangent[0], tangent[1], 0]), scale: d };
 }
 
 /**
@@ -109,7 +110,35 @@ export function towardsPlate(
     return least;
   };
   const by = front(tied, tiedEntry) - front(now, entry);
-  return [plate.axis[0] * by, plate.axis[1] * by, plate.axis[2] * by];
+  const along: Point3 = [plate.axis[0] * by, plate.axis[1] * by, plate.axis[2] * by];
+  // and across, so that the standing part goes through the middle of the hole: where it passes through the
+  // plate, it is brought to the plate's middle
+  const through = throughPlate(plate, now, along);
+  if (!through) return along;
+  const aside = sub(plate.at, through);
+  const off = aside[0] * plate.axis[0] + aside[1] * plate.axis[1] + aside[2] * plate.axis[2];
+  return [
+    along[0] + aside[0] - off * plate.axis[0],
+    along[1] + aside[1] - off * plate.axis[1],
+    along[2] + aside[2] - off * plate.axis[2],
+  ];
+}
+
+/** Where a rope, moved by `by`, first passes through the plane of a plate, from its start; if it does. */
+function throughPlate(plate: SceneObject, rope: RopeShape, by: Point3): Point3 | null {
+  const side = (point: Point3): number =>
+    (point[0] + by[0] - plate.at[0]) * plate.axis[0] +
+    (point[1] + by[1] - plate.at[1]) * plate.axis[1] +
+    (point[2] + by[2] - plate.at[2]) * plate.axis[2];
+  for (let i = 0; i + 1 < rope.points.length; i++) {
+    const [a, b] = [rope.points[i] as Point3, rope.points[i + 1] as Point3];
+    const [sa, sb] = [side(a), side(b)];
+    if (sa <= 0 && sb > 0) {
+      const t = -sa / (sb - sa);
+      return [a[0] + (b[0] - a[0]) * t + by[0], a[1] + (b[1] - a[1]) * t + by[1], a[2] + (b[2] - a[2]) * t + by[2]];
+    }
+  }
+  return null;
 }
 
 /** How far to move a tightened knot so that its eye stays round the post: its middle where it was, tied. */
