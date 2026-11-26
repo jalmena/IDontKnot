@@ -754,6 +754,8 @@ button:disabled {
   padding: 0;
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(min(18rem, 100%), 1fr));
+  /* every card the same size */
+  grid-auto-rows: 1fr;
   gap: 1.25rem;
 }
 
@@ -768,6 +770,7 @@ button:disabled {
   display: flex;
   flex-direction: column;
   width: 100%;
+  height: 100%;
   padding: 0;
   border-radius: var(--radius);
   overflow: hidden;
@@ -793,12 +796,16 @@ button:disabled {
   font-size: 1.1rem;
 }
 
+/* one line, written to fit the narrowest card */
 .discipline__about {
   display: block;
   padding: 0 1rem 0.8rem;
   color: var(--ivory-dim);
   font-size: 0.9rem;
   line-height: 1.35;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* What a knot is for */
