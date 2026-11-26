@@ -23,6 +23,31 @@ test('opens on the disciplines until one is chosen', async ({ page }) => {
   await expect.poll(() => picture.evaluate((image: HTMLImageElement) => image.naturalWidth)).toBeGreaterThan(100);
 });
 
+test('shows every discipline on a card of the same size, said in one line', async ({ page }) => {
+  const viewport = page.viewportSize();
+  // as wide as the page is, and on the narrowest phone
+  for (const width of [viewport?.width ?? 1280, 360]) {
+    await page.setViewportSize({ width, height: viewport?.height ?? 800 });
+    for (const language of ['en', 'es']) {
+      await page.addInitScript((code) => localStorage.setItem('idk.language', code), language);
+      await page.goto('/');
+      const cards = await disciplines(page).evaluateAll((all) =>
+        all.map((card) => {
+          const box = card.getBoundingClientRect();
+          const about = card.querySelector('.discipline__about') as HTMLElement;
+          return { width: box.width, height: box.height, cut: about.scrollWidth > about.clientWidth };
+        }),
+      );
+      expect(cards).toHaveLength(6);
+      for (const card of cards) {
+        expect(card.width, `${language} at ${width}`).toBeCloseTo(cards[0]?.width ?? 0, 0);
+        expect(card.height, `${language} at ${width}`).toBeCloseTo(cards[0]?.height ?? 0, 0);
+        expect(card.cut, `${language} at ${width}`).toBe(false);
+      }
+    }
+  }
+});
+
 test('leads from a discipline to its knots by category, in its rope, and keeps it', async ({ page }) => {
   await page.goto('/');
   await page.locator('[data-discipline="nautical"]').click();
