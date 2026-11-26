@@ -112,7 +112,9 @@
       "none": "La biblioteca no recoge ningún uso de este nudo en {{discipline}}.",
       "show": {
         "plate": "Mostrar la placa",
-        "post": "Mostrar el poste"
+        "post": "Mostrar el poste",
+        "ring": "Mostrar la anilla",
+        "rope": "Mostrar la otra cuerda"
       }
     }
   },

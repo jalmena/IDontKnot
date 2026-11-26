@@ -1,9 +1,10 @@
 /**
- * The things a rope can be shown tied to: a plate with a hole, and a post. Their sizes are in rope
- * diameters, so that they suit any rope.
+ * The things a rope can be shown tied to: a plate with a hole and a post, of wood, and a ring of metal.
+ * Their sizes are in rope diameters, so that they suit any rope.
  */
 import {
   CylinderGeometry,
+  TorusGeometry,
   DataTexture,
   ExtrudeGeometry,
   LinearMipmapLinearFilter,
@@ -22,13 +23,13 @@ import type { WoodImages } from './wood.ts';
 import type { WoodReply } from './wood.worker.ts';
 import type { Point3 } from '@idontknot/core';
 
-export type ThingKind = 'plate' | 'post';
+export type ThingKind = 'plate' | 'post' | 'ring';
 
 export interface SceneObject {
   readonly kind: ThingKind;
   /** Where its middle is. */
   readonly at: Point3;
-  /** The way it faces: across a plate, along a post. */
+  /** The way it faces: across a plate, along a post, through a ring. */
   readonly axis: Point3;
   /** The diameter of the rope it is made for: its sizes are in those. */
   readonly scale: number;
@@ -42,12 +43,16 @@ export const PLATE_THICKNESS = 0.7;
 export const PLATE_HOLE = 0.62;
 export const POST_RADIUS = 1.05;
 export const POST_HEIGHT = 5;
+/** The radius of a ring, to the middle of its bar, and the radius of its bar: a ring of the size of a climber's. */
+export const RING_RADIUS = 2.2;
+export const RING_BAR = 0.32;
 
 function geometryOf(thing: SceneObject): BufferGeometry {
   const k = thing.scale;
   if (thing.kind === 'post') {
     return new CylinderGeometry(POST_RADIUS * k, POST_RADIUS * k, (thing.length ?? POST_HEIGHT) * k, 48);
   }
+  if (thing.kind === 'ring') return new TorusGeometry(RING_RADIUS * k, RING_BAR * k, 32, 128);
   const side = PLATE_HALF * k;
   const shape = new Shape();
   shape.moveTo(-side, -side);
@@ -164,10 +169,27 @@ function woodFor(thing: SceneObject): MeshPhysicalMaterial[] {
   return [woodWith(wood?.side, along), woodWith(wood?.end, () => undefined), woodWith(wood?.end, () => undefined)];
 }
 
-/** The mesh of a thing, in wood, placed and turned as it says. */
+/**
+ * The metal of a ring: aluminium, as climbing hardware is, lit by what the room around it shows in it, a
+ * little dulled by use.
+ */
+function metal(): MeshPhysicalMaterial {
+  return new MeshPhysicalMaterial({
+    color: 0xc4c8cf,
+    metalness: 1,
+    roughness: 0.3,
+    clearcoat: 0.25,
+    clearcoatRoughness: 0.4,
+  });
+}
+
+/** Whether a thing is of wood, which is computed before it can be drawn in its grain. */
+export const isWooden = (thing: SceneObject): boolean => thing.kind !== 'ring';
+
+/** The mesh of a thing, in wood or in metal, placed and turned as it says. */
 export function meshOf(thing: SceneObject): Mesh {
-  const mesh = new Mesh(geometryOf(thing), woodFor(thing));
-  // a plate is drawn facing +z, a post standing along +y
+  const mesh = new Mesh(geometryOf(thing), isWooden(thing) ? woodFor(thing) : metal());
+  // a plate is drawn facing +z, a post standing along +y, a ring round +z
   const drawn = thing.kind === 'post' ? new Vector3(0, 1, 0) : new Vector3(0, 0, 1);
   mesh.quaternion.copy(new Quaternion().setFromUnitVectors(drawn, new Vector3(...thing.axis).normalize()));
   mesh.position.set(...thing.at);

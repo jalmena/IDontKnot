@@ -1,9 +1,9 @@
 /**
- * What a knot is shown tied to, and where: a plate that a stopper keeps the rope from running through, or a
- * post that an eye is dropped over. They are placed from the shape the rope has, so that they stay with the
+ * What a knot is shown tied to, and where: a plate that a stopper keeps the rope from running through, a
+ * post that an eye is dropped over, a ring an eye hangs from, or the strands of another rope. They are placed from the shape the rope has, so that they stay with the
  * knot as it is tied and tightened. Pure: it knows nothing about the views.
  */
-import type { Point3 } from '@idontknot/core';
+import type { FrameCurve, Point3 } from '@idontknot/core';
 import { PLATE_THICKNESS, POST_RADIUS, type SceneObject } from '../viewer/things.ts';
 
 const sub = (a: Point3, b: Point3): Point3 => [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
@@ -80,6 +80,49 @@ export function postFor(rope: RopeShape, eye: readonly [from: number, to: number
   const axis = unit([0, high - low, 2 * clear]);
   const length = (Math.hypot(high - low, 2 * clear) + 6 * d) / d;
   return { kind: 'post', at: [x, (low + high) / 2, 0], axis, scale: d, length };
+}
+
+/**
+ * A ring through an eye, round its far end, as an eye hangs from a ring: it stands across the drawing, its
+ * middle at the far end of the eye, so that its bar passes through the eye and round the bight beyond it.
+ */
+export function ringFor(rope: RopeShape, eye: readonly [from: number, to: number]): SceneObject {
+  const d = 2 * rope.radius;
+  const inside = rope.points.filter((_, i) => (rope.s[i] as number) > eye[0] && (rope.s[i] as number) < eye[1]);
+  const [a, b] = [along(rope, eye[0]).point, along(rope, eye[1]).point];
+  const mouth: Point3 = [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2, (a[2] + b[2]) / 2];
+  if (inside.length < 3) return { kind: 'ring', at: mouth, axis: [0, 1, 0], scale: d };
+  const far = inside.reduce((best, point) => (size(sub(point, mouth)) > size(sub(best, mouth)) ? point : best));
+  const out = unit([far[0] - mouth[0], far[1] - mouth[1], 0]);
+  return { kind: 'ring', at: [far[0], far[1], 0], axis: unit([-out[1], out[0], 0]), scale: d };
+}
+
+/**
+ * The two strands of another rope, standing where a knot's own post stands: the rope a knot is tied to
+ * when it joins one rope to the next, as a lark's head does in Shibari. Each runs along the post, side by
+ * side across the drawing, from above the knot to a little below it.
+ */
+export function strandsFor(post: SceneObject, radius: number): FrameCurve[] {
+  const d = 2 * radius;
+  const across = unit([post.axis[1], -post.axis[0], 0]);
+  const [above, below] = [6 * d, 2.5 * d];
+  return [1, -1].map((side, k) => {
+    const offset: Point3 = [across[0] * side * 1.04 * radius, across[1] * side * 1.04 * radius, 0];
+    const at = (t: number): Point3 => [
+      post.at[0] + offset[0] + post.axis[0] * t,
+      post.at[1] + offset[1] + post.axis[1] * t,
+      post.at[2] + offset[2] + post.axis[2] * t,
+    ];
+    const count = 24;
+    const points = Array.from({ length: count + 1 }, (_, i) => at(above - ((above + below) * i) / count));
+    return {
+      id: `other-${k + 1}`,
+      kind: 'rope' as const,
+      closed: false,
+      points,
+      s: points.map((_, i) => ((above + below) * i) / count),
+    };
+  });
 }
 
 /** How far across an eye, from its mouth to its far end, a post stands. */

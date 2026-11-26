@@ -21,5 +21,5 @@ export function ropeOf(discipline: DisciplineId): RopeMaterialId {
 export const CATEGORY_IDS = ['stopper', 'loop', 'bend', 'hitch', 'binding', 'lashing', 'tie', 'mathematical'] as const;
 export type CategoryId = (typeof CATEGORY_IDS)[number];
 
-/** Things a knot can be shown tied to, in the view. */
-export const OBJECT_KINDS = ['plate', 'post'] as const satisfies readonly ThingKind[];
+/** Things a knot can be shown tied to, in the view: things, or another rope. */
+export const OBJECT_KINDS = ['plate', 'post', 'ring', 'rope'] as const satisfies readonly (ThingKind | 'rope')[];

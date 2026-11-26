@@ -435,3 +435,44 @@ test('shows a knot tied round a post round its own post when asked, and says tha
   await page.getByRole('button', { name: 'Diagram' }).click();
   await expect(posts).not.toHaveCount(0);
 });
+
+test('shows an eye through a ring of metal, and a lark’s head round the strands of the rope before', async ({
+  page,
+}) => {
+  await page.addInitScript(() => localStorage.setItem('idk.discipline', 'climbing'));
+  await page.goto('/knots/figure-eight-loop');
+  await page.getByRole('tab', { name: 'Use' }).click();
+  // the sections, in their order, and the last of them only where there is something to show
+  await expect(page.getByTestId('panel').getByRole('heading', { level: 2 })).toHaveText([
+    'Category',
+    'What it is for',
+    'Cautions',
+    'In use',
+  ]);
+  const canvas = page.getByTestId('rope-canvas');
+  await page.getByRole('button', { name: 'Show the ring' }).click();
+  await expect(canvas).toHaveAttribute('data-objects', 'ring');
+  // a ring is metal: it has no wood to wait for
+  await expect(canvas).toHaveAttribute('data-wood', '');
+
+  await page.getByTestId('discipline').selectOption('shibari');
+  await page.getByRole('navigation', { name: 'All knots' }).getByRole('link', { name: "Lark's head" }).click();
+  await page.getByRole('tab', { name: 'Use' }).click();
+  await expect(canvas).toHaveAttribute('data-ropes', '1');
+  await page.getByRole('button', { name: 'Show the other rope' }).click();
+  // its two strands, drawn as rope where the post would stand, and no post
+  await expect(canvas).toHaveAttribute('data-ropes', '3');
+  await expect(canvas).toHaveAttribute('data-objects', '');
+
+  // a knot with nothing to show has no such section
+  await page
+    .getByRole('navigation', { name: 'All knots' })
+    .getByRole('link', { name: 'Overhand knot', exact: true })
+    .click();
+  await page.getByRole('tab', { name: 'Use' }).click();
+  await expect(page.getByTestId('panel').getByRole('heading', { level: 2 })).toHaveText([
+    'Category',
+    'What it is for',
+    'Cautions',
+  ]);
+});

@@ -48,7 +48,7 @@ import { buildFuzz, buildTuft, FUZZ_PIECES } from './fuzz.ts';
 import { ROPE_MATERIALS, ropeColour, type RopeMaterialId } from './materials.ts';
 import { rgbOf, toned } from './images.ts';
 import { RopeTextures } from './textures.ts';
-import { askForWood, meshOf, woodIsReady, type SceneObject } from './things.ts';
+import { askForWood, isWooden, meshOf, woodIsReady, type SceneObject } from './things.ts';
 import {
   buildCap,
   buildDome,
@@ -262,6 +262,8 @@ export class RopeViewport {
   /** Replaces what is drawn with these ropes. */
   setRopes(specs: readonly RopeSpec[]): void {
     this.specs = specs;
+    // how many there are, so that a test can tell
+    this.host.dataset['ropes'] = String(specs.length);
     this.clear();
     this.bare = false;
     specs.forEach((spec, place) => {
@@ -378,7 +380,8 @@ export class RopeViewport {
   setObjects(objects: readonly SceneObject[], draw = true): void {
     this.objects = objects;
     // things are drawn in a plain colour of wood until their wood has been computed, and again when it has
-    if (objects.length > 0 && !woodIsReady()) {
+    const wooden = objects.some(isWooden);
+    if (wooden && !woodIsReady()) {
       void askForWood().then(() => {
         if (this.objects === objects && !this.disposed) this.setObjects(objects);
       });
@@ -392,7 +395,7 @@ export class RopeViewport {
     }
     this.host.dataset['objects'] = objects.map((thing) => thing.kind).join(' ');
     // and whether they are in their wood yet, so that a test can tell
-    this.host.dataset['wood'] = objects.length === 0 ? '' : woodIsReady() ? 'ready' : 'waiting';
+    this.host.dataset['wood'] = !wooden ? '' : woodIsReady() ? 'ready' : 'waiting';
     if (this.detail === 'full') this.renderer.shadowMap.needsUpdate = true;
     if (draw) this.render();
   }

@@ -9,6 +9,7 @@
   "category": "loop",
   "uses": {
     "climbing": {
+      "object": "ring",
       "text": {
         "en": "The usual knot for tying in to the end of the rope, through the tie-in points of the harness.",
         "es": "El nudo habitual para encordarse al extremo de la cuerda, por los puntos de encordamiento del arnés."
