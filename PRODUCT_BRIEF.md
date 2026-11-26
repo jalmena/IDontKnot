@@ -72,12 +72,13 @@ Its differentiator is that the system reasons about knots through a mathematical
 | 2026-11-26 | Things a knot is tied to | An eye is shown round a post, which stands nearly upright and passes over the upper side of the eye and under the lower. A stopper is shown against a plate that its standing part runs through, by the middle of the plate whether the knot is tied or tight, and stands out beyond. The things stay where they are: as the knot is tightened, it is the rope that moves, so that the knot rests against the plate and the eye stays round the post. This holds for most knots, unless one needs otherwise. Things are drawn in realistic wood, and in realistic metal when a thing of metal comes. |
 | 2026-11-26 | Joined ends | A knot whose rope has an end inside it, such as the bowline, shows its Jones polynomial with its ends joined over the whole knot and under it, the two closures that do not depend on the way the join takes. |
 | 2026-11-26 | After a load | Whether a knot jams after it has taken a load, or still unties easily, is said for every knot: it is the last sentence of what it is for, in the Use tab. |
+| 2026-11-26 | Three knots for every discipline | At least three knots in each discipline, from the first dozen: Climbing, the figure-eight loop, the clove hitch and the lark's head (as a girth hitch); Nautical, the figure-eight knot, the bowline, the clove hitch and the reef knot; Shibari, the overhand knot (at the ends of the rope), the lark's head and the single column tie; Pioneering, the bowline, the clove hitch and the square lashing; General, the overhand and figure-eight knots, the bowline, the reef knot and the figure-eight loop; Mathematics, the overhand and figure-eight knots and the double overhand knot. The double overhand knot takes the place of the closed trefoil, which is the knot the overhand knot already closes into. Then the sheet bend and the carrick bend. |
 
 ## Open decisions
 
 - Visual identity, remaining: a variant for light surfaces, themes by discipline, iconography and motion.
 - The typeface of the wordmark: the Product Owner would like the name to sit closer to the mark (asked on 2026-11-25; to be studied from rendered alternatives).
-- 3D interaction details, editor capabilities, content organisation and the first set of knots.
+- 3D interaction details, editor capabilities and content organisation.
 - App store integration: name, identifier, port, category, store card.
 
 ## Not goals
