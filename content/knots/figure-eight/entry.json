@@ -11,8 +11,8 @@
     "nautical": {
       "object": "plate",
       "text": {
-        "en": "A stopper at the end of a sheet, or of any line that runs through a fairlead or a block: it keeps the end from running out. It is bulkier than the overhand knot, and easier to untie after it has taken a load.",
-        "es": "Tope al final de una escota, o de cualquier cabo que corre por una guía o un motón: impide que el extremo se escape. Es más grueso que el nudo simple, y más fácil de deshacer después de haber soportado carga."
+        "en": "A stopper at the end of a sheet, or of any line that runs through a fairlead or a block: it keeps the end from running out. It is bulkier than the overhand knot.",
+        "es": "Tope al final de una escota, o de cualquier cabo que corre por una guía o un motón: impide que el extremo se escape. Es más grueso que el nudo simple."
       }
     },
     "decorative": {
@@ -28,6 +28,10 @@
         "es": "Con los extremos unidos es el nudo de ocho, 4₁: el único nudo de cuatro cruces, y anfiquiral, igual que su imagen en un espejo."
       }
     }
+  },
+  "afterLoad": {
+    "en": "After it has taken a load it tightens, but it is easier to untie than the overhand knot.",
+    "es": "Después de soportar carga se aprieta, pero se deshace con más facilidad que el nudo simple."
   },
   "parts": {
     "standing-part": {

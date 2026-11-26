@@ -39,6 +39,14 @@ describe.each(Object.entries(KNOTS))('what the library knot %s is for', (_id, { 
       if (use.object === 'post') expect(document.parts?.some((part) => part.type === 'eye')).toBe(true);
     }
   });
+
+  it('says whether it jams after a load, in every language, and says it once', () => {
+    for (const { code } of LANGUAGES) {
+      const afterLoad = entry.afterLoad[code];
+      expect(afterLoad).toBeTruthy();
+      for (const use of Object.values(entry.uses ?? {})) expect(use.text[code]).not.toContain(afterLoad);
+    }
+  });
 });
 
 describe.each(Object.entries(KNOTS))('the ways of tying the library knot %s', (_id, { document, entry }) => {

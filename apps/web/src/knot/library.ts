@@ -28,6 +28,8 @@ export interface LibraryEntry {
   readonly category?: string;
   /** What it is for in each discipline that uses it, by discipline. A discipline that is not here does not show it. */
   readonly uses?: Readonly<Record<string, KnotUse>>;
+  /** Whether it jams after it has taken a load, or still unties easily, by language code. Every knot says it. */
+  readonly afterLoad: Readonly<Record<string, string>>;
   /** The name of each named part of its ropes, by part and by language code. */
   readonly parts: Readonly<Record<string, Readonly<Record<string, string>>>>;
   /** For each method of tying: its name, and what each of its steps tells the person to do, by language code. */
