@@ -4,10 +4,12 @@
  * the next visit computes nothing.
  */
 import { NO_STORE, openImageStore, type StoredImage } from './imageStore.ts';
-import { endGrain, sideGrain, type WoodImages } from './wood.ts';
+import { endGrain, roundGrain, sideGrain, type WoodImages } from './wood.ts';
 
 export interface WoodReply {
+  /** The side of a board, the side of a round pole, and the end of either. */
   readonly side: WoodImages;
+  readonly round: WoodImages;
   readonly end: WoodImages;
 }
 
@@ -27,15 +29,23 @@ const fromStored = ({ width, height, planes }: StoredImage): WoodImages | null =
 addEventListener('message', () => {
   void (async () => {
     const kept = await store;
-    const [side, end] = await Promise.all([kept.read('wood side'), kept.read('wood end')]);
-    const [keptSide, keptEnd] = [side ? fromStored(side) : null, end ? fromStored(end) : null];
-    const reply: WoodReply =
-      keptSide && keptEnd ? { side: keptSide, end: keptEnd } : { side: sideGrain(), end: endGrain() };
-    if (!(keptSide && keptEnd)) {
-      kept.write('wood side', asStored(reply.side));
-      kept.write('wood end', asStored(reply.end));
-    }
-    const buffers = [reply.side, reply.end].flatMap((image) => [image.colour.buffer, image.detail.buffer]);
+    const names = ['wood side', 'wood round', 'wood end'] as const;
+    const read = await Promise.all(
+      names.map(async (name) => {
+        const stored = await kept.read(name);
+        return stored ? fromStored(stored) : null;
+      }),
+    );
+    const [keptSide, keptRound, keptEnd] = read;
+    const reply: WoodReply = {
+      side: keptSide ?? sideGrain(),
+      round: keptRound ?? roundGrain(),
+      end: keptEnd ?? endGrain(),
+    };
+    if (!keptSide) kept.write('wood side', asStored(reply.side));
+    if (!keptRound) kept.write('wood round', asStored(reply.round));
+    if (!keptEnd) kept.write('wood end', asStored(reply.end));
+    const buffers = [reply.side, reply.round, reply.end].flatMap((image) => [image.colour.buffer, image.detail.buffer]);
     postMessage(reply, { transfer: buffers });
   })().catch(reportError);
 });
