@@ -138,3 +138,47 @@ describe('the frames of a tightening', () => {
     expect(rules(pressed(-0.1))).toEqual(['shape']);
   });
 });
+
+describe('tightening round a thing', () => {
+  // the clove hitch is tied round a post, which is a component of its document
+  const hitch = read('../../../content/knots/clove-hitch/knot.json') as KnotDocument;
+  const [first] = hitch.geometry?.frames ?? [];
+  if (!first) throw new Error('the clove hitch has a frame');
+  const hitchFrames = tighteningFrames(hitch, first);
+  const post = hitch.components.find((component) => component.kind === 'rigid');
+
+  it('is made for one rope and the things it is tied round', () => {
+    expect(post?.id).toBe('post');
+    expect(hitchFrames.length).toBeGreaterThan(1);
+  });
+
+  it('leaves the thing where it is, in every frame', () => {
+    for (const frame of hitchFrames) expect(frame.curves['post']).toEqual(first.curves['post']);
+  });
+
+  it('keeps the rope out of the thing, and every rule of a frame', () => {
+    const document = { ...hitch, geometry: { frames: [first, ...hitchFrames] } };
+    for (const frame of hitchFrames) {
+      expect(checkFrame(document, frame), frame.id).toEqual([]);
+      const [rope] = framePolylines(document, frame);
+      // the post stands along y through the origin: the rope keeps to its own radius and the post's
+      for (const [x, , z] of rope?.points ?? [])
+        expect(Math.hypot(x, z)).toBeGreaterThan(0.9 * (0.5 + (post?.radius ?? 0)));
+    }
+  });
+
+  it('draws the rope tight by its ends', () => {
+    const ends = (frame: Frame): number => {
+      const [rope] = framePolylines({ ...hitch, geometry: { frames: [frame] } }, frame);
+      return between(rope?.points[0] as Point3, rope?.points.at(-1) as Point3);
+    };
+    expect(ends(hitchFrames.at(-1) as Frame)).toBeGreaterThan(ends(first) + 0.5);
+  });
+
+  it('does not say the tightest realises the topology when, seen from the front, it does not', () => {
+    const tightest = hitchFrames.at(-1) as Frame;
+    const document = { ...hitch, geometry: { frames: [first, ...hitchFrames] } };
+    if (tightest.realises) expect(checkFrame(document, tightest)).toEqual([]);
+    else expect(checkFrame(document, { ...tightest, realises: 'topology' }).map((issue) => issue.rule)).toContain('G4');
+  });
+});
