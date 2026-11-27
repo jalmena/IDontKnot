@@ -134,6 +134,8 @@ A rope in a knot drawn hard does not keep its thickness: it is pressed thinner w
 
 An eye is not drawn tight with the knot, since something stands in it: a part of type `eye` keeps its shape and goes with the knot as its two ends go, and the rope from the knot to it bends round gradually. A drawing may also say how its knot is tightened where it is not as for every knot (`tightening`, for instance a stiffer rope): the bowline is tightened with a stiffer rope, which keeps the rope from bending too sharply where it enters the eye before the knot has closed.
 
+A tie round a column is not drawn tight as a whole: its drawing says which stretches of the rope stay still (`still`, from one material coordinate to another, along the first strand of a doubled rope), as the single column tie's turns do, and only the knot after them is drawn tight; what the knot gives up runs out beyond them. It may say which way each end is drawn (`towards`, a direction for the start and one for the end; for a knot tied in a bight, the start is both ends of the rope and the end its bight), and the end swings round that way as it is drawn: the tie's standing part is drawn down and its bight up. A doubled rope round a column lies flat on it, and in the drawing where it leaves it; each strand keeps the side it lay on from one shape to the next, and bends no tighter than the rope may. The frames are kept as far as they keep the rules.
+
 The named parts of a rope are stretches of its material in the frame the knot is tied in. In a tightened frame the same material lies elsewhere, so a view names the parts only on the frame the knot is tied in.
 
 ### Validity

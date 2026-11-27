@@ -24,4 +24,6 @@ pnpm exec prettier --write content
 
 Computes the frames a knot passes through as it is drawn tight, from the frame it is tied in, and writes them into the knot's `knot.json` with the list `geometry.tightening`. It refuses to write a frame that breaks a rule of the geometry layer.
 
+A drawing's `tightening` says how its knot is drawn tight where it is not as for every knot. The single column tie's, for instance: `paired` (a doubled rope), `held` (its bight's tip, which goes with the knot), `still` (its turns, which stay where they are), `towards` (its standing part drawn down, its bight up), `dressed: false` (its pair not turned in its bends once tight), `closings` (how many times at most the holes are drawn shut) and `keep` (how many shapes are kept on the way).
+
 Run it again after changing the shape a knot is tied in, or the way the core tightens (`packages/core/src/tighten.ts`): a test compares the file with what the core computes. Only a knot of one open rope can be tightened so far.

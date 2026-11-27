@@ -445,14 +445,40 @@ export function checkFrame(document: KnotDocument, frame: Frame, tolerances: Fra
       const reach = radiusOf(first.id) + radiusOf(second.id);
       const length = lengthOf(first.id) ?? Infinity;
       let closest = Infinity;
-      for (let i = 0; i < first.points.length; i++) {
-        for (let j = a === b ? i + 1 : 0; j < second.points.length; j++) {
-          if (a === b) {
-            const apart = Math.abs((first.s[i] as number) - (first.s[j] as number));
-            const along = first.closed ? Math.min(apart, length - apart) : apart;
-            if (along < Math.PI * reach) continue; // neighbours: closer than one tightest turn of the rope
+      // only points nearer than the two radii matter: each point is looked for among those of the boxes, as wide
+      // as that, round its own
+      const box = (point: Point3): [number, number, number] => [
+        Math.floor(point[0] / reach),
+        Math.floor(point[1] / reach),
+        Math.floor(point[2] / reach),
+      ];
+      const hash = (x: number, y: number, z: number): number => (x * 92837111) ^ (y * 689287499) ^ (z * 283923481);
+      const boxes = new Map<number, number[]>();
+      if (reach > 0) {
+        second.points.forEach((point, j) => {
+          const key = hash(...box(point));
+          const held = boxes.get(key);
+          if (held) held.push(j);
+          else boxes.set(key, [j]);
+        });
+      }
+      for (let i = 0; i < first.points.length && reach > 0; i++) {
+        const point = first.points[i] as Point3;
+        const [x, y, z] = box(point);
+        for (let dx = -1; dx <= 1; dx++) {
+          for (let dy = -1; dy <= 1; dy++) {
+            for (let dz = -1; dz <= 1; dz++) {
+              for (const j of boxes.get(hash(x + dx, y + dy, z + dz)) ?? []) {
+                if (a === b) {
+                  if (j <= i) continue;
+                  const apart = Math.abs((first.s[i] as number) - (first.s[j] as number));
+                  const along = first.closed ? Math.min(apart, length - apart) : apart;
+                  if (along < Math.PI * reach) continue; // neighbours: closer than one tightest turn of the rope
+                }
+                closest = Math.min(closest, distance(point, second.points[j] as Point3));
+              }
+            }
           }
-          closest = Math.min(closest, distance(first.points[i] as Point3, second.points[j] as Point3));
         }
       }
       if (closest < reach * (1 - squeeze)) {

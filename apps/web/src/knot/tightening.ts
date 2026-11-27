@@ -123,10 +123,16 @@ function work(document: KnotDocument): Tightening | null {
     return shape;
   });
   const beside = Math.round(BESIDE / STEP);
+  // the bight of a rope that has no eye, where it runs on out of the knot, as a tie's does, is left out of what
+  // the view takes in as its ends are
+  const parts = (document.parts ?? []).filter((part) => part.component === component.id);
+  const runsOn =
+    !parts.some((part) => part.type === 'eye') &&
+    parts.some((part) => part.type === 'bight' && Math.abs(part.to - length / 2) < STEP * d);
   const windows: Window[] = [];
   shapes.forEach((shape, which) => {
     const even = evenly(shape, count);
-    const own = windowOf(which === 0 ? even : knotOf(even, beside), d / 2);
+    const own = windowOf(which === 0 ? even : knotOf(runsOn ? withoutTail(even, beside) : even, beside), d / 2);
     const before = windows[which - 1];
     // the view only closes in as the knot is tightened: drawn by its ends, a knot may grow a little longer
     // for a while before it closes further
@@ -212,6 +218,35 @@ function knotOf(shape: readonly Point3[], beside: number): readonly Point3[] {
   const last = shape.length - 1 - straightRun([...shape].reverse());
   if (first >= last) return shape;
   return shape.slice(Math.max(first - beside, 0), Math.min(last + beside, shape.length - 1) + 1);
+}
+
+/**
+ * How far from the middle of the rope, in rope diameters, the tip of a bight may come round before its tail runs
+ * straight; and how long that tail must run straight to be one.
+ */
+const TIP = 10;
+const TAIL = 4;
+
+/** A shape without the straight tail of its bight, either side of the middle of the rope, but some points beside it. */
+function withoutTail(shape: readonly Point3[], beside: number): readonly Point3[] {
+  const middle = Math.round((shape.length - 1) / 2);
+  const [reach, least] = [Math.round(TIP / STEP), Math.round(TAIL / STEP)];
+  // how many points from the middle the tail runs to, on one side: round the tip, and then straight, as far as
+  // it goes; a tip may have straight sides of its own
+  const tail = (side: readonly Point3[]): number => {
+    let furthest = 0;
+    for (let skip = 0; skip <= reach && skip < side.length - least; skip++) {
+      const run = straightRun(side.slice(skip));
+      if (run >= least) furthest = Math.max(furthest, skip + run);
+    }
+    return furthest;
+  };
+  const [back, on] = [tail(shape.slice(0, middle + 1).reverse()), tail(shape.slice(middle))];
+  if (back === 0 || on === 0) return shape;
+  return [
+    ...shape.slice(0, Math.max(middle - back + beside, 0) + 1),
+    ...shape.slice(Math.min(middle + on - beside, shape.length - 1)),
+  ];
 }
 
 function windowOf(points: readonly Point3[], margin: number): Window {

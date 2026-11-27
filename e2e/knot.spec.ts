@@ -496,6 +496,13 @@ test('shows the single column tie round its column in Shibari, tied with the big
   await page.addInitScript(() => localStorage.setItem('idk.discipline', 'shibari'));
   await page.goto('/knots/single-column-tie');
   await expect(page.getByTestId('panel')).toHaveAttribute('data-checked', 'ok');
+  // only its knot is drawn tight, its turns staying round the column; and it is loosened again
+  const tighten = page.getByTestId('tighten');
+  await tighten.click();
+  await expect(tighten).toHaveText('Loosen');
+  await expect(page.getByTestId('panel')).toHaveAttribute('data-tightened', '1', { timeout: 30_000 });
+  await tighten.click();
+  await expect(tighten).toHaveText('Tighten');
   // led by the bight: it is the bight that is named, and how far it has come
   const progress = page.getByRole('slider', { name: 'How far the bight has come' });
   await expect(progress).toBeVisible();
