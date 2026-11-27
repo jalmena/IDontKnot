@@ -54,16 +54,16 @@
       },
       "steps": {
         "round-pole": {
-          "en": "Lead the end round the pole, and under the standing part beside it.",
-          "es": "Rodea el palo con el chicote y pásalo por debajo del firme, junto al palo."
+          "en": "Lead the end round the pole, and over the standing part beside it.",
+          "es": "Rodea el palo con el chicote y pásalo por encima del firme, junto al palo."
         },
-        "over-standing-part": {
-          "en": "Bring it back over the standing part: a half hitch round it.",
-          "es": "Vuelve a pasarlo por encima del firme: un cote alrededor de él."
+        "under-standing-part": {
+          "en": "Bring it back under the standing part: a half hitch round it.",
+          "es": "Vuelve a pasarlo por debajo del firme: un cote alrededor de él."
         },
         "first-twist": {
-          "en": "Twist it round the turn: under it and over it.",
-          "es": "Enróllalo en la vuelta: por debajo y por encima."
+          "en": "Twist it round the turn: over it and under it.",
+          "es": "Enróllalo en la vuelta: por encima y por debajo."
         },
         "second-twist": {
           "en": "Twist it round again, a little further along.",
