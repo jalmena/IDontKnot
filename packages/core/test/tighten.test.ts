@@ -211,19 +211,21 @@ describe('tightening a knot tied in a bight', () => {
       }
       fellow = at;
       expect(best).toBeLessThan(1.3);
-      // where the first strand bends sharply, which of the two is on the outside
+      // where the first strand bends round a circle of six diameters or less, measured over three either side,
+      // which of the two is on the outside
       const [a, b] = [rope.points[i] as Point3, rope.points[at] as Point3];
-      const [before, after] = [rope.points[Math.max(i - 60, 0)] as Point3, rope.points[i + 60]];
-      if (!after) continue;
+      const along = (s: number): Point3 | undefined => rope.points[rope.s.findIndex((each) => each >= s)];
+      const [before, after] = [along((rope.s[i] as number) - 3), along((rope.s[i] as number) + 3)];
+      if ((rope.s[i] as number) < 3 || !before || !after) continue;
       const bend = [before[0] + after[0] - 2 * a[0], before[1] + after[1] - 2 * a[1]] as const;
-      if (Math.hypot(bend[0], bend[1]) < 0.5) continue;
+      if (Math.hypot(bend[0], bend[1]) < 9 / 6) continue;
       bends++;
       const inside = (b[0] - a[0]) * bend[0] + (b[1] - a[1]) * bend[1] > 0;
       const [outer, inner] = inside ? [a, b] : [b, a];
       if (outer[2] < inner[2] - 0.05) tucked++;
     }
     expect(bends).toBeGreaterThan(100);
-    expect(tucked / bends).toBeGreaterThan(0.8);
+    expect(tucked / bends).toBeGreaterThan(0.95);
   });
 });
 
@@ -275,7 +277,15 @@ describe('the holes a rope leaves seen from the front', () => {
 });
 
 describe('a knot of one rope drawn tight', () => {
-  const single = ['overhand', 'double-overhand', 'figure-eight', 'bowline', 'clove-hitch', 'larks-head'];
+  const single = [
+    'overhand',
+    'double-overhand',
+    'figure-eight',
+    'figure-eight-loop',
+    'bowline',
+    'clove-hitch',
+    'larks-head',
+  ];
   it.each(single)('%s leaves no hole seen from the front', (id) => {
     const document = read(`../../../content/knots/${id}/knot.json`) as KnotDocument;
     const tight = document.geometry?.frames.find((frame) => frame.id === TIGHT_FRAME) as Frame;
