@@ -102,6 +102,8 @@
       "progress": "How far the end has come",
       "speed": "Speed",
       "end": "The end",
+      "bight": "The bight",
+      "progressBight": "How far the bight has come",
       "unsound": "The steps of this method do not follow from one another. This is a defect: please report it."
     },
     "use": {

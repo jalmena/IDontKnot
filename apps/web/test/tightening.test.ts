@@ -124,3 +124,13 @@ it('never passes the rope through itself as a knot is drawn tight', () => {
     }
   }
 }, 60_000);
+
+it('leaves the tail of a bight that runs on out of the knot out of what it closes in on, as it does the ends', () => {
+  const tie = tighteningOf(KNOTS['single-column-tie']!.document);
+  if (!tie) throw new Error('the single column tie of the library can be tightened');
+  const [tight, window] = [tie.shapes.at(-1)!, tie.windows.at(-1)!];
+  // drawn up, the tip of its bight is far above the knot, and out of the view; the knot is in it
+  const tip = Math.max(...tight.map((point) => point[1]));
+  expect(window.centre[1] + window.height / 2).toBeLessThan(tip - 5);
+  expect(window.height).toBeLessThan(14);
+});

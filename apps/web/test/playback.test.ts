@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { KNOTS } from '../src/knot/library.ts';
 import {
   begin,
+  BIGHT_PACE,
   done,
   next,
   PACE,
@@ -117,4 +118,15 @@ it('goes back to where the step began, and from there to where the one before be
   expect(previous(seek(timeline, 20), timeline).position).toBe(10);
   expect(previous(seek(timeline, 10), timeline).position).toBe(10);
   expect(previous(seek(timeline, 45), timeline).position).toBe(30);
+});
+
+it('leads a bight faster than an end: it brings the rope in from both ends at once', () => {
+  const tie = KNOTS['single-column-tie']!.document.construction!.methods[0]!;
+  const read = timelineOf(tie);
+  expect(read.pace).toBe(BIGHT_PACE);
+  expect(BIGHT_PACE).toBeGreaterThan(PACE);
+  const playing = play(begin(read), read);
+  expect(tick(playing, read, 1, 1).position).toBeCloseTo(read.start + BIGHT_PACE, 6);
+  // and an end goes at the pace it always has
+  expect(timelineOf(KNOTS['figure-eight']!.document.construction!.methods[0]!).pace).toBeUndefined();
 });

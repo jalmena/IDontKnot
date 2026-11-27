@@ -1,0 +1,71 @@
+{
+  "format": "idk-entry",
+  "formatVersion": "0.1.0",
+  "knot": "single-column-tie",
+  "names": {
+    "en": "Single column tie",
+    "es": "Columna simple"
+  },
+  "category": "tie",
+  "uses": {
+    "shibari": {
+      "object": "post",
+      "text": {
+        "en": "To tie a wrist, an ankle or a thigh with the bight of a doubled rope, leaving the working ends free to go on with the tie.",
+        "es": "Para atar una muñeca, un tobillo o un muslo con el seno de la cuerda doble, dejando los cabos libres para seguir la atadura."
+      }
+    }
+  },
+  "afterLoad": {
+    "en": "After a load it unties easily, by undoing its half hitches.",
+    "es": "Después de soportar carga se deshace con facilidad, soltando sus cotes."
+  },
+  "cautions": {
+    "en": "Leave room for a finger between the coils and the wrist; pulled by its working ends it can close on the wrist: never hang weight from it.",
+    "es": "Deja sitio para un dedo entre las vueltas y la muñeca; si se tira de los cabos puede cerrarse sobre la muñeca: nunca cuelgues peso de él."
+  },
+  "parts": {
+    "standing-part": {
+      "en": "Standing part",
+      "es": "Firme"
+    },
+    "turns": {
+      "en": "Turns",
+      "es": "Vueltas"
+    },
+    "bight": {
+      "en": "Bight",
+      "es": "Seno"
+    }
+  },
+  "methods": {
+    "with-the-bight": {
+      "name": {
+        "en": "With the bight",
+        "es": "Con el seno"
+      },
+      "steps": {
+        "first-turn": {
+          "en": "Lead the bight in from the left, across the front of the column and round behind it, rising.",
+          "es": "Entra con el seno por la izquierda, pásalo por delante de la columna y rodéala por detrás, subiendo."
+        },
+        "second-turn": {
+          "en": "Round again, above the first turn.",
+          "es": "Da otra vuelta, por encima de la primera."
+        },
+        "over-the-turns": {
+          "en": "Bring the bight down over both turns, and over the standing part where it begins them.",
+          "es": "Baja el seno por encima de las dos vueltas y del firme, donde empiezan."
+        },
+        "under-the-turns": {
+          "en": "Take it round below them and up under both turns, against the column, out at the top.",
+          "es": "Rodéalas por abajo y sube el seno por debajo de las dos vueltas, pegado a la columna, hasta salir por arriba."
+        },
+        "overhand": {
+          "en": "Over to the standing part: round it, out under itself where it came to it, and up in front of itself: an overhand knot.",
+          "es": "Llévalo al firme: rodéalo, sácalo por debajo de sí mismo, donde llegó, y súbelo por delante de sí mismo: el nudo simple."
+        }
+      }
+    }
+  }
+}

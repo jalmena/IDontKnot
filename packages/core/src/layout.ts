@@ -25,10 +25,10 @@ import type { TightenOptions } from './tighten.ts';
 export type LayoutPoint = readonly [x: number, y: number, pass?: 'over' | 'under' | number];
 
 /**
- * A place along the rope: one of its ends, or one of the crossings it meets, counted from 1 along the rope,
- * and some distance beyond it (or, negative, before it).
+ * A place along the rope: one of its ends, its middle, or one of the crossings it meets, counted from 1 along
+ * the rope, and some distance beyond it (or, negative, before it).
  */
-export type LayoutPlace = 'start' | 'end' | { readonly visit: number; readonly by?: number };
+export type LayoutPlace = 'start' | 'end' | 'middle' | { readonly visit: number; readonly by?: number };
 
 /** A straight rigid thing a rope is tied round: the two ends of its axis, and its radius. */
 export interface LayoutThing {
@@ -75,10 +75,14 @@ export interface Layout {
    * as it is tied, and its drawing is how it is left.
    */
   readonly tightening?: TightenOptions | false;
-  /** How the knot is tied by leading the end of the rope along the drawing. */
+  /**
+   * How the knot is tied by leading the end of the rope along the drawing; or its bight, the middle of the
+   * rope doubled, the rope laid from both its ends at once, each step's place along its first half.
+   */
   readonly method?: {
     readonly id: string;
-    /** How much of the rope is laid before the first step. */
+    readonly by?: 'end' | 'bight';
+    /** How much of the rope is laid before the first step: from each end, when the bight leads. */
     readonly start: number;
     readonly steps: readonly {
       readonly id: string;
@@ -155,6 +159,7 @@ export function layOut(layout: Layout): KnotDocument {
   const place = (where: LayoutPlace): number => {
     if (where === 'start') return 0;
     if (where === 'end') return length;
+    if (where === 'middle') return round(length / 2);
     const at = met[where.visit - 1];
     if (at === undefined)
       throw new Error(`"${layout.id}" meets ${met.length} crossings: there is no crossing ${where.visit}`);
@@ -209,14 +214,14 @@ export function layOut(layout: Layout): KnotDocument {
   };
   if (!layout.method) return document;
 
-  // each step of the method leaves the diagram that the shape shows when the end has come that far
+  // each step of the method leaves the diagram that the shape shows when the end, or the bight, has come that far
   const steps: Step[] = [];
   for (const step of layout.method.steps) {
     const to = place(step.to);
     const told: Omit<Step, 'result'> = {
       id: step.id,
       op: step.op,
-      actor: [rope, 'end'],
+      actor: [rope, layout.method.by ?? 'end'],
       ...(step.pass ? { pass: step.pass } : {}),
       ...(step.passes ? { passes: step.passes } : {}),
       to,
@@ -228,7 +233,7 @@ export function layOut(layout: Layout): KnotDocument {
       steps: [{ ...told, result: { crossings: [], strands: {} } }],
     };
     const shown = shownAt(document, so, to);
-    if (!shown) throw new Error(`"${layout.id}": the shape cannot be read when the end has come to ${to}`);
+    if (!shown) throw new Error(`"${layout.id}": the shape cannot be read when the rope has come to ${to}`);
     steps.push({ ...told, result: { crossings: shown.crossings, strands: shown.strands } });
   }
   return {

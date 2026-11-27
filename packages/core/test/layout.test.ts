@@ -12,6 +12,7 @@ import {
   strandOf,
   tighteningFrames,
   type KnotDocument,
+  type Point3,
   type Layout,
 } from '../src/index.ts';
 
@@ -59,8 +60,9 @@ describe('the knots of the library', () => {
         });
       }
     },
-    // a knot tied in a bight is drawn tight as a flat pair, which takes the longest
-    120_000,
+    // a knot tied in a bight is drawn tight as a flat pair, which takes long; a tie round a column, its ends
+    // drawn a thousand times, the longest
+    180_000,
   );
 });
 
@@ -97,6 +99,34 @@ describe('the bowline of the library', () => {
       return Math.abs((points.at(-1)?.[0] ?? 0) - (points[0]?.[0] ?? 0));
     };
     expect(span(tight)).toBeGreaterThan(span(dressed) + 5);
+  });
+});
+
+describe('the single column tie of the library', () => {
+  const tie = read('single-column-tie/knot.json') as KnotDocument;
+
+  it('draws only its knot tight: its turns stay round the column, its standing part is drawn down, its bight up', () => {
+    const frames = tie.geometry?.frames ?? [];
+    const [tied, tight] = [frames[0], frames.find((frame) => frame.id === 'tight')];
+    const turns = tie.parts?.find((part) => part.type === 'turn');
+    if (!tied || !tight || !turns) throw new Error('the tie has its shapes and its turns');
+    const [before, after] = [tied, tight].map((frame) => framePolylines(tie, frame).find((c) => c.id === 'rope'));
+    if (!before || !after) throw new Error('the tie has its rope');
+    // every point of the turns, short of where they begin and end, is where a point of the rope still is
+    let moved = 0;
+    before.points.forEach((point, i) => {
+      if ((before.s[i] as number) < turns.from + 3 || (before.s[i] as number) > turns.to - 3) return;
+      const nearest = Math.min(...after.points.map((other) => Math.hypot(...point.map((x, c) => x - other[c]!))));
+      moved = Math.max(moved, nearest);
+    });
+    expect(moved).toBeLessThan(0.15);
+    // the ends of the rope, its standing part, are drawn down, and its middle, the bight, up
+    const at = (curve: typeof before, s: number): Point3 =>
+      curve.points[curve.s.findIndex((each) => each >= s)] as Point3;
+    const half = (before.s.at(-1) as number) / 2;
+    expect(at(after, 0)[1]).toBeLessThan(at(before, 0)[1] - 3);
+    expect((after.points.at(-1) as Point3)[1]).toBeLessThan((before.points.at(-1) as Point3)[1] - 3);
+    expect(at(after, half)[1]).toBeGreaterThan(at(before, half)[1] + 3);
   });
 });
 

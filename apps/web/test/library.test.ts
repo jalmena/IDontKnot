@@ -78,7 +78,11 @@ describe.each(Object.entries(KNOTS))('the ways of tying the library knot %s', (_
   });
 
   it('are valid methods', () => {
-    for (const method of methods) expect(checkMethod(document, method)).toEqual([]);
+    // nothing broken; only an operation the core cannot check yet is noted, as a tie's turns round a column
+    for (const method of methods) {
+      const issues = checkMethod(document, method);
+      expect(issues.filter((issue) => !(issue.level === 'note' && /is not checked/.test(issue.message)))).toEqual([]);
+    }
   });
 });
 

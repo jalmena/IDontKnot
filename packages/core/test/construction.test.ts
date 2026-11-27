@@ -8,6 +8,7 @@ import {
   checkMethod,
   cutCurve,
   framePolylines,
+  ledBy,
   shownAt,
   type Frame,
   type KnotDocument,
@@ -156,5 +157,31 @@ describe('checking a method', () => {
     };
     expect(rules(checkMethod(knot, fromStart))).toEqual(['shape']);
     expect(rules(checkMethod(knot, { ...method, steps: [] }))).toEqual(['shape']);
+  });
+});
+
+describe('a method led by the bight: the single column tie of the library', () => {
+  const tie = JSON.parse(
+    readFileSync(new URL('../../../content/knots/single-column-tie/knot.json', import.meta.url), 'utf8'),
+  ) as KnotDocument;
+  const withBight = tie.construction?.methods[0] as Method;
+  const half = (tie.components[0]?.length as number) / 2;
+
+  it('is led by the bight, and its steps take the bight as far as the middle of the rope', () => {
+    expect(ledBy(withBight)).toBe('bight');
+    expect(withBight.steps.every((step) => step.actor[1] === 'bight')).toBe(true);
+    // to the thousandth it is written to
+    expect(Math.abs((withBight.steps.at(-1)?.to as number) - half)).toBeLessThanOrEqual(5e-4 + 1e-9);
+    expect(rules(checkMethod(tie, withBight))).toEqual([]);
+  });
+
+  it('lays the rope from both its ends at once: more is laid, and more crossed, the further the bight has come', () => {
+    const crossings = [withBight.start, ...withBight.steps.map((step) => step.to)].map(
+      (to) => shownAt(tie, withBight, to)?.crossings.length ?? -1,
+    );
+    expect(crossings.every((count, i) => i === 0 || count > (crossings[i - 1] as number))).toBe(true);
+    // and with the bight at the middle, the whole rope is laid: the knot as the document has it
+    const whole = shownAt(tie, withBight, half);
+    expect(whole?.crossings.length).toBe(tie.topology?.diagram.crossings.length);
   });
 });

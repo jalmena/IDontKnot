@@ -35,6 +35,8 @@ export interface SceneObject {
   readonly scale: number;
   /** How long a post is, in rope diameters. */
   readonly length?: number;
+  /** How thick a post is, its radius in rope diameters: a knot may be tied round a thicker one than usual. */
+  readonly radius?: number;
 }
 
 /** The half side and the thickness of a plate, the radius of its hole, and the radius and height of a post. */
@@ -50,7 +52,8 @@ export const RING_BAR = 0.32;
 function geometryOf(thing: SceneObject): BufferGeometry {
   const k = thing.scale;
   if (thing.kind === 'post') {
-    return new CylinderGeometry(POST_RADIUS * k, POST_RADIUS * k, (thing.length ?? POST_HEIGHT) * k, 48);
+    const radius = (thing.radius ?? POST_RADIUS) * k;
+    return new CylinderGeometry(radius, radius, (thing.length ?? POST_HEIGHT) * k, 48);
   }
   if (thing.kind === 'ring') return new TorusGeometry(RING_RADIUS * k, RING_BAR * k, 32, 128);
   const side = PLATE_HALF * k;
@@ -166,7 +169,7 @@ function woodFor(thing: SceneObject): MeshPhysicalMaterial[] {
   const along = (texture: DataTexture): void => {
     texture.rotation = Math.PI / 2;
     texture.center.set(0.5, 0.5);
-    texture.repeat.set((thing.length ?? POST_HEIGHT) / (2 * Math.PI * POST_RADIUS), 1);
+    texture.repeat.set((thing.length ?? POST_HEIGHT) / (2 * Math.PI * (thing.radius ?? POST_RADIUS)), 1);
   };
   return [woodWith(wood?.round, along), woodWith(wood?.end, () => undefined), woodWith(wood?.end, () => undefined)];
 }

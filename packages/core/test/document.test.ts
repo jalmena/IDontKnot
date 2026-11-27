@@ -96,7 +96,11 @@ describe('every knot of the library', () => {
       expect(document.id).toBe(name);
       expect(checkDocument(document)).toEqual([]);
       for (const frame of document.geometry?.frames ?? []) expect(checkFrame(document, frame)).toEqual([]);
-      for (const method of document.construction?.methods ?? []) expect(checkMethod(document, method)).toEqual([]);
+      // nothing broken; only an operation this version cannot check yet is noted, as a tie's turns round a column
+      for (const method of document.construction?.methods ?? []) {
+        const issues = checkMethod(document, method);
+        expect(issues.filter((issue) => !(issue.level === 'note' && /is not checked/.test(issue.message)))).toEqual([]);
+      }
     },
     // a knot drawn tight in many shapes takes some seconds to check, more on a slower machine
     30_000,

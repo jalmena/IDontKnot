@@ -1,4 +1,4 @@
-import type { Method } from '@idontknot/core';
+import { ledBy, type Method } from '@idontknot/core';
 import { useEffect, useRef, type Dispatch, type SetStateAction } from 'react';
 import { useTranslation } from 'react-i18next';
 import { inLanguage, type LibraryEntry } from './library.ts';
@@ -111,7 +111,7 @@ export function Tying({ method, texts, timeline, length, state, setState, speed,
           max={length}
           step={SLIDER_STEP}
           value={state.position}
-          aria-label={t('knot.tying.progress')}
+          aria-label={t(ledBy(method) === 'bight' ? 'knot.tying.progressBight' : 'knot.tying.progress')}
           data-testid="progress"
           onChange={(event) => {
             // the slider moves in steps, and the end of the rope is seldom on one: its last step is the end

@@ -1,6 +1,6 @@
 # Knot document model
 
-Draft 0.1. Implemented in `packages/core`: components, parts, the topology layer, geometry frames with curves and rules G1 to G5, the tightening of a knot of one open rope, and the construction layer for methods led with the end of a rope (operations `cross` and `tuck`, rules C1 to C3). Not yet implemented: shapes of rigid objects, the other operations, library entries, the JSON Schema. The reasoning behind it is in the [foundations report](../research/01-mathematical-foundations.md) and the [comparison of representations](../research/02-representation-comparison.md). The decisions it embodies are recorded in the [decision records](../adr/README.md).
+Draft 0.1. Implemented in `packages/core`: components, parts, the topology layer, geometry frames with curves and rules G1 to G5, the tightening of a knot of one open rope, and the construction layer for methods led with the end of a rope or with its bight (operations `cross` and `tuck`, rules C1 to C3). Not yet implemented: shapes of rigid objects, the other operations, library entries, the JSON Schema. The reasoning behind it is in the [foundations report](../research/01-mathematical-foundations.md) and the [comparison of representations](../research/02-representation-comparison.md). The decisions it embodies are recorded in the [decision records](../adr/README.md).
 
 ## 1. Purpose and rules
 
@@ -134,6 +134,8 @@ A rope in a knot drawn hard does not keep its thickness: it is pressed thinner w
 
 An eye is not drawn tight with the knot, since something stands in it: a part of type `eye` keeps its shape and goes with the knot as its two ends go, and the rope from the knot to it bends round gradually. A drawing may also say how its knot is tightened where it is not as for every knot (`tightening`, for instance a stiffer rope): the bowline is tightened with a stiffer rope, which keeps the rope from bending too sharply where it enters the eye before the knot has closed.
 
+A tie round a column is not drawn tight as a whole: its drawing says which stretches of the rope stay still (`still`, from one material coordinate to another, along the first strand of a doubled rope), as the single column tie's turns do, and only the knot after them is drawn tight; what the knot gives up runs out beyond them. It may say which way each end is drawn (`towards`, a direction for the start and one for the end; for a knot tied in a bight, the start is both ends of the rope and the end its bight), and the end swings round that way as it is drawn: the tie's standing part is drawn down and its bight up. A doubled rope round a column lies flat on it, and in the drawing where it leaves it; each strand keeps the side it lay on from one shape to the next, and bends no tighter than the rope may. The frames are kept as far as they keep the rules.
+
 The named parts of a rope are stretches of its material in the frame the knot is tied in. In a tightened frame the same material lies elsewhere, so a view names the parts only on the frame the knot is tied in.
 
 ### Validity
@@ -194,11 +196,13 @@ The first implementation covers methods in which the end of a rope is led along 
 
 `start` and `to` are material coordinates. The state at a coordinate is the frame with the rope cut there.
 
+A method may instead be led by the bight, the middle of a doubled rope: each step's actor is `["rope", "bight"]`, and `start` and `to` say how far the rope has been laid from each of its ends at once, the state being the frame with the rope laid that far from both. The last step brings the bight to the middle of the rope. For such a method, C2 checks that each half has passed the strands its step names; a tie whose two halves pass different strands, as a doubled rope does where its two strands cross each other going round a column, uses operations that are noted, not checked.
+
 | Rule | Statement |
 | --- | --- |
 | C1 | Each step's result is the diagram of the frame with the rope cut at the step's `to`, up to renaming of crossings. |
 | C2 | Each step's result follows from the state before it by the operation it names. For `cross`, the last crossing the end visits is new, it passes it as `pass` says, and without it the diagram is the state before. For `tuck`, the same for as many crossings as `passes` has entries. An operation the implementation cannot check is noted, not refused. |
-| C3 | The last step's `to` is the length of the rope, and its result is the diagram of the topology layer. |
+| C3 | The last step's `to` is the length of the rope, or its middle when the bight leads, to the thousandth coordinates are written to, and its result is the diagram of the topology layer. |
 
 A step may instead carry a frame of its own; that is not implemented yet.
 

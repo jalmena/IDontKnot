@@ -10,7 +10,7 @@ A roadmap is a plan, not a promise. Nothing listed here exists until its phase i
 | Product discovery | Mostly done. Decisions are in [PRODUCT_BRIEF.md](PRODUCT_BRIEF.md). Open: 3D interaction details, the knots after the first dozen. |
 | Architecture | Decided. See [ARCHITECTURE.md](ARCHITECTURE.md) and [docs/adr](docs/adr/README.md). |
 | Design and branding | The identity is decided: [docs/design/brand](docs/design/brand/README.md). Open: a light variant, themes by discipline, iconography, motion. |
-| Implementation | Phases 1, 3 and 4 are done, and phase 2 except graded comparison. Phase 5 has begun: the knots of the library are written from drawings by a tool, and eight knots are in, three of them tied round a post; the single column tie comes next, and sets of knots such as lashings wait for a section of their own, Structures. In phase 4 the end of the rope is led along the finished knot; steps with shapes of their own are not built yet; see [ARCHITECTURE.md](ARCHITECTURE.md) for exactly what exists. Not yet measured on a real tablet. |
+| Implementation | Phases 1, 3 and 4 are done, and phase 2 except graded comparison. Phase 5 has begun: the knots of the library are written from drawings by a tool, and nine knots are in, four of them tied round a post or a column, one of them, the single column tie, tied with the bight; and sets of knots such as lashings wait for a section of their own, Structures. In phase 4 the end of the rope is led along the finished knot; steps with shapes of their own are not built yet; see [ARCHITECTURE.md](ARCHITECTURE.md) for exactly what exists. Not yet measured on a real tablet. |
 
 ## Phases
 

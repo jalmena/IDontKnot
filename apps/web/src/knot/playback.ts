@@ -3,12 +3,14 @@
  * coordinates of the rope: the end begins at `start`, and each step takes it to its stop.
  * Pure: it knows nothing about the views or the clock.
  */
-import type { Method } from '@idontknot/core';
+import { ledBy, type Method } from '@idontknot/core';
 
 export interface Timeline {
   readonly start: number;
   /** Where each step leaves the end, in order. */
   readonly stops: readonly number[];
+  /** Rope diameters the end travels in a second, at normal speed, where it is not `PACE`. */
+  readonly pace?: number;
 }
 
 export interface Playback {
@@ -25,12 +27,15 @@ export interface Playback {
 
 /** Rope diameters the end travels in a second, at normal speed. */
 export const PACE = 5;
+/** And the bight, which brings rope in from both ends at once, and is led a long way round a tie. */
+export const BIGHT_PACE = 7.5;
 /** Seconds the end rests at the end of a step before going on. */
 export const REST = 0.9;
 export const SPEEDS = [0.5, 1, 2] as const;
 
 export function timelineOf(method: Method): Timeline {
-  return { start: method.start, stops: method.steps.map((step) => step.to) };
+  const stops = method.steps.map((step) => step.to);
+  return ledBy(method) === 'bight' ? { start: method.start, stops, pace: BIGHT_PACE } : { start: method.start, stops };
 }
 
 const finish = (timeline: Timeline): number => timeline.stops.at(-1) ?? timeline.start;
@@ -98,7 +103,7 @@ export function tick(state: Playback, timeline: Timeline, seconds: number, speed
     const rest = state.rest - seconds;
     return rest > 0 ? { ...state, rest } : { ...state, rest: 0, target: stopAfter(timeline, state.position) };
   }
-  const position = Math.min(state.position + PACE * speed * seconds, state.target);
+  const position = Math.min(state.position + (timeline.pace ?? PACE) * speed * seconds, state.target);
   if (position < state.target) return { ...state, position };
   const more = state.through && position < finish(timeline) - 1e-9;
   return { ...state, position, playing: more, rest: more ? REST : 0 };
