@@ -133,6 +133,155 @@ const PULL = 0.05;
 const LEAST_PULL = 0.004;
 /** How much further apart than they may come two strands are moved, in diameters: what a shape has to spare. */
 const SPARE = 0.015;
+/**
+ * How far, in each pass, the bending of the rope is evened out along it: a kink between gentler bends is
+ * eased out, and a zigzag finer than the rope goes in one pass.
+ */
+const FAIRING = 1;
+/**
+ * Where two strands push each other apart, how much of the push the particle beside each one bears, and
+ * the next one the square of it: a rope bears on another along a stretch of it, not at a point.
+ */
+const SPREAD = 0.7;
+/**
+ * How far, in each pass, the rope is drawn towards the depth it lies at on the whole, as a knot lies on a
+ * table: gently, so that it keeps the face it was tied with and still closes.
+ */
+const LYING = 0.002;
+/**
+ * Closing the holes the knot leaves seen from the front: how far the rope round a hole is drawn into it each
+ * time, in diameters, to begin with and at least; how many times at most, and after how many without the holes
+ * growing smaller it is left; how far from a hole's edge the rope is drawn, in diameters; and below what area,
+ * in square diameters, no hole is seen.
+ */
+const CLOSE = 0.02;
+const LEAST_CLOSE = 0.002;
+const CLOSINGS = 400;
+const NO_CLOSER = 40;
+const BORDER = 0.35;
+const NO_HOLE = 0.002;
+/**
+ * The narrowest hole that is seen, in diameters: the circle that fits in it. Narrower, it is no more than the
+ * line where two ropes lie against each other.
+ */
+const NARROWEST = 0.05;
+/**
+ * How far from the knot the ends of a rope drawn tight run straight, in diameters; and how far from straight,
+ * at most, a stretch of an end may be to be taken as one that is drawn straight.
+ */
+const CLEAR = 2;
+const NEARLY = 0.25;
+/**
+ * How near two stretches of the rope may come, in diameters, going straight from one shape kept to the next,
+ * before a shape between them is kept too; and how many shapes are kept at most.
+ */
+const THROUGH = 0.5;
+const MOST_KEPT = 24;
+/** The side of the cells in which the front is looked at for holes, in diameters. */
+const HOLE_CELL = 0.05;
+
+/** A hole seen from the front: its area and where its middle is. */
+export interface Hole {
+  readonly area: number;
+  readonly x: number;
+  readonly y: number;
+}
+
+/**
+ * The holes a rope leaves seen from the front, from +z: the background it closes round, which is not reached
+ * from outside the knot, and in which a circle of a twentieth of a diameter fits. `leaveOut` is a stretch of it,
+ * from one material coordinate to another, that is not looked at: an eye, which is meant to be open. Things
+ * it is tied round are solid. Areas are in the units of the points, and are what is left of each hole once
+ * its edge is drawn in by half the narrowest.
+ */
+export function holesSeen(
+  points: readonly Point3[],
+  s: readonly number[],
+  radius: number,
+  options: { readonly leaveOut?: readonly [number, number]; readonly around?: readonly Rod[] } = {},
+): { readonly area: number; readonly holes: readonly Hole[] } {
+  const d = 2 * radius;
+  const margin = (NARROWEST / 2) * d;
+  const skip = options.leaveOut;
+  const kept = points.map((_, i) => !(skip && (s[i] as number) > skip[0] && (s[i] as number) < skip[1]));
+  // the knot: where the rope comes near itself
+  let [low, high] = [Infinity, -Infinity];
+  for (let i = 0; i < points.length; i++) {
+    if (!kept[i]) continue;
+    for (let j = i + 1; j < points.length; j++) {
+      if (!kept[j] || (s[j] as number) - (s[i] as number) < 1.6 * d) continue;
+      if (size(sub(points[i] as Point3, points[j] as Point3)) < 1.3 * d) {
+        [low, high] = [Math.min(low, s[i] as number), Math.max(high, s[j] as number)];
+      }
+    }
+  }
+  if (low > high) return { area: 0, holes: [] };
+  let [x0, x1, y0, y1] = [Infinity, -Infinity, Infinity, -Infinity];
+  points.forEach((point, i) => {
+    if (!kept[i] || (s[i] as number) < low - d || (s[i] as number) > high + d) return;
+    [x0, x1, y0, y1] = [Math.min(x0, point[0]), Math.max(x1, point[0]), Math.min(y0, point[1]), Math.max(y1, point[1])];
+  });
+  [x0, x1, y0, y1] = [x0 - 2 * d, x1 + 2 * d, y0 - 2 * d, y1 + 2 * d];
+  const cell = HOLE_CELL * d;
+  const [w, h] = [Math.ceil((x1 - x0) / cell), Math.ceil((y1 - y0) / cell)];
+  const solid = new Uint8Array(w * h);
+  // every cell whose middle is within a radius of a piece of the rope, or of a thing, seen from the front
+  const paint = (a: Point3, b: Point3, r: number): void => {
+    const [left, right] = [
+      Math.max(Math.floor((Math.min(a[0], b[0]) - r - x0) / cell), 0),
+      Math.min(Math.ceil((Math.max(a[0], b[0]) + r - x0) / cell), w - 1),
+    ];
+    const [bottom, top] = [
+      Math.max(Math.floor((Math.min(a[1], b[1]) - r - y0) / cell), 0),
+      Math.min(Math.ceil((Math.max(a[1], b[1]) + r - y0) / cell), h - 1),
+    ];
+    const [vx, vy] = [b[0] - a[0], b[1] - a[1]];
+    const squared = vx * vx + vy * vy || 1e-12;
+    for (let gy = bottom; gy <= top; gy++) {
+      for (let gx = left; gx <= right; gx++) {
+        const [px, py] = [x0 + (gx + 0.5) * cell - a[0], y0 + (gy + 0.5) * cell - a[1]];
+        const t = Math.min(Math.max((px * vx + py * vy) / squared, 0), 1);
+        if ((px - t * vx) ** 2 + (py - t * vy) ** 2 <= r * r) solid[gy * w + gx] = 1;
+      }
+    }
+  };
+  for (let i = 0; i + 1 < points.length; i++) {
+    if (kept[i] && kept[i + 1]) paint(points[i] as Point3, points[i + 1] as Point3, radius + margin);
+  }
+  for (const rod of options.around ?? []) paint(rod.from, rod.to, rod.radius + margin);
+  // the background, cell by cell: what is reached from the edge is outside, and what is not is a hole
+  const seen = new Uint8Array(w * h);
+  const fill = (starts: number[], each: (k: number) => void): void => {
+    const stack = starts;
+    while (stack.length > 0) {
+      const k = stack.pop() as number;
+      if (seen[k] || solid[k]) continue;
+      seen[k] = 1;
+      each(k);
+      const x = k % w;
+      if (x > 0) stack.push(k - 1);
+      if (x < w - 1) stack.push(k + 1);
+      if (k >= w) stack.push(k - w);
+      if (k < w * (h - 1)) stack.push(k + w);
+    }
+  };
+  const edge: number[] = [];
+  for (let x = 0; x < w; x++) edge.push(x, (h - 1) * w + x);
+  for (let y = 0; y < h; y++) edge.push(y * w, y * w + w - 1);
+  fill(edge, () => undefined);
+  const holes: Hole[] = [];
+  for (let k = 0; k < w * h; k++) {
+    if (seen[k] || solid[k]) continue;
+    let [count, sx, sy] = [0, 0, 0];
+    fill([k], (at) => {
+      count++;
+      sx += x0 + ((at % w) + 0.5) * cell;
+      sy += y0 + (Math.floor(at / w) + 0.5) * cell;
+    });
+    holes.push({ area: count * cell * cell, x: sx / count, y: sy / count });
+  }
+  return { area: holes.reduce((sum, hole) => sum + hole.area, 0), holes };
+}
 
 /**
  * The shapes an open rope passes through as it is tightened. `points` is its centerline and `s` the
@@ -144,7 +293,28 @@ export function tighten(
   radius: number,
   options: TightenOptions = {},
 ): Tightening {
+  const { spacing, shapes } = drawnTight(points, s, radius, options, 0);
+  return { spacing, shapes };
+}
+
+/**
+ * The shapes a line passes through as it is tightened: a rope, whose bends are eased, which bears on itself
+ * along a stretch, lies as on a table and is drawn into the holes it leaves. Or, `ribbon` being more than
+ * nothing, the middle of two strands of that rope side by side, flat, that far on either side of it: the
+ * strands bear on the strands of the other stretches of the pair, and it is as wide as the two of them.
+ */
+function drawnTight(
+  points: readonly Point3[],
+  s: readonly number[],
+  radius: number,
+  options: TightenOptions,
+  ribbon: number,
+): Tightening & { readonly turns: readonly number[] } {
+  const [fairing, spread, closings] = [FAIRING, SPREAD, CLOSINGS];
+  let lying = LYING;
   const d = 2 * radius;
+  // how wide the line is, across: the rope, or the pair side by side; its bends are measured against it
+  const wide = d + 2 * ribbon;
   const length = s[s.length - 1] ?? 0;
   const n = Math.max(Math.round(length / ((options.spacing ?? 0.25) * d)), 8);
   const h = length / n;
@@ -165,8 +335,46 @@ export function tighten(
   };
 
   // nearer than this along the rope, two particles are neighbours and may be as close as they like
-  const neighbours = Math.round((0.95 * Math.PI * d) / h);
-  const least = SPANS.map((m) => 2 * held * d * Math.sin((m * h) / (held * d)));
+  const neighbours = Math.round((0.95 * Math.PI * wide) / h);
+  const least = SPANS.map((m) => 2 * held * wide * Math.sin((m * h) / (held * wide)));
+  // for a pair, the way from its middle to the strand on its left at each particle, as the line last lay; and
+  // how far the pair is turned in its bends, as a part of the whole: not at all until the knot is tight
+  let sides: readonly Point3[] = [];
+  let dress = 0;
+  const lay = (q: Particle[]): void => {
+    if (ribbon > 0) sides = pairSides(q, d, h, dress);
+  };
+  /**
+   * The way from one particle of the line to another where they are nearest: from the one to the other for a
+   * rope, and for a pair from a strand of the one to the nearest strand of the other.
+   */
+  const between = (q: Particle[], i: number, j: number): Particle => {
+    const delta = sub(q[j] as Particle, q[i] as Particle);
+    // further apart than the pair is wide, no strand of the one comes nearer the other than a diameter
+    if (ribbon === 0 || dotOf(delta, delta) > wide * wide) return delta;
+    const [a, b] = [sides[i] as Point3, sides[j] as Point3];
+    let [best, nearestWay] = [Infinity, delta];
+    for (const u of [-ribbon, ribbon]) {
+      for (const v of [-ribbon, ribbon]) {
+        const way: Particle = [
+          delta[0] + v * b[0] - u * a[0],
+          delta[1] + v * b[1] - u * a[1],
+          delta[2] + v * b[2] - u * a[2],
+        ];
+        const squared = dotOf(way, way);
+        if (squared < best) [best, nearestWay] = [squared, way];
+      }
+    }
+    return nearestWay;
+  };
+  /** Whether two particles of the line, or their strands, are nearer than a distance. */
+  const nearer = (q: Particle[], i: number, j: number, distance: number): boolean => {
+    const [a, b] = [q[i] as Particle, q[j] as Particle];
+    const reach = distance + 2 * ribbon;
+    const squared = (a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2 + (a[2] - b[2]) ** 2;
+    if (squared >= reach * reach) return false;
+    return ribbon === 0 ? squared < distance * distance : size(between(q, i, j)) < distance;
+  };
 
   const at = (coordinate: number): Particle => {
     let i = 0;
@@ -175,6 +383,7 @@ export function tighten(
     return mix(points[i] as Point3, points[i + 1] as Point3, Math.min(Math.max((coordinate - a) / (b - a || 1), 0), 1));
   };
   let p: Particle[] = Array.from({ length: n + 1 }, (_, k) => at(k * h));
+  const initial = p;
 
   // while the ends are drawn, the particles of the two ends are held: from the first to `gripped[0]`,
   // and from `gripped[1]` to the last. Otherwise none is.
@@ -191,7 +400,12 @@ export function tighten(
     const away = i < hold[0] ? hold[0] - i : i > hold[1] ? i - hold[1] : 0;
     return Math.min((away * h) / (HELD_REACH * d), 1);
   };
-  const free = (i: number): boolean => i > gripped[0] && i < gripped[1];
+  // once the knot is as small as it goes as a whole, an eye stays where it is, as round what stands in it;
+  // its two sides near the knot still go with the knot
+  let pinned = false;
+  const near = Math.round((HELD_REACH * d) / h);
+  const still = (i: number): boolean => hold !== null && i >= hold[0] + near && i <= hold[1] - near;
+  const free = (i: number): boolean => i > gripped[0] && i < gripped[1] && !(pinned && still(i));
   // in a doubled rope, each particle and its fellow on the other strand: the one beside it as the knot is
   // tied, for the two strands are not of one length, the one inside each bend being shorter
   const couples: [number, number, number][] = [];
@@ -230,6 +444,33 @@ export function tighten(
     }
   };
 
+  /**
+   * Moves two strands apart along the line between two of their particles until those are at least a
+   * distance apart: each particle moves, and the particles beside it with it, less and less.
+   */
+  const bear = (q: Particle[], i: number, j: number, distance: number): void => {
+    const delta = between(q, i, j);
+    const now = size(delta) || 1e-9;
+    if (now >= distance) return;
+    const [wa, wb] = [free(i) ? 1 : 0, free(j) ? 1 : 0];
+    if (wa + wb === 0) return;
+    const move = (distance - now) / now / (wa + wb);
+    for (const [k, way] of [
+      [i, -wa],
+      [j, wb],
+    ] as const) {
+      if (way === 0) continue;
+      for (let o = -2; o <= 2; o++) {
+        const m = k + o;
+        if (m < 0 || m > n || !free(m)) continue;
+        const share = o === 0 ? 1 : Math.abs(o) === 1 ? spread : spread * spread;
+        if (share === 0) continue;
+        const point = q[m] as Particle;
+        for (let c = 0; c < 3; c++) point[c] = (point[c] as number) + way * (delta[c] as number) * move * share;
+      }
+    }
+  };
+
   /** Moves two particles along the line between them until they are no further apart than a distance. */
   const together = (q: Particle[], i: number, j: number, distance: number): void => {
     const [a, b] = [q[i] as Particle, q[j] as Particle];
@@ -247,6 +488,8 @@ export function tighten(
 
   /** Moves the particles towards keeping the rules of a rope. */
   const relax = (q: Particle[], sweeps: number): void => {
+    // the knot, which lies as on a table; its two ends are drawn straight
+    const [lies, lain] = rods.length === 0 && lying > 0 ? knot(q) : [1, 0];
     // the strands of a doubled rope slide along each other as the knot closes, the outer one round each bend
     // being longer: each particle's fellow is found again, near the one it had
     for (const couple of couples) {
@@ -260,7 +503,7 @@ export function tighten(
       couple[1] = nearestTo;
     }
     const pairs: [number, number][] = [];
-    const reach = (d + 0.2) ** 2;
+    const reach = (wide + 0.2) ** 2;
     for (let i = 0; i <= n; i++) {
       const a = q[i] as Particle;
       for (let j = i + neighbours; j <= n; j++) {
@@ -269,6 +512,7 @@ export function tighten(
       }
     }
     for (let k = 0; k < sweeps; k++) {
+      lay(q);
       // it is a little stiff: each particle is drawn towards the middle of its neighbours
       for (let i = 1; i < n; i++) {
         if (!free(i)) continue;
@@ -279,6 +523,30 @@ export function tighten(
             stiffness * (((before[c] as number) + (after[c] as number)) / 2 - (here[c] as number));
         }
       }
+      // its bending changes gently along it: a kink between gentler bends is eased out
+      const was = q.map((point): Particle => [...point]);
+      for (let i = 2; i <= n - 2 && fairing > 0; i++) {
+        if (!free(i)) continue;
+        const here = q[i] as Particle;
+        for (let c = 0; c < 3; c++) {
+          const fourth =
+            (was[i - 2]![c] as number) -
+            4 * (was[i - 1]![c] as number) +
+            6 * (was[i]![c] as number) -
+            4 * (was[i + 1]![c] as number) +
+            (was[i + 2]![c] as number);
+          here[c] = (here[c] as number) - (fairing * fourth) / 16;
+        }
+      }
+      // it lies as on a table, pressed gently towards one depth; round a thing, the thing holds it instead
+      if (lies <= lain) {
+        let depth = 0;
+        for (let i = lies; i <= lain; i++) depth += q[i]![2] as number;
+        depth /= lain - lies + 1;
+        for (let i = lies; i <= lain; i++) {
+          if (free(i)) q[i]![2] = (q[i]![2] as number) + (depth - (q[i]![2] as number)) * lying;
+        }
+      }
       // it does not stretch
       if (k % 2 === 0) for (let i = 0; i < n; i++) apart(q, i, i + 1, h, true);
       else for (let i = n - 1; i >= 0; i--) apart(q, i, i + 1, h, true);
@@ -287,7 +555,7 @@ export function tighten(
         for (let i = m; i + m <= n; i++) apart(q, i - m, i + m, least[which] as number, false);
       });
       // and, last of all, it does not pass through itself, nor into what it is tied round
-      for (let again = 0; again < 3; again++) for (const [i, j] of pairs) apart(q, i, j, (nearest + SPARE) * d, false);
+      for (let again = 0; again < 3; again++) for (const [i, j] of pairs) bear(q, i, j, (nearest + SPARE) * d);
       // the two strands of a doubled rope lie together, side by side
       for (const [i, j, most] of couples) {
         together(q, i, j, most);
@@ -314,6 +582,7 @@ export function tighten(
 
   /** The stretch of rope that is the knot: from the first particle that touches another, or a thing, to the last. */
   const knot = (q: Particle[]): [first: number, last: number] => {
+    lay(q);
     let [first, last] = [n, 0];
     for (let i = 0; i <= n; i++) {
       if (
@@ -326,7 +595,7 @@ export function tighten(
       for (let j = i + neighbours; j <= n; j++) {
         // the other strand of a doubled rope, lying beside it, is not a knot
         if (fellow >= 0 && Math.abs(j - fellow) < neighbours) continue;
-        if (size(sub(q[i] as Particle, q[j] as Particle)) < 1.08 * d) {
+        if (nearer(q, i, j, 1.08 * d)) {
           first = Math.min(first, i);
           last = Math.max(last, j);
         }
@@ -359,11 +628,56 @@ export function tighten(
     });
   };
 
+  /**
+   * The two ends of a rope drawn tight are straight: the stretch of each that runs nearly straight from where
+   * it ends, short of the knot, is laid on the line from there to its end, at the distances along it that its
+   * particles keep. Only once the knot is as small as it goes as a whole: before, the rope a loop is made of
+   * may still run nearly straight.
+   */
+  const straightened = (q: Particle[]): Particle[] => {
+    const [first, last] = knot(q);
+    const clear = Math.round((CLEAR * wide) / h);
+    const out = q.map((point): Particle => [...point]);
+    for (const [end, limit, step] of [
+      [0, first - clear, 1],
+      [n, last + clear, -1],
+    ] as const) {
+      const tip = q[end] as Particle;
+      // how far from its end the rope stays near the line from its end
+      let run = end;
+      for (let k = end + 2 * step; step > 0 ? k <= limit : k >= limit; k += 2 * step) {
+        const line = sub(q[k] as Particle, tip);
+        const long = size(line) || 1;
+        let near = true;
+        for (let i = end + step; i !== k && near; i += step) {
+          const v = sub(q[i] as Particle, tip);
+          const off = size([
+            v[1] * line[2] - v[2] * line[1],
+            v[2] * line[0] - v[0] * line[2],
+            v[0] * line[1] - v[1] * line[0],
+          ]);
+          near = off / long <= NEARLY * d;
+        }
+        if (!near) break;
+        run = k;
+      }
+      if (Math.abs(run - end) < 3) continue;
+      const base = q[run] as Particle;
+      const way = from(tip, base);
+      for (let i = run - step; step > 0 ? i >= end : i <= end; i -= step) {
+        const along = Math.abs(i - run) * h;
+        out[i] = [base[0] + way[0] * along, base[1] + way[1] * along, base[2] + way[2] * along];
+      }
+    }
+    return out;
+  };
+
   /** Whether a shape keeps the rules: measured on the curve drawn through its particles, as a frame is checked. */
   const sound = (q: Particle[]): boolean => {
+    lay(q);
     for (let i = 0; i <= n; i++) {
       for (let j = i + neighbours; j <= n; j++) {
-        if (size(sub(q[i] as Particle, q[j] as Particle)) < nearest * d) return false;
+        if (nearer(q, i, j, nearest * d)) return false;
       }
       for (const rod of rods)
         if (size(sub(q[i] as Particle, onAxis(q[i] as Particle, rod))) < off(rod) - 1e-6) return false;
@@ -373,12 +687,13 @@ export function tighten(
       false,
     ).points;
     for (let i = 1; i < fine.length - 1; i++) {
-      if (bend(fine[i - 1] as Point3, fine[i] as Point3, fine[i + 1] as Point3) < sharpest * d) return false;
+      if (bend(fine[i - 1] as Point3, fine[i] as Point3, fine[i + 1] as Point3) < sharpest * wide) return false;
     }
     return true;
   };
 
   const taken: Particle[][] = [];
+  const turns: number[] = [];
   const inKnot: number[] = [];
   // a knot tied round a thing is not made smaller as a whole: its ends alone draw it tight
   let shrink = rods.length > 0 ? 0 : SHRINK;
@@ -421,15 +736,17 @@ export function tighten(
     }
     p = q;
     taken.push(p);
+    turns.push(dress);
     inKnot.push((last - first) * h);
     // the knot gives up no more rope
     if (inKnot.length > 80 && (inKnot[inKnot.length - 81] as number) - (inKnot[inKnot.length - 1] as number) < 0.02 * d)
       break;
   }
 
+  pinned = true;
   // Then the two ends are drawn apart, a little at a time, with the knot between them free to follow: the
   // loops that making it smaller as a whole left open are closed, until the knot gives no more rope.
-  const beside = Math.round((1.5 * d) / h);
+  const beside = Math.round((1.5 * wide) / h);
   let pull = PULL * d;
   let drawn = 0;
   const most = options.draw ?? DRAWS;
@@ -450,7 +767,7 @@ export function tighten(
     let kept: boolean;
     do {
       relax(q, 6);
-      q = spaced(q, middle);
+      q = straightened(spaced(q, middle));
       kept = sound(q);
     } while (!kept && ++tries < 6);
     if (!kept) {
@@ -459,32 +776,272 @@ export function tighten(
     }
     p = q;
     taken.push(p);
+    turns.push(dress);
     drawn++;
   }
 
-  const keep = Math.min(options.keep ?? 6, Math.max(taken.length - 1, 0));
-  const shapes: Particle[][] = [];
-  for (let k = 1; k <= keep; k++) shapes.push(taken[Math.round((k * taken.length) / (keep + 1)) - 1] as Particle[]);
-  if (taken.length > 0) shapes.push(taken[taken.length - 1] as Particle[]);
-  return { spacing: h, shapes };
+  // Last, while the knot leaves a hole seen from the front, the rope round each hole is drawn into it: a
+  // knot pulled hard shows none.
+  const leaveOut = hold ? ([hold[0] * h, hold[1] * h] as const) : undefined;
+  // a strand drawn into a hole may have to ride over another: the knot is no longer pressed flat
+  lying = 0;
+  const closeHoles = (): void => {
+    let pace = CLOSE * d;
+    let [smallest, since] = [Infinity, 0];
+    for (let closed = 0; closed < closings && pace > LEAST_CLOSE * d && since < NO_CLOSER;) {
+      // seen on the curve drawn through the particles, as the frame is drawn
+      const seen =
+        ribbon > 0
+          ? holesOfPair(p, h, d, ribbon, dress)
+          : holesSeen(...drawnOf(p, h), radius, { ...(leaveOut ? { leaveOut } : {}), around: rods });
+      if (seen.area < NO_HOLE * d * d) break;
+      // the rope may be too thick, or the knot too locked, to close them: then it is left as it is
+      [smallest, since] = seen.area < smallest - NO_HOLE * d * d ? [seen.area, 0] : [smallest, since + 1];
+      const [first, last] = knot(p);
+      const middle = Math.round((first + last) / 2);
+      let q = p.map((point): Particle => [...point]);
+      for (const hole of seen.holes) {
+        const reach = Math.sqrt(hole.area / Math.PI) + radius + ribbon + BORDER * d;
+        // only the rope round it moves, and not an eye: it would be drawn shut
+        for (let i = 1; i < n; i++) {
+          if (still(i)) continue;
+          const [x, y] = [hole.x - (p[i]![0] as number), hole.y - (p[i]![1] as number)];
+          const away = Math.hypot(x, y);
+          if (away > reach || away < 1e-9) continue;
+          q[i]![0] = (q[i]![0] as number) + (x / away) * pace;
+          q[i]![1] = (q[i]![1] as number) + (y / away) * pace;
+        }
+      }
+      // the rope drawn into a hole presses on what is round it, which takes longer to settle
+      let tries = 0;
+      let kept: boolean;
+      do {
+        relax(q, 30);
+        q = straightened(spaced(q, middle));
+        kept = sound(q);
+      } while (!kept && ++tries < 8);
+      if (!kept) {
+        pace /= 2;
+        continue;
+      }
+      p = q;
+      taken.push(p);
+      turns.push(dress);
+      closed++;
+    }
+  };
+  closeHoles();
+
+  // A pair, last, is dressed: in each of its bends its outer strand is turned back behind the inner, a little
+  // at a time, the knot settling round it; and the holes that leaves are closed again
+  if (ribbon > 0) {
+    for (let step = 1; step <= DRESSINGS; step++) {
+      const was = dress;
+      dress = step / DRESSINGS;
+      const [first, last] = knot(p);
+      const middle = Math.round((first + last) / 2);
+      let q = p.map((point): Particle => [...point]);
+      let tries = 0;
+      let kept: boolean;
+      do {
+        relax(q, 30);
+        q = straightened(spaced(q, middle));
+        kept = sound(q);
+      } while (!kept && ++tries < 8);
+      if (!kept) {
+        dress = was;
+        break;
+      }
+      p = q;
+      taken.push(p);
+      turns.push(dress);
+    }
+    closeHoles();
+  }
+
+  // the shapes kept are told apart by how far the rope moves, the strands of a pair as they are turned
+  const seen = (q: readonly Point3[], turn: number): readonly Point3[] =>
+    ribbon > 0 ? strandsOf(q, h, d, ribbon, turn).flat() : q;
+  const kept = evenlyKept(
+    seen(initial, 0),
+    taken.map((shape, k) => seen(shape, turns[k] as number)),
+    options.keep ?? 11,
+    d,
+  );
+  return {
+    spacing: h,
+    shapes: kept.map((k) => taken[k] as Particle[]),
+    turns: kept.map((k) => turns[k] as number),
+  };
 }
 
 /**
- * How a doubled rope is dressed when drawn tight: in a bend as sharp as this or sharper (a curvature, per
- * diameter), each pair is turned this far, in radians, its outer strand back behind the inner; the bend is
- * measured over so many particles either side.
+ * Of the shapes a knot passes through, so many on the way and the last, as far apart as each other in how
+ * much the knot changes, so that played one after another at an even pace the knot is drawn tight in one
+ * even pull: how far each point moves across the rope, for sliding along it changes nothing that is seen.
+ * And more where stretches of the rope go round each other.
  */
-const DRESS_BEND = 0.4;
-const DRESS_TURN = 1.5;
-const DRESS_SPAN = 6;
+function evenlyKept(
+  initial: readonly Point3[],
+  taken: readonly (readonly Point3[])[],
+  most: number,
+  d: number,
+): number[] {
+  // how far the points of a shape have moved across the rope since another, in all
+  const across = (shape: readonly Point3[], was: readonly Point3[]): number => {
+    const n = shape.length - 1;
+    let all = 0;
+    for (let i = 0; i <= n; i++) {
+      const tangent = from(shape[Math.min(i + 1, n)] as Point3, shape[Math.max(i - 1, 0)] as Point3);
+      const moved = sub(shape[i] as Point3, was[i] as Point3);
+      const along = dotOf(moved, tangent);
+      const off = size([moved[0] - tangent[0] * along, moved[1] - tangent[1] * along, moved[2] - tangent[2] * along]);
+      all += off;
+    }
+    return all;
+  };
+  const changed = [0];
+  let was = initial;
+  for (const shape of taken) {
+    changed.push((changed.at(-1) as number) + across(shape, was));
+    was = shape;
+  }
+  if (taken.length === 0) return [];
+  const total = changed.at(-1) as number;
+  const keep = Math.min(most, Math.max(taken.length - 1, 0));
+  // the shapes kept, by their place among those taken, the last always
+  const kept: number[] = [];
+  let next = 1;
+  for (let k = 1; k <= keep; k++) {
+    while (next < taken.length && (changed[next] as number) < (total * k) / (keep + 1)) next++;
+    if (next - 1 !== kept.at(-1)) kept.push(next - 1);
+  }
+  if (kept.at(-1) !== taken.length - 1) kept.push(taken.length - 1);
+  // where going straight from one shape kept to the next would carry the rope through itself, as when one
+  // stretch goes round another, the shape halfway between is kept too, until none would, or there is none
+  // left between
+  const throughItself = (was: readonly Point3[], now: readonly Point3[]): boolean => {
+    const n = now.length;
+    const step = size(sub(now[1] as Point3, now[0] as Point3)) || d;
+    const neighbours = Math.ceil((Math.PI * d) / step);
+    const least = (THROUGH * d) ** 2;
+    for (const t of [0.25, 0.5, 0.75]) {
+      const between = now.map((point, i) => mix(was[i] as Point3, point, t));
+      for (let i = 0; i < n; i += 2) {
+        for (let j = i + neighbours; j < n; j += 2) {
+          const way = sub(between[j] as Point3, between[i] as Point3);
+          if (dotOf(way, way) < least) return true;
+        }
+      }
+    }
+    return false;
+  };
+  for (let k = 0; k < kept.length && kept.length < MOST_KEPT; k++) {
+    const before = k === 0 ? -1 : (kept[k - 1] as number);
+    const here = kept[k] as number;
+    if (here - before < 2) continue;
+    if (!throughItself(before < 0 ? initial : (taken[before] as readonly Point3[]), taken[here] as readonly Point3[]))
+      continue;
+    const halfway = ((changed[before + 1] as number) + (changed[here + 1] as number)) / 2;
+    let middle = before + 1;
+    while (middle < here - 1 && (changed[middle + 1] as number) < halfway) middle++;
+    kept.splice(k, 0, middle);
+    k--;
+  }
+  return kept;
+}
+
+/**
+ * How a doubled rope is dressed: where the pair bends, it is turned about its middle, its outer strand back
+ * behind the inner, as the lobes of a dressed figure-eight loop are. The bend is measured, and the turn eased
+ * along the rope, over `DRESS_REACH` diameters either side: so measured, the pair is not turned where it bends
+ * round a circle of `DRESS_LOOSE` diameters or wider, and is turned `DRESS_TURN` radians where it bends round
+ * one of `DRESS_TIGHT` or less.
+ */
+const DRESS_LOOSE = 4;
+const DRESS_TIGHT = 2.2;
+const DRESS_TURN = 1.4;
+const DRESS_REACH = 2.9;
+/** In how many steps a pair is dressed, once the knot is tight. */
+const DRESSINGS = 8;
+
+/**
+ * The way from the middle of a pair to the strand on its left, at each particle of its middle line: square to
+ * the line, and where the pair bends, turned so that the strand outside the bend lies behind the one inside.
+ */
+function pairSides(line: readonly Point3[], d: number, h: number, turn: number): Point3[] {
+  const n = line.length - 1;
+  const span = Math.max(Math.round((DRESS_REACH * d) / h), 1);
+  const lefts = line.map((_, i): Particle => {
+    const [a, b] = [line[Math.max(i - 1, 0)] as Point3, line[Math.min(i + 1, n)] as Point3];
+    const [x, y] = [b[0] - a[0], b[1] - a[1]];
+    const l = Math.hypot(x, y) || 1;
+    return [-y / l, x / l, 0];
+  });
+  let turned = line.map((c, i) => {
+    const [lo, hi] = [Math.max(i - span, 0), Math.min(i + span, n)];
+    const [a, b] = [line[lo] as Point3, line[hi] as Point3];
+    const left = lefts[i] as Particle;
+    // how sharply it bends towards its left: one over the radius of the circle through the three points
+    const reach = ((hi - lo) / 2) * h;
+    const towards =
+      (2 * (left[0] * (a[0] + b[0] - 2 * c[0]) + left[1] * (a[1] + b[1] - 2 * c[1]))) / (reach * reach || 1);
+    const amount = (Math.abs(towards) * d - 1 / DRESS_LOOSE) / (1 / DRESS_TIGHT - 1 / DRESS_LOOSE);
+    return Math.sign(towards) * DRESS_TURN * turn * Math.min(Math.max(amount, 0), 1);
+  });
+  // eased along the rope, four times over
+  for (let pass = 0; pass < 4; pass++) {
+    const sums = [0];
+    for (const angle of turned) sums.push((sums.at(-1) as number) + angle);
+    turned = turned.map((_, i) => {
+      const [lo, hi] = [Math.max(i - span, 0), Math.min(i + span, n)];
+      return ((sums[hi + 1] as number) - (sums[lo] as number)) / (hi - lo + 1);
+    });
+  }
+  return lefts.map((left, i) => {
+    const angle = turned[i] as number;
+    return [Math.cos(angle) * left[0], Math.cos(angle) * left[1], Math.sin(angle)];
+  });
+}
+
+/** The curve drawn through the particles of a shape, as a frame is drawn: its points, and how far along it each is. */
+function drawnOf(q: readonly Point3[], h: number): [readonly Point3[], readonly number[]] {
+  const drawn = sampleCurve({ type: 'catmull-rom', points: q.map((point, k) => [...point, k * h] as const) }, false);
+  return [drawn.points, drawn.s];
+}
+
+/** The two strands of a pair, `ribbon` either side of its middle line through the particles, turned by `turn`. */
+function strandsOf(q: readonly Point3[], h: number, d: number, ribbon: number, turn: number): [Particle[], Particle[]] {
+  const sides = pairSides(q, d, h, turn);
+  const strand = (way: number): Particle[] =>
+    q.map((c, i) => {
+      const side = sides[i] as Point3;
+      return [c[0] + way * ribbon * side[0], c[1] + way * ribbon * side[1], c[2] + way * ribbon * side[2]];
+    });
+  return [strand(1), strand(-1)];
+}
+
+/**
+ * The holes a pair of strands leaves seen from the front: its two strands are looked at as one rope that goes
+ * along the one, across, and back along the other.
+ */
+function holesOfPair(
+  q: readonly Point3[],
+  h: number,
+  d: number,
+  ribbon: number,
+  turn: number,
+): ReturnType<typeof holesSeen> {
+  const [one, other] = strandsOf(q, h, d, ribbon, turn);
+  const [[a, as], [b, bs]] = [drawnOf(one, h), drawnOf(other, h)];
+  const [far, back] = [(as.at(-1) as number) + d, bs.at(-1) as number];
+  return holesSeen([...a, ...[...b].reverse()], [...as, ...[...bs].reverse().map((v) => far + back - v)], d / 2);
+}
+
+/** How far either side of a stretch of rope the way it goes is measured, in particles. */
+const SPAN = 6;
 /** How many particles of the eye, at either end, are left for the rope to come round from the pair. */
 const EYE_EASE = 7;
-/**
- * The tightest the middle line of a pair is bent, in its own diameters; and how wide it is taken to be, as a
- * part of the width of the pair side by side: a pair turned in a bend takes a little less.
- */
-const PAIR_SHARPEST = 0.52;
-const PAIR_WIDTH = 0.9;
 
 /** A polyline at its distances along it, from `from` to `to`, as so many points at equal steps. */
 function evenly(line: readonly Point3[], from: number, to: number, count: number): Particle[] {
@@ -506,11 +1063,10 @@ function evenly(line: readonly Point3[], from: number, to: number, count: number
 
 /**
  * The shapes a knot tied in a bight passes through as it is drawn tight, dressed. The middle line of its two
- * strands is drawn tight as one rope, as wide as the pair and as thick, and the pair is laid along it again:
- * side by side where it runs straight, and in each bend turned so that its outer strand lies a little behind
- * the inner, as the lobes of a dressed figure-eight loop do, by `turn` of the whole. The eye where the rope
- * turns back goes with the knot as it is; what the knot gives up runs out into the two strands of its legs.
- * Nothing, for a rope whose strands do not lie together from its ends to the eye.
+ * strands is drawn tight as a pair of strands side by side, and the pair is laid along it again, side by side
+ * where it runs straight and in each bend turned, its outer strand behind the inner, as it was drawn tight.
+ * The eye where the rope turns back goes with the knot as it is; what the knot gives up runs out into the two
+ * strands of its legs. Nothing, for a rope whose strands do not lie together from its ends to the eye.
  */
 function tightenInBight(
   points: readonly Point3[],
@@ -518,7 +1074,6 @@ function tightenInBight(
   radius: number,
   held: readonly [number, number],
   options: TightenOptions,
-  turn: number,
 ): Tightening | null {
   const d = 2 * radius;
   const length = s[s.length - 1] ?? 0;
@@ -542,8 +1097,11 @@ function tightenInBight(
   const m = fellows.length;
   if (m < 8) return null;
   const last = fellows[m - 1] as number;
-  const half = fellows.reduce((sum, j, i) => sum + size(sub(p[j] as Particle, p[i] as Particle)), 0) / (2 * m);
-  // the middle line of the pair, drawn tight as one round rope as wide as the pair
+  // drawn tight, the two strands lie against each other
+  const half = Math.min(
+    fellows.reduce((sum, j, i) => sum + size(sub(p[j] as Particle, p[i] as Particle)), 0) / (2 * m),
+    radius,
+  );
   const middle = fellows.map((j, i) => mix(p[i] as Particle, p[j] as Particle, 0.5));
   const along = [0];
   for (let i = 1; i < middle.length; i++)
@@ -552,17 +1110,13 @@ function tightenInBight(
   const plain: TightenOptions = {
     ...(options.spacing !== undefined ? { spacing: options.spacing } : {}),
     ...(options.stiffness !== undefined ? { stiffness: options.stiffness } : {}),
-    ...(options.keep !== undefined ? { keep: options.keep } : {}),
-    ...(options.sharpest !== undefined ? { sharpest: options.sharpest } : {}),
+    ...(options.nearest !== undefined ? { nearest: options.nearest } : {}),
     ...(options.draw !== undefined ? { draw: options.draw } : {}),
   };
-  // as wide as two strands side by side, from the middle of the pair; and they are not pressed into each other
-  // and bent less tightly than a rope may be, for the strand inside each bend of it bends more tightly still
-  const core = tighten(middle, along, (half + radius) * PAIR_WIDTH, {
-    ...plain,
-    nearest: 1,
-    sharpest: Math.max(plain.sharpest ?? SHARPEST, PAIR_SHARPEST),
-  });
+  // as a flat pair of strands side by side: each strand bears on the strands of the rest of the knot, and the
+  // strand inside a bend of the pair may bend as tightly as the rope may
+  const sharpest = ((options.sharpest ?? SHARPEST) * d + half) / (d + 2 * half);
+  const core = drawnTight(middle, along, radius, { ...plain, keep: 24, sharpest }, half);
   if (core.shapes.length === 0) return null;
   // which side of the middle line the first strand lies on, going from the ends to the eye
   const leftOf = (line: readonly Point3[], k: number): Particle => {
@@ -570,8 +1124,7 @@ function tightenInBight(
     const l = Math.hypot(t[0], t[1]) || 1;
     return [-t[1] / l, t[0] / l, 0];
   };
-  const firstLeft = leftOf(middle, 0);
-  const side = Math.sign(dotOf(sub(p[0] as Particle, middle[0] as Particle), firstLeft)) || 1;
+  const side = Math.sign(dotOf(sub(p[0] as Particle, middle[0] as Particle), leftOf(middle, 0))) || 1;
   // the last particle of the middle line that is in the knot, touching another part of it
   const knotEnd = (line: readonly Point3[]): number => {
     const near = Math.round((Math.PI * (half + radius)) / (core.spacing || 1));
@@ -588,60 +1141,25 @@ function tightenInBight(
   const toEye = Math.max(tied.length - knotEnd(tied), Math.round((4 * (half + radius)) / (core.spacing || 1)));
   const eye = p.slice(m - 1, last + 1);
   // the way the pair leaves the knot for the eye, as tied
-  const outOfEye = level(from(middle[m - 1] as Point3, middle[Math.max(m - 1 - DRESS_SPAN, 0)] as Point3));
+  const outOfEye = level(from(middle[m - 1] as Point3, middle[Math.max(m - 1 - SPAN, 0)] as Point3));
   const mouth = mix(p[m - 1] as Particle, p[last] as Particle, 0.5);
-  const shapes = core.shapes.map((shape, k) => {
-    const amount = (turn * (k + 1)) / core.shapes.length;
+  const shapes = core.shapes.map((whole, k) => {
     // the pair runs on from the knot to the eye as far as it did as tied: what the knot gives up runs out into
     // the legs, and the eye stays where it is against the knot
-    const whole = shape;
     const line = whole.slice(0, Math.min(knotEnd(whole) + toEye, whole.length));
-    // how far each pair is turned, and which way: in a bend, its outer strand back, behind the inner; and along
-    // the rope, gradually. The middle line is drawn tight as a round rope as wide as the pair, so that the pair,
-    // turned any way about it, keeps clear of the others
-    const turned = line.map((c, i) => {
-      const left = leftOf(line, i);
-      const [lo, hi] = [
-        line[Math.max(i - DRESS_SPAN, 0)] as Point3,
-        line[Math.min(i + DRESS_SPAN, line.length - 1)] as Point3,
-      ];
-      const bend: Particle = [lo[0] + hi[0] - 2 * c[0], lo[1] + hi[1] - 2 * c[1], 0];
-      const span = (Math.min(i + DRESS_SPAN, line.length - 1) - Math.max(i - DRESS_SPAN, 0)) / 2;
-      const step = size(sub(hi, lo)) / (2 * span || 1);
-      // how sharply the pair bends towards the side of its first strand: the inner strand comes forward, and
-      // through a turn from one way to the other, gradually, for the bend passes through nothing
-      const towards = (2 * side * dotOf(left, bend)) / ((span * step) ** 2 || 1);
-      return DRESS_TURN * Math.min(Math.max(towards / (DRESS_BEND / d), -1), 1) * amount;
-    });
-    for (let pass = 0; pass < 4; pass++) {
-      const was = [...turned];
-      for (let i = 0; i < turned.length; i++) {
-        let [sum, count] = [0, 0];
-        for (let j = Math.max(i - DRESS_SPAN, 0); j <= Math.min(i + DRESS_SPAN, turned.length - 1); j++) {
-          sum += was[j] as number;
-          count++;
-        }
-        turned[i] = sum / count;
-      }
-    }
+    // side by side, and in each bend turned, its outer strand behind the inner, as it was drawn tight
+    const sides = pairSides(whole, d, core.spacing, core.turns[k] as number);
     const [first, second]: [Particle[], Particle[]] = [[], []];
     line.forEach((c, i) => {
-      const left = leftOf(line, i);
-      const angle = turned[i] as number;
-      const offset: Particle = [
-        side * half * Math.cos(angle) * left[0],
-        side * half * Math.cos(angle) * left[1],
-        half * Math.sin(angle),
-      ];
-      first.push([c[0] + offset[0], c[1] + offset[1], c[2] + offset[2]]);
-      second.push([c[0] - offset[0], c[1] - offset[1], c[2] - offset[2]]);
+      const way = sides[i] as Point3;
+      const [x, y, z] = [side * half * way[0], side * half * way[1], side * half * way[2]];
+      first.push([c[0] + x, c[1] + y, c[2] + z]);
+      second.push([c[0] - x, c[1] - y, c[2] - z]);
     });
     // the eye goes with the knot, as the middle of its mouth goes, and turned to lie on along the pair as it
     // leaves the knot; leaving a little of it on either side free, for the rope to come round smoothly
     const end = mix(first[first.length - 1] as Particle, second[second.length - 1] as Particle, 0.5);
-    const leaving = level(
-      from(line[line.length - 1] as Point3, line[Math.max(line.length - 1 - DRESS_SPAN, 0)] as Point3),
-    );
+    const leaving = level(from(line[line.length - 1] as Point3, line[Math.max(line.length - 1 - SPAN, 0)] as Point3));
     const turnEye = rotation(outOfEye, leaving);
     const moved = eye.slice(EYE_EASE, -EYE_EASE).map((point): Particle => {
       const [x, y, z] = turnEye(sub(point, mouth));
@@ -662,7 +1180,7 @@ function tightenInBight(
     const trim = Math.max(-spare, 0);
     return evenly(longer, trim, total + 2 * reach - trim, n);
   });
-  return { spacing: h, shapes };
+  return { spacing: h, shapes: evenlyKept(p, shapes, options.keep ?? 11, d).map((k) => shapes[k] as Particle[]) };
 }
 
 const dotOf = (a: Point3, b: Point3): number => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
@@ -752,17 +1270,12 @@ export function tighteningFrames(document: KnotDocument, start: Frame, options: 
   });
   // a knot tied in a bight is drawn tight dressed, as far as every frame on the way keeps the rules
   let dressed: Tightening | null = null;
-  if (options.paired && held) {
-    for (const turn of [1, 0.75, 0.5, 0.25, 0]) {
-      const made = tightenInBight(curve.points, curve.s, rope.radius ?? 0.5, held, options, turn);
-      if (!made) break;
-      const frames = made.shapes.map((shape, k) => frameOf(shape, made.spacing, `tightening-${k + 1}`));
-      const all = { ...document, geometry: { frames: [start, ...frames] } };
-      if (frames.every((frame) => checkFrame(all, frame).every((issue) => issue.level !== 'error'))) {
-        dressed = made;
-        break;
-      }
-    }
+  const inBight =
+    options.paired && held ? tightenInBight(curve.points, curve.s, rope.radius ?? 0.5, held, options) : null;
+  if (inBight) {
+    const frames = inBight.shapes.map((shape, k) => frameOf(shape, inBight.spacing, `tightening-${k + 1}`));
+    const all = { ...document, geometry: { frames: [start, ...frames] } };
+    if (frames.every((frame) => checkFrame(all, frame).every((issue) => issue.level !== 'error'))) dressed = inBight;
   }
   const { spacing, shapes } =
     dressed ??
