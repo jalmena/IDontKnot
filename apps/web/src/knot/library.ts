@@ -17,6 +17,8 @@ import larksHeadEntry from '../../../../content/knots/larks-head/entry.json';
 import larksHead from '../../../../content/knots/larks-head/knot.json';
 import overhandEntry from '../../../../content/knots/overhand/entry.json';
 import overhand from '../../../../content/knots/overhand/knot.json';
+import singleColumnTieEntry from '../../../../content/knots/single-column-tie/entry.json';
+import singleColumnTie from '../../../../content/knots/single-column-tie/knot.json';
 import timberHitchEntry from '../../../../content/knots/timber-hitch/entry.json';
 import timberHitch from '../../../../content/knots/timber-hitch/knot.json';
 
@@ -70,6 +72,7 @@ export const KNOTS: Readonly<Record<string, LibraryKnot>> = {
   'figure-eight-loop': { document: figureEightLoop as unknown as KnotDocument, entry: figureEightLoopEntry },
   'larks-head': { document: larksHead as unknown as KnotDocument, entry: larksHeadEntry },
   overhand: { document: overhand as unknown as KnotDocument, entry: overhandEntry },
+  'single-column-tie': { document: singleColumnTie as unknown as KnotDocument, entry: singleColumnTieEntry },
   'timber-hitch': { document: timberHitch as unknown as KnotDocument, entry: timberHitchEntry },
 };
 

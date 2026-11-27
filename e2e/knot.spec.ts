@@ -489,3 +489,20 @@ test('shows the timber hitch round its post in Pioneering when asked, and draws 
   await page.getByRole('button', { name: 'Show the post' }).click();
   await expect(canvas).toHaveAttribute('data-objects', 'post');
 });
+
+test('shows the single column tie round its column in Shibari, tied with the bight', async ({ page }) => {
+  // the longest rope of the library: its surface takes longest to compute, the more so with every test running
+  test.slow();
+  await page.addInitScript(() => localStorage.setItem('idk.discipline', 'shibari'));
+  await page.goto('/knots/single-column-tie');
+  await expect(page.getByTestId('panel')).toHaveAttribute('data-checked', 'ok');
+  // led by the bight: it is the bight that is named, and how far it has come
+  const progress = page.getByRole('slider', { name: 'How far the bight has come' });
+  await expect(progress).toBeVisible();
+  await page.getByRole('button', { name: 'Play' }).click();
+  await expect(page.getByTestId('rope-canvas')).toBeVisible();
+  await page.getByRole('tab', { name: 'Use' }).click();
+  await expect(page.getByTestId('category')).toHaveText('Tie');
+  await page.getByRole('button', { name: 'Show the post' }).click();
+  await expect(page.getByTestId('rope-canvas')).toHaveAttribute('data-objects', 'post');
+});
