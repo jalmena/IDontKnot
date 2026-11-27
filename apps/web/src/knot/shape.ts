@@ -29,7 +29,7 @@ export function ropesOf(document: KnotDocument, curves: readonly FrameCurve[], m
 
 /**
  * What the ropes of a document are tied round, as it stands in a frame: each straight rigid component as a
- * post along its axis, measured in diameters of the rope.
+ * post along its axis, as thick as it is, measured in diameters of the rope.
  */
 export function thingsOf(document: KnotDocument, curves: readonly FrameCurve[]): SceneObject[] {
   const rope = document.components.find((component) => component.kind === 'rope');
@@ -47,6 +47,9 @@ export function thingsOf(document: KnotDocument, curves: readonly FrameCurve[]):
         axis: [axis[0] / long, axis[1] / long, axis[2] / long],
         scale,
         length: long / scale,
+        // as thick as the knot was laid round
+        radius:
+          (document.components.find((component) => component.id === curve.id)?.radius ?? POST_RADIUS * scale) / scale,
       },
     ];
   });
@@ -100,7 +103,7 @@ export function withThings(fit: Fit, things: readonly SceneObject[]): Fit {
           ? // a ring is seen as far across as its plane is turned towards the eye
             [ring * Math.sqrt(1 - ax * ax), ring * Math.sqrt(1 - ay * ay)]
           : // a post stands on past the top and the bottom of the view: only its width is framed
-            [POST_RADIUS + 0.3, 0];
+            [(thing.radius ?? POST_RADIUS) + 0.3, 0];
     minX = Math.min(minX, thing.at[0] - (half[0] as number) * thing.scale);
     maxX = Math.max(maxX, thing.at[0] + (half[0] as number) * thing.scale);
     minY = Math.min(minY, thing.at[1] - (half[1] as number) * thing.scale);
