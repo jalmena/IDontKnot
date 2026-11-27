@@ -60,8 +60,9 @@ describe('the knots of the library', () => {
         });
       }
     },
-    // a knot tied in a bight is drawn tight as a flat pair, which takes the longest
-    120_000,
+    // a knot tied in a bight is drawn tight as a flat pair, which takes long; a tie round a column, its ends
+    // drawn a thousand times, the longest
+    180_000,
   );
 });
 
