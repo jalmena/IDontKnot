@@ -54,28 +54,24 @@
       },
       "steps": {
         "round-pole": {
-          "en": "Lead the end round behind the pole and across its front.",
-          "es": "Pasa el chicote por detrás del palo y crúzalo por delante."
-        },
-        "under-standing-part": {
-          "en": "Take it on round the pole's left side, and down behind the standing part.",
-          "es": "Sigue rodeando el palo por la izquierda y pásalo por detrás del firme."
+          "en": "Lead the end round the pole, and under the standing part beside it.",
+          "es": "Rodea el palo con el chicote y pásalo por debajo del firme, junto al palo."
         },
         "over-standing-part": {
-          "en": "Bring it up in front of the standing part: a half hitch round it.",
-          "es": "Súbelo por delante del firme: un cote alrededor de él."
+          "en": "Bring it back over the standing part: a half hitch round it.",
+          "es": "Vuelve a pasarlo por encima del firme: un cote alrededor de él."
         },
         "first-twist": {
-          "en": "Twist it round the turn, on the front of the pole: under it and over it.",
-          "es": "Enróllalo en la vuelta, por delante del palo: por debajo y por encima."
+          "en": "Twist it round the turn: under it and over it.",
+          "es": "Enróllalo en la vuelta: por debajo y por encima."
         },
         "second-twist": {
-          "en": "Twist it round again, a little further on.",
+          "en": "Twist it round again, a little further along.",
           "es": "Enróllalo otra vez, un poco más allá."
         },
         "third-twist": {
-          "en": "And a third time, the way the rope is laid; leave the end lying on round the pole.",
-          "es": "Y una tercera, en el sentido del colchado; deja el chicote apoyado en el palo."
+          "en": "And a third time, the way the rope is laid; leave the end lying along the turn.",
+          "es": "Y una tercera, en el sentido del colchado; deja el chicote apoyado en la vuelta."
         }
       }
     }

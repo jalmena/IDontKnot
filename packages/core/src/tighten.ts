@@ -64,7 +64,8 @@ export interface TightenOptions {
   readonly paired?: boolean;
   /**
    * Which ends draw the knot tight: both; or its start alone, the standing part, as a timber hitch is drawn
-   * tight by the load on it while its end, twisted round its own turn, is held by nothing but the knot.
+   * tight by the load on it while its end, twisted round its own turn, is held by nothing but the knot. Either
+   * way, what the knot gives up runs out into both its ends.
    */
   readonly drawnBy?: 'both' | 'start';
 }
@@ -616,9 +617,9 @@ function drawnTight(
       along.push((along[i - 1] as number) + size(sub(q[i] as Particle, q[i - 1] as Particle)));
     const total = along[n] as number;
     const [start, end] = [from(q[0] as Particle, q[3] as Particle), from(q[n] as Particle, q[n - 3] as Particle)];
-    // from the middle of a stretch that is not drawn tight, where it hangs; or else from the middle of the knot
-    // or from its end, if only its start draws it: what the knot gives up goes to the standing part
-    const [left, right] = options.drawnBy === 'start' ? [n, n] : hold ? [hook, hook] : [middle, middle];
+    // from the middle of a stretch that is not drawn tight, where it hangs; or else from the middle of the knot:
+    // what the knot gives up goes to both its ends, even where only its start draws it
+    const [left, right] = hold ? [hook, hook] : [middle, middle];
     let segment = 0;
     return q.map((point, i) => {
       if (i >= left && i <= right) return point;

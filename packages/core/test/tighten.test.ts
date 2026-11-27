@@ -308,3 +308,30 @@ describe('a knot of one rope drawn tight', () => {
     expect(area).toBeLessThan(0.05);
   });
 });
+
+describe('a knot drawn tight by its standing part alone', () => {
+  it('lengthens both its ends: the end of the timber hitch is not drawn into its twists', () => {
+    const hitch = read('../../../content/knots/timber-hitch/knot.json') as KnotDocument;
+    const frames = hitch.geometry?.frames ?? [];
+    const tied = frames.find((frame) => frame.id === hitch.geometry?.tightening?.[0]) as Frame;
+    const tight = frames.find((frame) => frame.id === TIGHT_FRAME) as Frame;
+    // how far each end of the rope is from the axis of the post
+    const ends = (frame: Frame): [number, number] => {
+      const curves = framePolylines(hitch, frame);
+      const rope = curves.find((curve) => curve.id === 'rope');
+      const post = curves.find((curve) => curve.id === 'post');
+      if (!rope || !post) throw new Error('the timber hitch has its rope and its post');
+      const [from, to] = [post.points[0] as Point3, post.points.at(-1) as Point3];
+      const axis = [to[0] - from[0], to[1] - from[1], to[2] - from[2]] as const;
+      const away = (point: Point3): number => {
+        const v = [point[0] - from[0], point[1] - from[1], point[2] - from[2]] as const;
+        const t = (v[0] * axis[0] + v[1] * axis[1] + v[2] * axis[2]) / (axis[0] ** 2 + axis[1] ** 2 + axis[2] ** 2);
+        return Math.hypot(v[0] - t * axis[0], v[1] - t * axis[1], v[2] - t * axis[2]);
+      };
+      return [away(rope.points[0] as Point3), away(rope.points.at(-1) as Point3)];
+    };
+    const [[start, end], [startTight, endTight]] = [ends(tied), ends(tight)];
+    expect(startTight).toBeGreaterThan(start + 1);
+    expect(endTight).toBeGreaterThan(end + 1);
+  });
+});
