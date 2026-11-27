@@ -1,6 +1,6 @@
 # Knot document model
 
-Draft 0.1. Implemented in `packages/core`: components, parts, the topology layer, geometry frames with curves and rules G1 to G5, the tightening of a knot of one open rope, and the construction layer for methods led with the end of a rope (operations `cross` and `tuck`, rules C1 to C3). Not yet implemented: shapes of rigid objects, the other operations, library entries, the JSON Schema. The reasoning behind it is in the [foundations report](../research/01-mathematical-foundations.md) and the [comparison of representations](../research/02-representation-comparison.md). The decisions it embodies are recorded in the [decision records](../adr/README.md).
+Draft 0.1. Implemented in `packages/core`: components, parts, the topology layer, geometry frames with curves and rules G1 to G5, the tightening of a knot of one open rope, and the construction layer for methods led with the end of a rope or with its bight (operations `cross` and `tuck`, rules C1 to C3). Not yet implemented: shapes of rigid objects, the other operations, library entries, the JSON Schema. The reasoning behind it is in the [foundations report](../research/01-mathematical-foundations.md) and the [comparison of representations](../research/02-representation-comparison.md). The decisions it embodies are recorded in the [decision records](../adr/README.md).
 
 ## 1. Purpose and rules
 
@@ -194,11 +194,13 @@ The first implementation covers methods in which the end of a rope is led along 
 
 `start` and `to` are material coordinates. The state at a coordinate is the frame with the rope cut there.
 
+A method may instead be led by the bight, the middle of a doubled rope: each step's actor is `["rope", "bight"]`, and `start` and `to` say how far the rope has been laid from each of its ends at once, the state being the frame with the rope laid that far from both. The last step brings the bight to the middle of the rope. For such a method, C2 checks that each half has passed the strands its step names; a tie whose two halves pass different strands, as a doubled rope does where its two strands cross each other going round a column, uses operations that are noted, not checked.
+
 | Rule | Statement |
 | --- | --- |
 | C1 | Each step's result is the diagram of the frame with the rope cut at the step's `to`, up to renaming of crossings. |
 | C2 | Each step's result follows from the state before it by the operation it names. For `cross`, the last crossing the end visits is new, it passes it as `pass` says, and without it the diagram is the state before. For `tuck`, the same for as many crossings as `passes` has entries. An operation the implementation cannot check is noted, not refused. |
-| C3 | The last step's `to` is the length of the rope, and its result is the diagram of the topology layer. |
+| C3 | The last step's `to` is the length of the rope, or its middle when the bight leads, to the thousandth coordinates are written to, and its result is the diagram of the topology layer. |
 
 A step may instead carry a frame of its own; that is not implemented yet.
 

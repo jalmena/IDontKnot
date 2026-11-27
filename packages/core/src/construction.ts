@@ -121,6 +121,14 @@ function laidAt(document: KnotDocument, method: Method, to: number): { diagram: 
     return issues.length > 0 ? null : { diagram, first: strandOf(diagram, rope).length };
   }
   const length = whole.s[whole.s.length - 1] as number;
+  // laid as far as its middle from each end, the rope is all laid: the two stretches meet in the bight
+  if (to >= length / 2 - 1e-9) {
+    const { diagram, issues, visits } = diagramFromGeometry([whole, ...others]);
+    if (issues.length > 0) return null;
+    // the visits of the stretch from the start: those before the middle, the points of the curve being in order
+    const middle = whole.s.findIndex((coordinate) => coordinate >= length / 2);
+    return { diagram, first: (visits[rope] ?? []).filter((visit) => visit.at < middle).length };
+  }
   const other = `${rope}\u0000`;
   const { diagram, issues } = diagramFromGeometry([
     cutCurve(whole, to),
@@ -266,7 +274,8 @@ export function checkMethod(document: KnotDocument, method: Method): DocumentIss
 
   const finished = documentDiagram(document);
   const last = method.steps.at(-1) as Step;
-  if (Math.abs(last.to - whole) > 1e-9) report('C3', `method "${method.id}" ends before the rope does`);
+  // material coordinates are written to a thousandth: the middle of a rope may be half a thousandth off
+  if (Math.abs(last.to - whole) > 1e-3) report('C3', `method "${method.id}" ends before the rope does`);
   if (finished && before && !identicalDiagrams(before, finished)) {
     report('C3', `method "${method.id}" does not end in the diagram of the topology layer`);
   }
