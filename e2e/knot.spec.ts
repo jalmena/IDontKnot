@@ -477,17 +477,15 @@ test('shows an eye through a ring of metal, and a lark’s head round the strand
   ]);
 });
 
-test('shows a lashing round its two poles when asked', async ({ page }) => {
+test('shows the timber hitch round its post in Pioneering when asked, and draws it tight', async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem('idk.discipline', 'pioneering'));
-  await page.goto('/knots/square-lashing');
+  await page.goto('/knots/timber-hitch');
   await expect(page.getByTestId('panel')).toHaveAttribute('data-checked', 'ok');
   const canvas = page.getByTestId('rope-canvas');
   await expect(canvas).toHaveAttribute('data-objects', '');
-  // a lashing is drawn tight turn by turn as it is tied, not afterwards
-  await expect(page.getByTestId('play')).toBeVisible();
-  await expect(page.getByTestId('tighten')).toHaveCount(0);
+  await expect(page.getByTestId('tighten')).toBeVisible();
   await page.getByRole('tab', { name: 'Use' }).click();
-  await expect(page.getByTestId('category')).toHaveText('Lashing');
-  await page.getByRole('button', { name: 'Show the poles' }).click();
-  await expect(canvas).toHaveAttribute('data-objects', 'post post');
+  await expect(page.getByTestId('category')).toHaveText('Hitch');
+  await page.getByRole('button', { name: 'Show the post' }).click();
+  await expect(canvas).toHaveAttribute('data-objects', 'post');
 });

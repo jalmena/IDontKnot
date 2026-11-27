@@ -1,0 +1,79 @@
+{
+  "format": "idk-entry",
+  "formatVersion": "0.1.0",
+  "knot": "timber-hitch",
+  "names": {
+    "en": "Timber hitch",
+    "es": "Vuelta de braza"
+  },
+  "category": "hitch",
+  "uses": {
+    "pioneering": {
+      "object": "post",
+      "text": {
+        "en": "To drag or hoist a log or a pole, and to start a diagonal lashing, whose first turns it draws the poles together with.",
+        "es": "Para arrastrar o izar un tronco o un palo, y para empezar una trinca diagonal, cuyas primeras vueltas juntan los palos con ella."
+      }
+    }
+  },
+  "afterLoad": {
+    "en": "After a load it unties at once, by pulling its twists open: it holds only while it is pulled.",
+    "es": "Después de soportar carga se deshace al instante, abriendo las vueltas del chicote: solo aguanta mientras se tira de él."
+  },
+  "cautions": {
+    "en": "Twist the end round at least three times, the way the rope is laid; it holds only a steady pull: to hoist, add a half hitch further along the pole.",
+    "es": "Enrolla el chicote al menos tres veces, en el sentido del colchado de la cuerda; solo aguanta un tiro constante: para izar, añade un cote más adelante en el palo."
+  },
+  "parts": {
+    "standing-part": {
+      "en": "Standing part",
+      "es": "Firme"
+    },
+    "turn": {
+      "en": "Turn",
+      "es": "Vuelta"
+    },
+    "half-hitch": {
+      "en": "Half hitch",
+      "es": "Cote"
+    },
+    "twists": {
+      "en": "Twists",
+      "es": "Enrollado"
+    },
+    "tail": {
+      "en": "Tail",
+      "es": "Chicote"
+    }
+  },
+  "methods": {
+    "with-the-end": {
+      "name": {
+        "en": "With the end",
+        "es": "Con el chicote"
+      },
+      "steps": {
+        "round-pole": {
+          "en": "Lead the end round the pole, and over the standing part beside it.",
+          "es": "Rodea el palo con el chicote y pásalo por encima del firme, junto al palo."
+        },
+        "under-standing-part": {
+          "en": "Bring it back under the standing part: a half hitch round it.",
+          "es": "Vuelve a pasarlo por debajo del firme: un cote alrededor de él."
+        },
+        "first-twist": {
+          "en": "Twist it round the turn: over it and under it.",
+          "es": "Enróllalo en la vuelta: por encima y por debajo."
+        },
+        "second-twist": {
+          "en": "Twist it round again, a little further along.",
+          "es": "Enróllalo otra vez, un poco más allá."
+        },
+        "third-twist": {
+          "en": "And a third time, the way the rope is laid; leave the end lying along the turn.",
+          "es": "Y una tercera, en el sentido del colchado; deja el chicote apoyado en la vuelta."
+        }
+      }
+    }
+  }
+}
