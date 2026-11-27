@@ -102,6 +102,8 @@
       "progress": "Hasta dónde ha llegado el chicote",
       "speed": "Velocidad",
       "end": "El chicote",
+      "bight": "El seno",
+      "progressBight": "Hasta dónde ha llegado el seno",
       "unsound": "Los pasos de este método no se siguen unos de otros. Es un defecto: por favor, comunícalo."
     },
     "use": {

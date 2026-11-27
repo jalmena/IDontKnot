@@ -9,6 +9,7 @@ import {
   jonesPolynomial,
   MAX_CROSSINGS_FOR_STATE_SUM,
   joinedAcross,
+  ledBy,
   ropeEndsShareOneFace,
   strandOf,
   writhe,
@@ -42,7 +43,7 @@ import {
   type RopeShape,
 } from './objects.ts';
 import { inLanguage, type LibraryKnot } from './library.ts';
-import { fed } from './feeding.ts';
+import { fed, fedByBight, laidByBight } from './feeding.ts';
 import { boundsOf, hungBelow, partShape, pointAt } from './parts.ts';
 import { timelineOf, type Timeline } from './playback.ts';
 import { centredOn, fitOf, ropesOf, shownFrame, thingsOf, withThings } from './shape.ts';
@@ -126,7 +127,10 @@ export function KnotPage({ knot }: Props) {
   const led = method?.steps[0]?.actor[0];
   const rope = curves.findIndex((curve) => curve.id === led);
   const length = document.components.find((component) => component.id === led)?.length ?? 1;
-  const tied = !method || rope < 0 || state.position >= length - 1e-9;
+  // led by its bight, the rope comes in from both its ends at once, and is all in when the bight is at its middle
+  const bight = method !== undefined && ledBy(method) === 'bight';
+  const whole = bight ? length / 2 : length;
+  const tied = !method || rope < 0 || state.position >= whole - 1e-9;
 
   const tightening = useMemo(() => tighteningOf(document), [document]);
   // drawn tight at the speed the knot is tied at
@@ -208,7 +212,7 @@ export function KnotPage({ knot }: Props) {
         ]);
         shape = { ...pulledShape, points };
       } else if (!tied && index === rope) {
-        const laid = fed(curve, state.position, length);
+        const laid = bight ? fedByBight(curve, state.position, length) : fed(curve, state.position, length);
         shape = { points: laid.points, s: laid.s, radius: ropeRadius };
       }
       if (lengthen > 0 && index === 0) shape = lengthened(shape, lengthen);
@@ -231,6 +235,7 @@ export function KnotPage({ knot }: Props) {
     rope,
     state.position,
     length,
+    bight,
     lengthen,
     ropeRadius,
     otherRope,
@@ -298,7 +303,7 @@ export function KnotPage({ knot }: Props) {
   // a part is a stretch of the rope as it lies when the knot is tied; while the rope is still being fed in,
   // the rope that lies there is further along it by what has not come in yet
   const emphasis = useMemo<Stretch[]>(() => {
-    const behind = tied ? 0 : 1 - state.position / length;
+    const behind = tied ? 0 : (whole - state.position) / length;
     // and the rope drawn on before its start, beyond a plate, is not part of anything
     const before = lengthen / (length + lengthen);
     const onto = (at: number): number => before + at * (1 - before);
@@ -309,7 +314,7 @@ export function KnotPage({ knot }: Props) {
           ? { rope: of, from: onto(from + behind), to: onto(Math.min(to + behind, 1)) }
           : { rope: of, from, to },
       );
-  }, [parts, shown, tied, rope, state.position, length, lengthen]);
+  }, [parts, shown, tied, rope, state.position, length, whole, lengthen]);
   const marked = useMemo(() => parts.filter((part) => part.id === shown).map((part) => part.points), [parts, shown]);
   const partNames = useMemo(() => {
     // two diameters apart, two names would run into each other
@@ -325,13 +330,16 @@ export function KnotPage({ knot }: Props) {
       below: below[i] ?? false,
     }));
   }, [parts, shown, entry, language, ropeRadius]);
-  // while the knot is tied step by step, what is named is the end that is led
-  const end = useMemo(
-    () => [
-      { id: 'end', text: t('knot.tying.end'), at: pointAt(curves[Math.max(rope, 0)]!, state.position), marked: true },
-    ],
-    [curves, rope, state.position, t],
-  );
+  // while the knot is tied step by step, what is named is the end that is led, or the bight, between its two
+  // stretches
+  const end = useMemo(() => {
+    const curve = curves[Math.max(rope, 0)]!;
+    const lead = pointAt(curve, state.position);
+    if (!bight) return [{ id: 'end', text: t('knot.tying.end'), at: lead, marked: true }];
+    const other = pointAt(curve, length - state.position);
+    const at: Point3 = [(lead[0] + other[0]) / 2, (lead[1] + other[1]) / 2, (lead[2] + other[2]) / 2];
+    return [{ id: 'end', text: t('knot.tying.bight'), at, marked: true }];
+  }, [curves, rope, state.position, bight, length, t]);
   // while the knot is tied, a part of the rope is named once the rope has been laid as far as its end
   const laidParts = useMemo(
     () =>
@@ -394,10 +402,16 @@ export function KnotPage({ knot }: Props) {
     if (tied && drawn.length === curves.length) {
       return { curves, visits: facts.visits, crossings: facts.diagram.crossings.length };
     }
-    const cut = drawn.map((curve, index) => (!tied && index === rope ? cutCurve(curve, state.position) : curve));
+    const cut = drawn.map((curve, index) =>
+      !tied && index === rope
+        ? bight
+          ? laidByBight(curve, state.position, length)
+          : cutCurve(curve, state.position)
+        : curve,
+    );
     const { diagram, visits } = diagramFromGeometry(cut);
     return { curves: cut, visits, crossings: diagram.crossings.length };
-  }, [placed, otherRope, tied, curves, facts, rope, state.position]);
+  }, [placed, otherRope, tied, curves, facts, rope, state.position, bight, length]);
 
   return (
     <section className="lab" aria-labelledby="knot-title">
@@ -474,7 +488,7 @@ export function KnotPage({ knot }: Props) {
                 method={method}
                 texts={entry.methods?.[method.id]}
                 timeline={timeline}
-                length={length}
+                length={whole}
                 state={state}
                 setState={setState}
                 speed={speed}
