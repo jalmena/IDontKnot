@@ -59,7 +59,7 @@ describe('the knots of the library', () => {
         });
       }
     },
-    // a knot tied in a bight is drawn tight dressed, which is tried at several turns and takes the longest
+    // a knot tied in a bight is drawn tight as a flat pair, which takes the longest
     120_000,
   );
 });
