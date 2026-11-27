@@ -7,6 +7,7 @@ import {
   diagramFromGeometry,
   framePolylines,
   jonesPolynomial,
+  MAX_CROSSINGS_FOR_STATE_SUM,
   joinedAcross,
   ropeEndsShareOneFace,
   strandOf,
@@ -73,22 +74,28 @@ const CLOSEST = 0.7;
 /** How far a standing part runs on beyond the plate it passes through, in rope diameters. */
 const STANDING_BEYOND = 4;
 
-/** The Jones polynomials of a knot with its ends joined, as far as they can be said: see `joinedAcross`. */
+/** Whether the Jones polynomial of a diagram can be computed: the state sum takes so many crossings at most. */
+const computable = (diagram: Diagram): boolean => diagram.crossings.length <= MAX_CROSSINGS_FOR_STATE_SUM;
+
+/**
+ * The Jones polynomials of a knot with its ends joined, as far as they can be said: see `joinedAcross`. None
+ * for a knot of more crossings than they can be computed for, such as a tie of a doubled rope.
+ */
 function closuresOf(document: KnotDocument, curves: readonly FrameCurve[], diagram: Diagram): Facts['closures'] {
   // a rope tied round a thing is a knot only round it: with its ends joined, it is taken alone
   if (curves.some((curve) => curve.kind === 'rigid')) {
     const alone = diagramFromGeometry(curves.filter((curve) => curve.kind !== 'rigid'));
-    if (alone.issues.length > 0 || !ropeEndsShareOneFace(alone.diagram)) return [];
+    if (alone.issues.length > 0 || !ropeEndsShareOneFace(alone.diagram) || !computable(alone.diagram)) return [];
     return [{ side: 'alone', value: jonesPolynomial(closeOpenComponents(alone.diagram)) }];
   }
   if (document.topology?.closure === 'exterior') {
-    return [{ side: 'outside', value: jonesPolynomial(closeOpenComponents(diagram)) }];
+    return computable(diagram) ? [{ side: 'outside', value: jonesPolynomial(closeOpenComponents(diagram)) }] : [];
   }
   const [rope] = curves;
   if (curves.length !== 1 || !rope || rope.closed) return [];
   return (['over', 'under'] as const).flatMap((side) => {
     const { diagram: joined, issues } = diagramFromGeometry([joinedAcross(rope, side)]);
-    return issues.length > 0 ? [] : [{ side, value: jonesPolynomial(joined) }];
+    return issues.length > 0 || !computable(joined) ? [] : [{ side, value: jonesPolynomial(joined) }];
   });
 }
 
